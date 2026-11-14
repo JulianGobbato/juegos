@@ -63,7 +63,10 @@
             <div class="game-icon-badge" style="background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.35);">
               🚌
             </div>
-            <span class="status-badge available">🟢 Listo para jugar</span>
+            <div class="d-flex flex-column align-items-end gap-1">
+              <span class="modality-badge">📱 1 Dispositivo (Mesa/TV)</span>
+              <span class="status-badge available">🟢 Listo para jugar</span>
+            </div>
           </div>
 
           <h3 class="game-title">¡TOCO TIMBRE! ME BAJO DEL BONDI</h3>
@@ -97,7 +100,10 @@
             <div class="game-icon-badge" style="background: rgba(139, 92, 246, 0.2); border-color: rgba(139, 92, 246, 0.4);">
               📻
             </div>
-            <span class="status-badge available" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; border-color: rgba(139, 92, 246, 0.45); box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);">🟢 Listo para jugar</span>
+            <div class="d-flex flex-column align-items-end gap-1">
+              <span class="modality-badge">📲 1 Celu + TV</span>
+              <span class="status-badge available" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; border-color: rgba(139, 92, 246, 0.45); box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);">🟢 Listo para jugar</span>
+            </div>
           </div>
 
           <h3 class="game-title">SINTONÍA FINA</h3>
@@ -131,7 +137,10 @@
             <div class="game-icon-badge" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.45);">
               🔄
             </div>
-            <span class="status-badge available" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.45); box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);">🟢 Listo para jugar</span>
+            <div class="d-flex flex-column align-items-end gap-1">
+              <span class="modality-badge">📲 1 Celu + TV</span>
+              <span class="status-badge available" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.45); box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);">🟢 Listo para jugar</span>
+            </div>
           </div>
 
           <h3 class="game-title">¡EN UNA VUELTA!</h3>
@@ -155,6 +164,44 @@
             <a href="en-una-vuelta/index.html" class="btn-game-action btn-play-primary" style="background: linear-gradient(135deg, #10b981, #14b8a6); color: #022c22; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);">
               <span>▶️</span>
               <span>Jugar ¡En Una Vuelta!</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- TARJETA 4 (ACTIVO): LA MÁS VOTADA -->
+        <article class="game-card card-active" style="border-color: rgba(245, 158, 11, 0.5); background: radial-gradient(circle at 90% 10%, rgba(245, 158, 11, 0.15) 0%, rgba(15, 23, 42, 0.88) 60%);">
+          <div class="game-card-top">
+            <div class="game-icon-badge" style="background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.45);">
+              🏆
+            </div>
+            <div class="d-flex flex-column align-items-end gap-1">
+              <span class="modality-badge">📲 1 Celu + TV</span>
+              <span class="status-badge available" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border-color: rgba(245, 158, 11, 0.45); box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);">🟢 Listo para jugar</span>
+            </div>
+          </div>
+
+          <h3 class="game-title">LA MÁS VOTADA</h3>
+
+          <div>
+            <span class="game-meta-badge">Equipo Azul vs Equipo Rojo | Show de TV y Respuestas Populares</span>
+          </div>
+
+          <p class="game-desc">
+            Inspirado en <em>100 Argentinos Dicen</em> y <em>Family Feud</em>. Dos equipos compiten por adivinar las respuestas más votadas a consignas cotidianas y argentinas. El Conductor maneja la partida desde el celular y destapa el tablero en la TV. ¡Conexión en tiempo real!
+          </p>
+
+          <div class="game-tags">
+            <span class="game-tag">100 Consignas</span>
+            <span class="game-tag">TV + 1 Celular Remoto</span>
+            <span class="game-tag">WebRTC PeerJS</span>
+            <span class="game-tag">Azul vs Rojo</span>
+            <span class="game-tag">Web Audio API</span>
+          </div>
+
+          <div class="mt-auto">
+            <a href="la-mas-votada/index.html" class="btn-game-action btn-play-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-weight: 800; box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);">
+              <span>▶️</span>
+              <span>Jugar La Más Votada</span>
             </a>
           </div>
         </article>

@@ -228,6 +228,20 @@ body {
   border-radius: var(--radius-pill);
 }
 
+.modality-badge {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .status-badge.available {
   background: rgba(16, 185, 129, 0.2);
   color: #34d399;

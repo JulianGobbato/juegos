@@ -1,0 +1,3111 @@
+/**
+ * Banco de Consignas para La Más Votada (Offline Bundle)
+ * Contiene 100 consignas verificadas (25 por categoría, 6 respuestas por consigna sumando 100 pts).
+ */
+(function(root) {
+  root.CONSIGNAS_BUNDLE = [
+  {
+    "id": 1,
+    "categoria": "argentina",
+    "pregunta": "¿Qué no puede faltar en un asado de domingo con amigos?",
+    "respuestas": [
+      {
+        "texto": "Carne / Tira de asado",
+        "puntos": 38
+      },
+      {
+        "texto": "Carbón o leña",
+        "puntos": 24
+      },
+      {
+        "texto": "Fernet o vino",
+        "puntos": 16
+      },
+      {
+        "texto": "Ensalada o provoleta",
+        "puntos": 11
+      },
+      {
+        "texto": "Pan criollo / baguette",
+        "puntos": 7
+      },
+      {
+        "texto": "Picada previa",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "categoria": "argentina",
+    "pregunta": "¿Qué costumbre argentina te delata de inmediato si estás en el exterior?",
+    "respuestas": [
+      {
+        "texto": "Tomar mate con termo bajo el brazo",
+        "puntos": 42
+      },
+      {
+        "texto": "Saludar con un beso en la mejilla",
+        "puntos": 22
+      },
+      {
+        "texto": "Buscar dulce de leche en los súper",
+        "puntos": 14
+      },
+      {
+        "texto": "Cenar después de las 22 hs",
+        "puntos": 11
+      },
+      {
+        "texto": "Decir 'che' o 'boludo' cada dos palabras",
+        "puntos": 7
+      },
+      {
+        "texto": "Aplaudir cuando aterriza el avión",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "categoria": "argentina",
+    "pregunta": "¿Cuál es la golosina o alfajor más clásico de los kioscos argentinos?",
+    "respuestas": [
+      {
+        "texto": "Alfajor de dulce de leche con chocolate",
+        "puntos": 39
+      },
+      {
+        "texto": "Bon o Bon",
+        "puntos": 23
+      },
+      {
+        "texto": "Chocolatín Jack o Marroc",
+        "puntos": 15
+      },
+      {
+        "texto": "Chupetín Pico Dulce",
+        "puntos": 11
+      },
+      {
+        "texto": "Turrón de maní",
+        "puntos": 7
+      },
+      {
+        "texto": "Caramelos Sugus / Palitos de la Selva",
+        "puntos": 5
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "categoria": "argentina",
+    "pregunta": "¿Qué ingrediente o acompañamiento es sagrado con unas buenas empanadas?",
+    "respuestas": [
+      {
+        "texto": "Vino tinto",
+        "puntos": 34
+      },
+      {
+        "texto": "Limón para exprimirle",
+        "puntos": 26
+      },
+      {
+        "texto": "Aceitunas verdes picadas",
+        "puntos": 17
+      },
+      {
+        "texto": "Masa hojaldrada casera",
+        "puntos": 11
+      },
+      {
+        "texto": "Cebolla de verdeo abundante",
+        "puntos": 7
+      },
+      {
+        "texto": "Salsa criolla o picante",
+        "puntos": 5
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "categoria": "argentina",
+    "pregunta": "¿Qué queja o insulto típico le gritás a otro conductor cuando maneja mal?",
+    "respuestas": [
+      {
+        "texto": "¡Poné el guiño que no te cobran!",
+        "puntos": 36
+      },
+      {
+        "texto": "¡Aprendé a manejar!",
+        "puntos": 25
+      },
+      {
+        "texto": "¡Andá a pata, salame!",
+        "puntos": 16
+      },
+      {
+        "texto": "¡Pelotudo!",
+        "puntos": 12
+      },
+      {
+        "texto": "¡El semáforo está verde hace media hora!",
+        "puntos": 7
+      },
+      {
+        "texto": "¡Comprate un auto nuevo!",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "categoria": "argentina",
+    "pregunta": "¿Qué comida de bodegón porteño pedís para compartir porque el plato es gigante?",
+    "respuestas": [
+      {
+        "texto": "Milanesa a la napolitana con fritas",
+        "puntos": 45
+      },
+      {
+        "texto": "Porción de rabas con limón",
+        "puntos": 20
+      },
+      {
+        "texto": "Tortilla de papas babé",
+        "puntos": 15
+      },
+      {
+        "texto": "Bife de chorizo mariposa",
+        "puntos": 10
+      },
+      {
+        "texto": "Matambre a la pizza",
+        "puntos": 6
+      },
+      {
+        "texto": "Sorrentinos de jamón y queso con tuco",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "categoria": "argentina",
+    "pregunta": "¿Qué excusa o frase usás para irte de una juntada sin llamar la atención?",
+    "respuestas": [
+      {
+        "texto": "Bueno, mañana me tengo que levantar temprano",
+        "puntos": 38
+      },
+      {
+        "texto": "Mañana laburo todo el día",
+        "puntos": 26
+      },
+      {
+        "texto": "Se me hizo re tarde",
+        "puntos": 16
+      },
+      {
+        "texto": "Palmada en las rodillas: 'Bueno...'",
+        "puntos": 10
+      },
+      {
+        "texto": "Arranco antes de que corte el bondi",
+        "puntos": 6
+      },
+      {
+        "texto": "Estoy destruido del gimnasio / semana",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "categoria": "argentina",
+    "pregunta": "¿Qué llevás cuando te invitan a merendar a una casa?",
+    "respuestas": [
+      {
+        "texto": "Facturas surtidas de panadería",
+        "puntos": 42
+      },
+      {
+        "texto": "Masitas secas o pepas",
+        "puntos": 22
+      },
+      {
+        "texto": "Bizcochitos de grasa Don Satur",
+        "puntos": 15
+      },
+      {
+        "texto": "Torta o budín casero",
+        "puntos": 11
+      },
+      {
+        "texto": "Chipá calentito",
+        "puntos": 6
+      },
+      {
+        "texto": "Alfajorcitos de maicena",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "categoria": "argentina",
+    "pregunta": "¿Qué cábala hacés para que gane la Selección o tu club de fútbol?",
+    "respuestas": [
+      {
+        "texto": "Sentarse en el mismo lugar exacto del sillón",
+        "puntos": 35
+      },
+      {
+        "texto": "Usar la misma camiseta sin lavar",
+        "puntos": 25
+      },
+      {
+        "texto": "Ver el partido con las mismas personas",
+        "puntos": 18
+      },
+      {
+        "texto": "No mirar los penales ni la tele",
+        "puntos": 11
+      },
+      {
+        "texto": "Tocar madera en cada ataque rival",
+        "puntos": 7
+      },
+      {
+        "texto": "Gritar 'Kiricocho' en tiros libres rivales",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "categoria": "argentina",
+    "pregunta": "¿Qué actividad hacés un domingo de lluvia en Buenos Aires?",
+    "respuestas": [
+      {
+        "texto": "Tortas fritas con mate",
+        "puntos": 40
+      },
+      {
+        "texto": "Maratón de series o películas en la cama",
+        "puntos": 28
+      },
+      {
+        "texto": "Dormir la siesta toda la tarde",
+        "puntos": 16
+      },
+      {
+        "texto": "Jugar a las cartas o juegos de mesa",
+        "puntos": 8
+      },
+      {
+        "texto": "Ordenar o limpiar la casa",
+        "puntos": 5
+      },
+      {
+        "texto": "Comer pastas caseras al mediodía",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "categoria": "argentina",
+    "pregunta": "¿Qué objeto clásico no falta en la casa de una abuela argentina?",
+    "respuestas": [
+      {
+        "texto": "Costurero en lata de galletitas danesas",
+        "puntos": 36
+      },
+      {
+        "texto": "Carpetitas tejidas al crochet y porcelanas",
+        "puntos": 24
+      },
+      {
+        "texto": "Sifón de vidrio azul o verde antiguo",
+        "puntos": 17
+      },
+      {
+        "texto": "Cuadro de santos o Sagrado Corazón",
+        "puntos": 11
+      },
+      {
+        "texto": "Termo forrado de cuerina marrón",
+        "puntos": 7
+      },
+      {
+        "texto": "Pava de aluminio bien tiznada",
+        "puntos": 5
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "categoria": "argentina",
+    "pregunta": "¿Con qué bebida alcohólica se hace la previa en una casa argentina?",
+    "respuestas": [
+      {
+        "texto": "Fernet con cola en jarra de plástico",
+        "puntos": 48
+      },
+      {
+        "texto": "Cerveza bien fría en lata o botella",
+        "puntos": 24
+      },
+      {
+        "texto": "Gin Tonic con pepino o frutos rojos",
+        "puntos": 12
+      },
+      {
+        "texto": "Vino tinto con gaseosa o hielo",
+        "puntos": 8
+      },
+      {
+        "texto": "Campari con jugo de naranja",
+        "puntos": 5
+      },
+      {
+        "texto": "Vodka con energizante",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "categoria": "argentina",
+    "pregunta": "¿Qué personaje o ídolo argentino pondrías en un billete de curso legal?",
+    "respuestas": [
+      {
+        "texto": "Lionel Messi",
+        "puntos": 44
+      },
+      {
+        "texto": "Diego Armando Maradona",
+        "puntos": 26
+      },
+      {
+        "texto": "Dr. René Favaloro",
+        "puntos": 14
+      },
+      {
+        "texto": "General José de San Martín",
+        "puntos": 9
+      },
+      {
+        "texto": "Charly García",
+        "puntos": 4
+      },
+      {
+        "texto": "Mafalda",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "categoria": "argentina",
+    "pregunta": "¿Qué corte de carne pedís primero al carnicero de confianza?",
+    "respuestas": [
+      {
+        "texto": "Tira de asado",
+        "puntos": 35
+      },
+      {
+        "texto": "Vacío jugoso",
+        "puntos": 28
+      },
+      {
+        "texto": "Nalga feteada para milanesas",
+        "puntos": 18
+      },
+      {
+        "texto": "Peceto tierno",
+        "puntos": 10
+      },
+      {
+        "texto": "Entraña fina",
+        "puntos": 6
+      },
+      {
+        "texto": "Matambre de vaca",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "categoria": "argentina",
+    "pregunta": "¿Qué motivo te hace llegar tarde en el transporte público de la ciudad?",
+    "respuestas": [
+      {
+        "texto": "Corte de calle, piquete o manifestación",
+        "puntos": 36
+      },
+      {
+        "texto": "Demora o huelga en el subte / tren",
+        "puntos": 27
+      },
+      {
+        "texto": "El colectivo venía repleto y no paró",
+        "puntos": 18
+      },
+      {
+        "texto": "Tránsito trabado en la autopista",
+        "puntos": 10
+      },
+      {
+        "texto": "Lluvia torrencial que inundó esquinas",
+        "puntos": 6
+      },
+      {
+        "texto": "Me quedé dormido y salí tarde",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "categoria": "argentina",
+    "pregunta": "¿Qué sabor de helado pedís siempre en una heladería artesanal argentina?",
+    "respuestas": [
+      {
+        "texto": "Dulce de leche granizado",
+        "puntos": 43
+      },
+      {
+        "texto": "Chocolate amargo o con almendras",
+        "puntos": 23
+      },
+      {
+        "texto": "Tramontana",
+        "puntos": 14
+      },
+      {
+        "texto": "Sambayón con nueces",
+        "puntos": 9
+      },
+      {
+        "texto": "Frutilla al agua",
+        "puntos": 7
+      },
+      {
+        "texto": "Menta granizada",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "categoria": "argentina",
+    "pregunta": "¿Qué cosa no puede faltar en un mate bien cebado?",
+    "respuestas": [
+      {
+        "texto": "Yerba mate de buena calidad",
+        "puntos": 38
+      },
+      {
+        "texto": "Agua a temperatura justa (no hervida)",
+        "puntos": 28
+      },
+      {
+        "texto": "Bombilla limpia y sin tapar",
+        "puntos": 17
+      },
+      {
+        "texto": "Buena charla y compañía",
+        "puntos": 9
+      },
+      {
+        "texto": "Montañita bien armada",
+        "puntos": 5
+      },
+      {
+        "texto": "Cascaritas de naranja o yuyos",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "categoria": "argentina",
+    "pregunta": "¿Qué tema de conversación se evita en un almuerzo familiar para no pelear?",
+    "respuestas": [
+      {
+        "texto": "Política nacional y elecciones",
+        "puntos": 52
+      },
+      {
+        "texto": "Herencia o terreno de los abuelos",
+        "puntos": 21
+      },
+      {
+        "texto": "Fútbol y clásicos",
+        "puntos": 14
+      },
+      {
+        "texto": "Religión e iglesia",
+        "puntos": 7
+      },
+      {
+        "texto": "Plata, deudas y sueldos",
+        "puntos": 4
+      },
+      {
+        "texto": "Parejas, casamiento o soltería",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "categoria": "argentina",
+    "pregunta": "¿Qué lugar o monumento argentino todo el mundo debería conocer al menos una vez?",
+    "respuestas": [
+      {
+        "texto": "Obelisco y Corrientes en Buenos Aires",
+        "puntos": 37
+      },
+      {
+        "texto": "Cataratas del Iguazú",
+        "puntos": 30
+      },
+      {
+        "texto": "Glaciar Perito Moreno",
+        "puntos": 16
+      },
+      {
+        "texto": "Cerro de los Siete Colores en Jujuy",
+        "puntos": 9
+      },
+      {
+        "texto": "Caminito en La Boca",
+        "puntos": 5
+      },
+      {
+        "texto": "Monumento a la Bandera en Rosario",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "categoria": "argentina",
+    "pregunta": "¿Qué comida fría llevás a un picnic o día de campo cerca del río?",
+    "respuestas": [
+      {
+        "texto": "Sándwiches de miga triples",
+        "puntos": 38
+      },
+      {
+        "texto": "Tarta de jamón, queso y choclo",
+        "puntos": 25
+      },
+      {
+        "texto": "Empanadas de carne o jamón y queso",
+        "puntos": 18
+      },
+      {
+        "texto": "Sándwich de milanesa con lechuga y tomate",
+        "puntos": 11
+      },
+      {
+        "texto": "Tortilla de papas fría",
+        "puntos": 5
+      },
+      {
+        "texto": "Fruta fresca lavada",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "categoria": "argentina",
+    "pregunta": "¿Qué frase típica de madre argentina escuchaste miles de veces?",
+    "respuestas": [
+      {
+        "texto": "¡Abrigate que hace frío!",
+        "puntos": 36
+      },
+      {
+        "texto": "¡Porque lo digo yo y punto!",
+        "puntos": 27
+      },
+      {
+        "texto": "¡Si voy yo y lo encuentro qué te hago!",
+        "puntos": 19
+      },
+      {
+        "texto": "¡Comé que hay chicos que no tienen!",
+        "puntos": 9
+      },
+      {
+        "texto": "¡No andes descalzo que te vas a enfermar!",
+        "puntos": 6
+      },
+      {
+        "texto": "¡Te lo dije y no me hiciste caso!",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "categoria": "argentina",
+    "pregunta": "¿Qué producto comprás siempre de más 'por las dudas' en el súper?",
+    "respuestas": [
+      {
+        "texto": "Papel higiénico",
+        "puntos": 34
+      },
+      {
+        "texto": "Paquetes de yerba mate",
+        "puntos": 26
+      },
+      {
+        "texto": "Botellas de aceite",
+        "puntos": 18
+      },
+      {
+        "texto": "Paquetes de fideos secos",
+        "puntos": 11
+      },
+      {
+        "texto": "Galletitas dulces para la alacena",
+        "puntos": 7
+      },
+      {
+        "texto": "Lavandina o cloro",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "categoria": "argentina",
+    "pregunta": "¿Qué comida comprás al salir de la cancha de fútbol o de un recital?",
+    "respuestas": [
+      {
+        "texto": "Choripán con chimichurri en el puestito",
+        "puntos": 46
+      },
+      {
+        "texto": "Hamburguesa completa al paso",
+        "puntos": 22
+      },
+      {
+        "texto": "Sándwich de bondiola a la parrilla",
+        "puntos": 16
+      },
+      {
+        "texto": "Pancho gigante con papas pay",
+        "puntos": 9
+      },
+      {
+        "texto": "Cono de papas fritas calientes",
+        "puntos": 4
+      },
+      {
+        "texto": "Paquetito de garrapiñada",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "categoria": "argentina",
+    "pregunta": "¿Qué ritmo o género musical suena sí o sí cuando se prende la fiesta?",
+    "respuestas": [
+      {
+        "texto": "Cumbia santafesina o villera",
+        "puntos": 42
+      },
+      {
+        "texto": "Cuarteto cordobés bien bailable",
+        "puntos": 27
+      },
+      {
+        "texto": "Reggaetón clásico de los 2000",
+        "puntos": 16
+      },
+      {
+        "texto": "Rock nacional festivo",
+        "puntos": 8
+      },
+      {
+        "texto": "RKT y cachengue moderno",
+        "puntos": 5
+      },
+      {
+        "texto": "Pop latino bailable",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "categoria": "argentina",
+    "pregunta": "¿Qué hacés apenas cobrás el sueldo a principios de mes?",
+    "respuestas": [
+      {
+        "texto": "Pagar el resumen de la tarjeta y servicios",
+        "puntos": 46
+      },
+      {
+        "texto": "Ir al súper y llenar la heladera",
+        "puntos": 26
+      },
+      {
+        "texto": "Darse un gusto o salir a cenar afuera",
+        "puntos": 14
+      },
+      {
+        "texto": "Pagar el alquiler de la casa",
+        "puntos": 8
+      },
+      {
+        "texto": "Comprar dólares o ponerlo en plazo fijo",
+        "puntos": 4
+      },
+      {
+        "texto": "Comprar ropa o zapatillas",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué objeto guardás siempre en el primer cajón de la mesa de luz?",
+    "respuestas": [
+      {
+        "texto": "Cargador y cable del celular",
+        "puntos": 37
+      },
+      {
+        "texto": "Medicamentos y analgésicos para el dolor",
+        "puntos": 24
+      },
+      {
+        "texto": "Auriculares",
+        "puntos": 16
+      },
+      {
+        "texto": "Lentes de lectura o estuche",
+        "puntos": 11
+      },
+      {
+        "texto": "Libreta y lapicera",
+        "puntos": 7
+      },
+      {
+        "texto": "Billetes o plata de emergencia",
+        "puntos": 5
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué comida pedís por delivery un viernes a la noche cuando no querés cocinar?",
+    "respuestas": [
+      {
+        "texto": "Pizza de muzzarella",
+        "puntos": 44
+      },
+      {
+        "texto": "Hamburguesa con queso y papas fritas",
+        "puntos": 24
+      },
+      {
+        "texto": "Docena de empanadas surtidas",
+        "puntos": 16
+      },
+      {
+        "texto": "Bandeja de sushi",
+        "puntos": 8
+      },
+      {
+        "texto": "Kilo de helado",
+        "puntos": 5
+      },
+      {
+        "texto": "Sándwich de lomo o lomito completo",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 28,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué es lo primero que hacés apenas abrís los ojos a la mañana?",
+    "respuestas": [
+      {
+        "texto": "Mirar las notificaciones del celular",
+        "puntos": 45
+      },
+      {
+        "texto": "Ir al baño a hacer pis",
+        "puntos": 26
+      },
+      {
+        "texto": "Tomar un vaso de agua o poner la pava",
+        "puntos": 15
+      },
+      {
+        "texto": "Posponer la alarma 5 minutos más",
+        "puntos": 8
+      },
+      {
+        "texto": "Lavarse los dientes o la cara",
+        "puntos": 4
+      },
+      {
+        "texto": "Estirarse en la cama",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 29,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué tarea doméstica es la más odiada por todo el mundo?",
+    "respuestas": [
+      {
+        "texto": "Lavar los platos y las ollas con grasa",
+        "puntos": 39
+      },
+      {
+        "texto": "Planchar camisas y ropa de salir",
+        "puntos": 26
+      },
+      {
+        "texto": "Limpiar y desinfectar el inodoro / baño",
+        "puntos": 18
+      },
+      {
+        "texto": "Fregar y pasar el trapo a los pisos",
+        "puntos": 9
+      },
+      {
+        "texto": "Colgar y doblar la ropa limpia",
+        "puntos": 5
+      },
+      {
+        "texto": "Limpiar los vidrios y ventanas",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 30,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué llevás en la mochila o cartera todos los días 'por si acaso'?",
+    "respuestas": [
+      {
+        "texto": "Paquetito de pañuelos descartables",
+        "puntos": 35
+      },
+      {
+        "texto": "Alcohol en gel o toallitas",
+        "puntos": 23
+      },
+      {
+        "texto": "Billetera con documentos y SUBE",
+        "puntos": 19
+      },
+      {
+        "texto": "Cargador portátil o cable USB",
+        "puntos": 12
+      },
+      {
+        "texto": "Juego de llaves de casa",
+        "puntos": 7
+      },
+      {
+        "texto": "Pastillas para el dolor de cabeza (Ibuprofeno)",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 31,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué hacés para matar el tiempo esperando en la sala de un médico?",
+    "respuestas": [
+      {
+        "texto": "Scrollear en Instagram o TikTok",
+        "puntos": 48
+      },
+      {
+        "texto": "Chatear por WhatsApp con amigos",
+        "puntos": 24
+      },
+      {
+        "texto": "Mirar fijamente a las demás personas",
+        "puntos": 12
+      },
+      {
+        "texto": "Hojear revistas viejas de la sala",
+        "puntos": 8
+      },
+      {
+        "texto": "Jugar jueguitos en el teléfono",
+        "puntos": 5
+      },
+      {
+        "texto": "Escuchar música con auriculares",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 32,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué alimento básico nunca falta adentro de la heladera de una casa?",
+    "respuestas": [
+      {
+        "texto": "Leche en sachet o cartón",
+        "puntos": 38
+      },
+      {
+        "texto": "Huevos en la huevera",
+        "puntos": 26
+      },
+      {
+        "texto": "Queso cremoso o feteado",
+        "puntos": 17
+      },
+      {
+        "texto": "Pan de manteca",
+        "puntos": 10
+      },
+      {
+        "texto": "Pote o sachet de mayonesa",
+        "puntos": 6
+      },
+      {
+        "texto": "Tomates frescos",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 33,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué actitud ajena te da más bronca cuando viajás en transporte público?",
+    "respuestas": [
+      {
+        "texto": "Llevar la mochila puesta en la espalda molestando",
+        "puntos": 36
+      },
+      {
+        "texto": "Escuchar videos o música sin auriculares",
+        "puntos": 25
+      },
+      {
+        "texto": "Empujar para subir antes de que bajen",
+        "puntos": 18
+      },
+      {
+        "texto": "Olor fuerte a chivo o transpiración",
+        "puntos": 11
+      },
+      {
+        "texto": "Que no prenda el aire acondicionado en verano",
+        "puntos": 6
+      },
+      {
+        "texto": "Quedarse clavado en la puerta impidiendo el paso",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 34,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué objeto perdés constantemente adentro de tu propia casa?",
+    "respuestas": [
+      {
+        "texto": "Las llaves de la puerta",
+        "puntos": 40
+      },
+      {
+        "texto": "El teléfono celular",
+        "puntos": 27
+      },
+      {
+        "texto": "El control remoto de la tele",
+        "puntos": 16
+      },
+      {
+        "texto": "Los anteojos de sol o de ver",
+        "puntos": 9
+      },
+      {
+        "texto": "La billetera",
+        "puntos": 5
+      },
+      {
+        "texto": "Los auriculares inalámbricos",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 35,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué hacés los domingos a la tarde cuando te agarra el bajón dominical?",
+    "respuestas": [
+      {
+        "texto": "Tirarse en el sillón a ver una película",
+        "puntos": 41
+      },
+      {
+        "texto": "Tomar mates con algo dulce para levantar",
+        "puntos": 25
+      },
+      {
+        "texto": "Pensar con angustia en todo lo que hay que hacer el lunes",
+        "puntos": 16
+      },
+      {
+        "texto": "Dormir una siesta eterna",
+        "puntos": 10
+      },
+      {
+        "texto": "Llamar o juntarse con familia / amigos",
+        "puntos": 5
+      },
+      {
+        "texto": "Darse un baño largo y preparar la ropa",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 36,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué parte del cuerpo te empieza a doler primero después de los 30 años?",
+    "respuestas": [
+      {
+        "texto": "La cintura y la espalda baja",
+        "puntos": 44
+      },
+      {
+        "texto": "Las rodillas al levantarse o subir escaleras",
+        "puntos": 24
+      },
+      {
+        "texto": "El cuello y las cervicales",
+        "puntos": 16
+      },
+      {
+        "texto": "La cabeza por el estrés",
+        "puntos": 8
+      },
+      {
+        "texto": "Los hombros contracturados",
+        "puntos": 5
+      },
+      {
+        "texto": "La planta de los pies",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 37,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué producto del baño se gasta siempre más rápido de lo esperado?",
+    "respuestas": [
+      {
+        "texto": "El shampoo de pelo",
+        "puntos": 37
+      },
+      {
+        "texto": "La pasta de dientes",
+        "puntos": 26
+      },
+      {
+        "texto": "El desodorante corporal",
+        "puntos": 18
+      },
+      {
+        "texto": "El jabón de tocador",
+        "puntos": 10
+      },
+      {
+        "texto": "El acondicionador / crema de enjuague",
+        "puntos": 6
+      },
+      {
+        "texto": "El papel higiénico",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 38,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué electrodoméstico usás todos los días sin excepción?",
+    "respuestas": [
+      {
+        "texto": "La heladera",
+        "puntos": 42
+      },
+      {
+        "texto": "La pava eléctrica",
+        "puntos": 27
+      },
+      {
+        "texto": "El microondas",
+        "puntos": 15
+      },
+      {
+        "texto": "El lavarropas",
+        "puntos": 8
+      },
+      {
+        "texto": "La tostadora de pan",
+        "puntos": 5
+      },
+      {
+        "texto": "La licuadora / cafetera",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 39,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué hacés cuando suena la alarma a la mañana y te gana la pereza?",
+    "respuestas": [
+      {
+        "texto": "Tocar 'posponer 5 minutos más'",
+        "puntos": 46
+      },
+      {
+        "texto": "Putear por tener que ir a trabajar",
+        "puntos": 24
+      },
+      {
+        "texto": "Quedarse con los ojos clavados en el techo",
+        "puntos": 14
+      },
+      {
+        "texto": "Levantarse a los tumbos arrastrando los pies",
+        "puntos": 9
+      },
+      {
+        "texto": "Preguntarse si realmente necesitás este empleo",
+        "puntos": 4
+      },
+      {
+        "texto": "Taparse hasta la coronilla con la frazada",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 40,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué cosas acumulás en un cajón desordenado que nunca tirás?",
+    "respuestas": [
+      {
+        "texto": "Cables viejos que no sabés de qué aparato son",
+        "puntos": 41
+      },
+      {
+        "texto": "Pilas gastadas y nuevas todas mezcladas",
+        "puntos": 24
+      },
+      {
+        "texto": "Folletos viejos de pizzerías y delivery",
+        "puntos": 16
+      },
+      {
+        "texto": "Tornillos, clavos y tarugos sueltos",
+        "puntos": 10
+      },
+      {
+        "texto": "Llaves misteriosas que no abren nada",
+        "puntos": 6
+      },
+      {
+        "texto": "Manuales de instrucciones en varios idiomas",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 41,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué condimento o especia no puede faltar nunca en tu cocina?",
+    "respuestas": [
+      {
+        "texto": "Sal fina de mesa",
+        "puntos": 45
+      },
+      {
+        "texto": "Orégano seco",
+        "puntos": 23
+      },
+      {
+        "texto": "Pimienta negra en grano o molida",
+        "puntos": 15
+      },
+      {
+        "texto": "Aceite de oliva virgen extra",
+        "puntos": 9
+      },
+      {
+        "texto": "Pimentón dulce o ahumado",
+        "puntos": 5
+      },
+      {
+        "texto": "Ajo picado o en polvo",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 42,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué mirás primero antes de decidir comprarte una prenda de ropa?",
+    "respuestas": [
+      {
+        "texto": "El precio en la etiqueta",
+        "puntos": 48
+      },
+      {
+        "texto": "El talle (si es S, M, L o XL)",
+        "puntos": 24
+      },
+      {
+        "texto": "Cómo te calza frente al espejo del probador",
+        "puntos": 15
+      },
+      {
+        "texto": "La calidad y grosor de la tela",
+        "puntos": 7
+      },
+      {
+        "texto": "Los colores disponibles",
+        "puntos": 4
+      },
+      {
+        "texto": "Si se puede pagar en cuotas sin interés",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 43,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué hacés apenas se corta la luz en tu casa?",
+    "respuestas": [
+      {
+        "texto": "Buscar una linterna o prender la del celular",
+        "puntos": 42
+      },
+      {
+        "texto": "Mirar por la ventana si los vecinos tienen luz",
+        "puntos": 28
+      },
+      {
+        "texto": "Desconectar la heladera o la compu",
+        "puntos": 14
+      },
+      {
+        "texto": "Buscar velas y fósforos en los cajones",
+        "puntos": 9
+      },
+      {
+        "texto": "Llamar o putear a la empresa de electricidad",
+        "puntos": 4
+      },
+      {
+        "texto": "Fijarse si saltó la térmica del tablero",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 44,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué comida guardás en el freezer para tener un menú salvador?",
+    "respuestas": [
+      {
+        "texto": "Milanesas ya rebozadas listas para freír",
+        "puntos": 40
+      },
+      {
+        "texto": "Empanadas congeladas",
+        "puntos": 24
+      },
+      {
+        "texto": "Hamburguesas en caja",
+        "puntos": 17
+      },
+      {
+        "texto": "Tupper con salsa boloñesa casera",
+        "puntos": 10
+      },
+      {
+        "texto": "Bolsa de verduras picadas o choclo",
+        "puntos": 6
+      },
+      {
+        "texto": "Pan lactal feteado para tostadas",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 45,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué detalle te hace sentir de golpe que te estás poniendo viejo?",
+    "respuestas": [
+      {
+        "texto": "Alegrarte genuinamente por comprar una sartén o tupper",
+        "puntos": 38
+      },
+      {
+        "texto": "Irte a dormir antes de las 12 un sábado a la noche",
+        "puntos": 26
+      },
+      {
+        "texto": "Que te duelan los huesos o articulaciones por la humedad",
+        "puntos": 18
+      },
+      {
+        "texto": "Quejarte de que la música de los boliches está muy fuerte",
+        "puntos": 10
+      },
+      {
+        "texto": "Hablar del clima o del dolor de espaldas",
+        "puntos": 5
+      },
+      {
+        "texto": "Empezar frases con 'en mis tiempos...'",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 46,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué comida sobrante es la reina indiscutida del recalentado al otro día?",
+    "respuestas": [
+      {
+        "texto": "Pizza fría de la caja",
+        "puntos": 44
+      },
+      {
+        "texto": "Guiso de lentejas con chorizo",
+        "puntos": 24
+      },
+      {
+        "texto": "Fideos secos con tuco recalentados en sartén",
+        "puntos": 15
+      },
+      {
+        "texto": "Tarta de jamón y queso",
+        "puntos": 9
+      },
+      {
+        "texto": "Empanadas calientes al horno",
+        "puntos": 5
+      },
+      {
+        "texto": "Milanesa fría en sándwich",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 47,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué aparato tecnológico se rompe siempre en el momento más inoportuno?",
+    "respuestas": [
+      {
+        "texto": "El teléfono celular",
+        "puntos": 43
+      },
+      {
+        "texto": "La computadora o notebook de trabajo",
+        "puntos": 26
+      },
+      {
+        "texto": "Los auriculares",
+        "puntos": 15
+      },
+      {
+        "texto": "El módem o router de Wi-Fi",
+        "puntos": 9
+      },
+      {
+        "texto": "El televisor",
+        "puntos": 4
+      },
+      {
+        "texto": "El microondas",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 48,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué calzado usás cuando estás descansando adentro de tu casa?",
+    "respuestas": [
+      {
+        "texto": "Pantuflas abrigadas",
+        "puntos": 41
+      },
+      {
+        "texto": "Ojotas o gomones tipo Crocs",
+        "puntos": 29
+      },
+      {
+        "texto": "Caminar en medias por el piso",
+        "puntos": 16
+      },
+      {
+        "texto": "Completamente descalzo",
+        "puntos": 8
+      },
+      {
+        "texto": "Zapatillas viejas cómodas",
+        "puntos": 4
+      },
+      {
+        "texto": "Sandalias de verano",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 49,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué rincón de la casa cuesta más trabajo mantener ordenado?",
+    "respuestas": [
+      {
+        "texto": "El placard y los estantes de ropa",
+        "puntos": 38
+      },
+      {
+        "texto": "La mesada de la cocina",
+        "puntos": 26
+      },
+      {
+        "texto": "El botiquín y vanitory del baño",
+        "puntos": 18
+      },
+      {
+        "texto": "La mesa del comedor llena de cosas apoyadas",
+        "puntos": 10
+      },
+      {
+        "texto": "El escritorio de la computadora",
+        "puntos": 5
+      },
+      {
+        "texto": "La pileta con los platos sucios",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 50,
+    "categoria": "cotidiano",
+    "pregunta": "¿Qué hacés si un paquete de galletitas queda empezado por la mitad?",
+    "respuestas": [
+      {
+        "texto": "Cerrarlo con un broche de colgar la ropa",
+        "puntos": 45
+      },
+      {
+        "texto": "Doblar el borde del papel varias veces hacia adentro",
+        "puntos": 27
+      },
+      {
+        "texto": "Comerte las que quedan para que no sobre nada",
+        "puntos": 14
+      },
+      {
+        "texto": "Pasarlo a un frasco de vidrio o tupper",
+        "puntos": 8
+      },
+      {
+        "texto": "Atarlo con una bandita elástica",
+        "puntos": 4
+      },
+      {
+        "texto": "Dejarlo abierto y que se humedezca todo",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 51,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué película clásica mirás cada vez que la enganchás en la tele?",
+    "respuestas": [
+      {
+        "texto": "Titanic",
+        "puntos": 38
+      },
+      {
+        "texto": "Mi Pobre Angelito (Home Alone)",
+        "puntos": 25
+      },
+      {
+        "texto": "Volver al Futuro (Back to the Future)",
+        "puntos": 17
+      },
+      {
+        "texto": "Gladiador",
+        "puntos": 11
+      },
+      {
+        "texto": "Harry Potter",
+        "puntos": 6
+      },
+      {
+        "texto": "Shrek",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 52,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Quién es el superhéroe más popular y reconocido de la historia?",
+    "respuestas": [
+      {
+        "texto": "Spider-Man (El Hombre Araña)",
+        "puntos": 40
+      },
+      {
+        "texto": "Batman (El Caballero de la Noche)",
+        "puntos": 28
+      },
+      {
+        "texto": "Superman",
+        "puntos": 17
+      },
+      {
+        "texto": "Iron Man",
+        "puntos": 8
+      },
+      {
+        "texto": "Capitán América",
+        "puntos": 4
+      },
+      {
+        "texto": "Wolverine / Lobezno",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 53,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué banda o artista de rock argentino marcó para siempre la música?",
+    "respuestas": [
+      {
+        "texto": "Soda Stereo / Gustavo Cerati",
+        "puntos": 42
+      },
+      {
+        "texto": "Charly García / Serú Girán",
+        "puntos": 27
+      },
+      {
+        "texto": "Patricio Rey y sus Redonditos de Ricota",
+        "puntos": 16
+      },
+      {
+        "texto": "Fito Páez",
+        "puntos": 8
+      },
+      {
+        "texto": "Luis Alberto Spinetta",
+        "puntos": 4
+      },
+      {
+        "texto": "Divididos",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 54,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué serie de comedia mirás para reírte y relajar la mente?",
+    "respuestas": [
+      {
+        "texto": "Friends",
+        "puntos": 39
+      },
+      {
+        "texto": "The Office",
+        "puntos": 26
+      },
+      {
+        "texto": "Los Simpson",
+        "puntos": 18
+      },
+      {
+        "texto": "Casados con Hijos",
+        "puntos": 10
+      },
+      {
+        "texto": "The Big Bang Theory",
+        "puntos": 4
+      },
+      {
+        "texto": "Brooklyn Nine-Nine",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 55,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué videojuego clásico conocen hasta las personas que nunca jugaron en su vida?",
+    "respuestas": [
+      {
+        "texto": "Super Mario Bros",
+        "puntos": 45
+      },
+      {
+        "texto": "Tetris",
+        "puntos": 25
+      },
+      {
+        "texto": "Pac-Man",
+        "puntos": 16
+      },
+      {
+        "texto": "FIFA / EA Sports FC",
+        "puntos": 8
+      },
+      {
+        "texto": "Grand Theft Auto (GTA)",
+        "puntos": 4
+      },
+      {
+        "texto": "Minecraft",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 56,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué personaje animado de Disney es el más emblemático y recordado?",
+    "respuestas": [
+      {
+        "texto": "Mickey Mouse",
+        "puntos": 47
+      },
+      {
+        "texto": "El Pato Donald",
+        "puntos": 22
+      },
+      {
+        "texto": "Simba (El Rey León)",
+        "puntos": 14
+      },
+      {
+        "texto": "Goofy / Tribilín",
+        "puntos": 9
+      },
+      {
+        "texto": "Aladdín",
+        "puntos": 5
+      },
+      {
+        "texto": "La Cenicienta",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 57,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué deporte mirás por televisión aunque no lo practiques jamás?",
+    "respuestas": [
+      {
+        "texto": "Fútbol profesional",
+        "puntos": 48
+      },
+      {
+        "texto": "Tenis (Grand Slams)",
+        "puntos": 23
+      },
+      {
+        "texto": "Básquet (NBA)",
+        "puntos": 13
+      },
+      {
+        "texto": "Automovilismo (Fórmula 1)",
+        "puntos": 9
+      },
+      {
+        "texto": "Rugby (Los Pumas)",
+        "puntos": 5
+      },
+      {
+        "texto": "Vóley internacional",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 58,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué actor de Hollywood es el más querido y respetado por el público?",
+    "respuestas": [
+      {
+        "texto": "Keanu Reeves",
+        "puntos": 36
+      },
+      {
+        "texto": "Tom Hanks",
+        "puntos": 25
+      },
+      {
+        "texto": "Leonardo DiCaprio",
+        "puntos": 18
+      },
+      {
+        "texto": "Brad Pitt",
+        "puntos": 11
+      },
+      {
+        "texto": "Will Smith",
+        "puntos": 6
+      },
+      {
+        "texto": "Robin Williams",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 59,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué tema clásico en español es un himno infaltable en el karaoke?",
+    "respuestas": [
+      {
+        "texto": "'De Música Ligera' - Soda Stereo",
+        "puntos": 39
+      },
+      {
+        "texto": "'Persiana Americana' - Soda Stereo",
+        "puntos": 24
+      },
+      {
+        "texto": "'La Mano de Dios' - Rodrigo Bueno",
+        "puntos": 17
+      },
+      {
+        "texto": "'Beso a Beso' - La Mona Jiménez",
+        "puntos": 10
+      },
+      {
+        "texto": "'Flaca' - Andrés Calamaro",
+        "puntos": 6
+      },
+      {
+        "texto": "'Mil Horas' - Los Abuelos de la Nada",
+        "puntos": 4
+      }
+    ]
+  },
+  {
+    "id": 60,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué saga de películas tiene la comunidad de fanáticos más fanática del mundo?",
+    "respuestas": [
+      {
+        "texto": "Star Wars (La Guerra de las Galaxias)",
+        "puntos": 40
+      },
+      {
+        "texto": "Universo Cinematográfico de Marvel (MCU)",
+        "puntos": 26
+      },
+      {
+        "texto": "Harry Potter",
+        "puntos": 18
+      },
+      {
+        "texto": "El Señor de los Anillos",
+        "puntos": 9
+      },
+      {
+        "texto": "Rápidos y Furiosos",
+        "puntos": 4
+      },
+      {
+        "texto": "DC Comics / Batman",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 61,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué serie animada de los años 90 te llena de nostalgia inmediata?",
+    "respuestas": [
+      {
+        "texto": "Los Simpson (temporadas doradas)",
+        "puntos": 38
+      },
+      {
+        "texto": "Dragon Ball Z",
+        "puntos": 28
+      },
+      {
+        "texto": "Sailor Moon",
+        "puntos": 15
+      },
+      {
+        "texto": "Rugrats (Aventuras en pañales)",
+        "puntos": 10
+      },
+      {
+        "texto": "Pokémon (temporada Kanto)",
+        "puntos": 6
+      },
+      {
+        "texto": "Las Tortugas Ninja",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 62,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué banda o artista internacional llena estadios en minutos en cualquier país?",
+    "respuestas": [
+      {
+        "texto": "Coldplay",
+        "puntos": 37
+      },
+      {
+        "texto": "Taylor Swift",
+        "puntos": 28
+      },
+      {
+        "texto": "The Rolling Stones",
+        "puntos": 17
+      },
+      {
+        "texto": "Paul McCartney / The Beatles",
+        "puntos": 10
+      },
+      {
+        "texto": "Metallica",
+        "puntos": 5
+      },
+      {
+        "texto": "Beyoncé",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 63,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Cuál es el reality show de televisión que más debate y rating genera?",
+    "respuestas": [
+      {
+        "texto": "Gran Hermano (Big Brother)",
+        "puntos": 50
+      },
+      {
+        "texto": "Bailando por un Sueño / Showmatch",
+        "puntos": 24
+      },
+      {
+        "texto": "MasterChef Celebrity",
+        "puntos": 14
+      },
+      {
+        "texto": "Survivor / Expedición Robinson",
+        "puntos": 6
+      },
+      {
+        "texto": "La Voz",
+        "puntos": 4
+      },
+      {
+        "texto": "Operación Triunfo",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 64,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué personaje de Los Simpson tiene las frases y momentos más divertidos?",
+    "respuestas": [
+      {
+        "texto": "Homero Simpson",
+        "puntos": 48
+      },
+      {
+        "texto": "Bart Simpson",
+        "puntos": 22
+      },
+      {
+        "texto": "El abuelo Abraham Simpson",
+        "puntos": 14
+      },
+      {
+        "texto": "Ned Flanders",
+        "puntos": 9
+      },
+      {
+        "texto": "El señor Burns",
+        "puntos": 4
+      },
+      {
+        "texto": "Barney Gómez",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 65,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué gol de la Selección Argentina gritaste con más emoción en tu vida?",
+    "respuestas": [
+      {
+        "texto": "Gol de Di María en la final de Qatar 2022",
+        "puntos": 40
+      },
+      {
+        "texto": "Gol de Messi a México en Qatar 2022",
+        "puntos": 26
+      },
+      {
+        "texto": "Segundo gol de Maradona a Inglaterra en 1986",
+        "puntos": 18
+      },
+      {
+        "texto": "Gol de Di María a Brasil en el Maracaná 2021",
+        "puntos": 9
+      },
+      {
+        "texto": "Gol de Maxi Rodríguez a México en 2006",
+        "puntos": 4
+      },
+      {
+        "texto": "Penal de Gonzalo Montiel en Qatar 2022",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 66,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué género de películas elegís para relajarte un fin de semana con pochoclos?",
+    "respuestas": [
+      {
+        "texto": "Acción y aventuras con efectos especiales",
+        "puntos": 39
+      },
+      {
+        "texto": "Comedia para reírse en pareja o familia",
+        "puntos": 27
+      },
+      {
+        "texto": "Terror y suspenso psicológico",
+        "puntos": 17
+      },
+      {
+        "texto": "Ciencia ficción y viajes en el tiempo",
+        "puntos": 9
+      },
+      {
+        "texto": "Drama emotivo basado en hechos reales",
+        "puntos": 5
+      },
+      {
+        "texto": "Animación de Pixar o DreamWorks",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 67,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Quién es el rey indiscutido de las baladas románticas en español?",
+    "respuestas": [
+      {
+        "texto": "Luis Miguel (El Sol de México)",
+        "puntos": 46
+      },
+      {
+        "texto": "Chayanne",
+        "puntos": 25
+      },
+      {
+        "texto": "Ricardo Arjona",
+        "puntos": 14
+      },
+      {
+        "texto": "Ricky Martin",
+        "puntos": 8
+      },
+      {
+        "texto": "Cristian Castro",
+        "puntos": 4
+      },
+      {
+        "texto": "Julio Iglesias",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 68,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué villano de películas o cómics es tan fascinante que casi te cae bien?",
+    "respuestas": [
+      {
+        "texto": "El Joker (Guasón)",
+        "puntos": 45
+      },
+      {
+        "texto": "Darth Vader",
+        "puntos": 26
+      },
+      {
+        "texto": "Thanos",
+        "puntos": 14
+      },
+      {
+        "texto": "Hannibal Lecter",
+        "puntos": 8
+      },
+      {
+        "texto": "Lord Voldemort",
+        "puntos": 4
+      },
+      {
+        "texto": "Loki",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 69,
+    "categoria": "cultura_pop",
+    "pregunta": "¿En qué red social o plataforma de videos pasás más horas scrolleando?",
+    "respuestas": [
+      {
+        "texto": "Instagram (Reels y Stories)",
+        "puntos": 41
+      },
+      {
+        "texto": "TikTok",
+        "puntos": 27
+      },
+      {
+        "texto": "YouTube",
+        "puntos": 19
+      },
+      {
+        "texto": "X (Twitter)",
+        "puntos": 7
+      },
+      {
+        "texto": "WhatsApp (estados y chats)",
+        "puntos": 4
+      },
+      {
+        "texto": "Facebook",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 70,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué juego de cartas tradicional se juega en las sobremesas familiares?",
+    "respuestas": [
+      {
+        "texto": "Truco con señas y retruco",
+        "puntos": 50
+      },
+      {
+        "texto": "Chinchón",
+        "puntos": 22
+      },
+      {
+        "texto": "Escoba del 15",
+        "puntos": 14
+      },
+      {
+        "texto": "Juego del UNO",
+        "puntos": 8
+      },
+      {
+        "texto": "Carioca o Rummy",
+        "puntos": 4
+      },
+      {
+        "texto": "Casita Robada",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 71,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué serie dramática es considerada una obra maestra de la televisión?",
+    "respuestas": [
+      {
+        "texto": "Breaking Bad",
+        "puntos": 47
+      },
+      {
+        "texto": "Game of Thrones",
+        "puntos": 23
+      },
+      {
+        "texto": "Los Soprano (The Sopranos)",
+        "puntos": 15
+      },
+      {
+        "texto": "Chernobyl",
+        "puntos": 8
+      },
+      {
+        "texto": "Better Call Saul",
+        "puntos": 4
+      },
+      {
+        "texto": "Peaky Blinders",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 72,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué instrumento musical te hubiera encantado aprender a tocar de chico?",
+    "respuestas": [
+      {
+        "texto": "Guitarra eléctrica o acústica",
+        "puntos": 42
+      },
+      {
+        "texto": "Piano o teclado",
+        "puntos": 28
+      },
+      {
+        "texto": "Batería",
+        "puntos": 16
+      },
+      {
+        "texto": "Saxofón",
+        "puntos": 7
+      },
+      {
+        "texto": "Bajo eléctrico",
+        "puntos": 4
+      },
+      {
+        "texto": "Violín",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 73,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué actor argentino es garantía absoluta de éxito en la taquilla del cine?",
+    "respuestas": [
+      {
+        "texto": "Ricardo Darín",
+        "puntos": 55
+      },
+      {
+        "texto": "Guillermo Francella",
+        "puntos": 24
+      },
+      {
+        "texto": "Oscar Martínez",
+        "puntos": 10
+      },
+      {
+        "texto": "Leonardo Sbaraglia",
+        "puntos": 5
+      },
+      {
+        "texto": "Diego Peretti",
+        "puntos": 4
+      },
+      {
+        "texto": "Rodrigo de la Serna",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 74,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué personaje de animé japonés es el más reconocido por todas las generaciones?",
+    "respuestas": [
+      {
+        "texto": "Goku (Dragon Ball)",
+        "puntos": 52
+      },
+      {
+        "texto": "Naruto Uzumaki",
+        "puntos": 21
+      },
+      {
+        "texto": "Pikachu (Pokémon)",
+        "puntos": 14
+      },
+      {
+        "texto": "Seiya (Los Caballeros del Zodiaco)",
+        "puntos": 7
+      },
+      {
+        "texto": "Oliver Atom (Supercampeones)",
+        "puntos": 4
+      },
+      {
+        "texto": "Monkey D. Luffy (One Piece)",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 75,
+    "categoria": "cultura_pop",
+    "pregunta": "¿Qué clásico del cine de terror no te animás a ver con las luces apagadas?",
+    "respuestas": [
+      {
+        "texto": "El Exorcista (The Exorcist)",
+        "puntos": 43
+      },
+      {
+        "texto": "El Conjuro (The Conjuring)",
+        "puntos": 24
+      },
+      {
+        "texto": "It (Eso / Pennywise)",
+        "puntos": 16
+      },
+      {
+        "texto": "Halloween (Michael Myers)",
+        "puntos": 9
+      },
+      {
+        "texto": "Pesadilla en la Calle Elm (Freddy Krueger)",
+        "puntos": 5
+      },
+      {
+        "texto": "Actividad Paranormal",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 76,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés si vas caminando por la calle y ves a alguien que no querés saludar?",
+    "respuestas": [
+      {
+        "texto": "Fingir que mirás el celular concentrado",
+        "puntos": 44
+      },
+      {
+        "texto": "Cruzar de vereda disimuladamente",
+        "puntos": 26
+      },
+      {
+        "texto": "Mirar una vidriera cualquiera con interés",
+        "puntos": 16
+      },
+      {
+        "texto": "Ponerte los auriculares rápido",
+        "puntos": 7
+      },
+      {
+        "texto": "Agachar la cabeza y apurar el paso",
+        "puntos": 4
+      },
+      {
+        "texto": "Saludar con una mueca rápida y seguir de largo",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 77,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué excusa metés para cancelar una salida a último momento sin quedar tan mal?",
+    "respuestas": [
+      {
+        "texto": "Me duele mucho la cabeza o me cayó mal la comida",
+        "puntos": 42
+      },
+      {
+        "texto": "Me surgió un imprevisto familiar urgente",
+        "puntos": 25
+      },
+      {
+        "texto": "Estoy muerto de cansancio del laburo",
+        "puntos": 18
+      },
+      {
+        "texto": "Tengo que cuidar a mi mascota que está rara",
+        "puntos": 7
+      },
+      {
+        "texto": "Se me complicó con el transporte para ir",
+        "puntos": 5
+      },
+      {
+        "texto": "Me quedé dormido y recién me despierto",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 78,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés cuando saludás con un beso a alguien y ambos van para el mismo lado?",
+    "respuestas": [
+      {
+        "texto": "Reírse a carcajadas con vergüenza",
+        "puntos": 45
+      },
+      {
+        "texto": "Tirar el chiste de: '¡Casi nos damos un pico!'",
+        "puntos": 26
+      },
+      {
+        "texto": "Quedarse congelado y pedir disculpas",
+        "puntos": 15
+      },
+      {
+        "texto": "Girar rápido la cara para dar el beso del otro lado",
+        "puntos": 8
+      },
+      {
+        "texto": "Extender la mano para zafar del beso",
+        "puntos": 4
+      },
+      {
+        "texto": "Ponerse rojo como un tomate",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 79,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés en el ascensor cuando viajás a solas con un vecino desconocido?",
+    "respuestas": [
+      {
+        "texto": "Clavar la mirada fija en el indicador de pisos",
+        "puntos": 42
+      },
+      {
+        "texto": "Tirar el comentario obligado del clima: '¡Qué frío/calor!'",
+        "puntos": 27
+      },
+      {
+        "texto": "Saludar con un 'buenas' seco y no emitir más sonido",
+        "puntos": 17
+      },
+      {
+        "texto": "Mirar hacia el piso o los cordones de las zapatillas",
+        "puntos": 8
+      },
+      {
+        "texto": "Revisar la pantalla del celular aunque no haya señal",
+        "puntos": 4
+      },
+      {
+        "texto": "Sonreír con timidez incómoda en el espejo",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 80,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés cuando el mozo te trae un plato que no es exactamente lo que pediste?",
+    "respuestas": [
+      {
+        "texto": "Comértelo igual para no quejarte ni molestar",
+        "puntos": 38
+      },
+      {
+        "texto": "Avisarle amablemente con culpa: 'Disculpá, había pedido...'",
+        "puntos": 32
+      },
+      {
+        "texto": "Preguntarle a tu acompañante si le gusta para cambiar",
+        "puntos": 14
+      },
+      {
+        "texto": "Reclamar indignado para que lo lleven a la cocina",
+        "puntos": 9
+      },
+      {
+        "texto": "Comer la guarnición y dejar el resto",
+        "puntos": 4
+      },
+      {
+        "texto": "Esperar a ver si el mozo se da cuenta solo",
+        "puntos": 3
+      }
+    ]
+  },
+  {
+    "id": 81,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés mientras te cantan el 'Feliz Cumpleaños' frente a la torta?",
+    "respuestas": [
+      {
+        "texto": "Sonreír con incomodidad total mirando el fuego de las velas",
+        "puntos": 48
+      },
+      {
+        "texto": "Aplaudir al ritmo de la canción",
+        "puntos": 23
+      },
+      {
+        "texto": "Mirar a todos lados sin saber adónde enfocar la vista",
+        "puntos": 16
+      },
+      {
+        "texto": "Fingir que cantás tu propio cumpleaños",
+        "puntos": 7
+      },
+      {
+        "texto": "Taparte la cara con las dos manos de la vergüenza",
+        "puntos": 4
+      },
+      {
+        "texto": "Soplar las velas antes de que terminen la canción",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 82,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés si se te cae un bocado de comida al piso adentro de tu casa?",
+    "respuestas": [
+      {
+        "texto": "Aplicar la regla de los 5 segundos y comértelo",
+        "puntos": 46
+      },
+      {
+        "texto": "Tirarlo al tacho de basura con dolor en el alma",
+        "puntos": 28
+      },
+      {
+        "texto": "Soplarlo fuerte con la boca y mandárselo",
+        "puntos": 13
+      },
+      {
+        "texto": "Dárselo al perro que está esperando abajo",
+        "puntos": 8
+      },
+      {
+        "texto": "Pasarlo por agua bajo la canilla",
+        "puntos": 3
+      },
+      {
+        "texto": "Limpiar la grasa del piso con la servilleta",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 83,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés si un amigo tiene un pedazo de comida entre los dientes mientras habla?",
+    "respuestas": [
+      {
+        "texto": "Tocarte disimuladamente tu propio diente para avisarle",
+        "puntos": 43
+      },
+      {
+        "texto": "Decirle de frente: 'Che, tenés algo en el diente'",
+        "puntos": 28
+      },
+      {
+        "texto": "Mirarle fijamente el diente sin poder escuchar lo que dice",
+        "puntos": 16
+      },
+      {
+        "texto": "Hacerte el distraído y no decirle nada por vergüenza ajena",
+        "puntos": 8
+      },
+      {
+        "texto": "Ofrecerle un chicle o escarbadientes",
+        "puntos": 3
+      },
+      {
+        "texto": "Toser para que se pase la lengua",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 84,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés cuando te saluda alguien con euforia pero no te acordás de su nombre?",
+    "respuestas": [
+      {
+        "texto": "Tirarle un eufórico: '¡Ehhh genio/a! ¿Cómo andás tanto tiempo?'",
+        "puntos": 49
+      },
+      {
+        "texto": "Hablar en plural y evitar a toda costa pronunciar un nombre",
+        "puntos": 25
+      },
+      {
+        "texto": "Preguntarle por la familia o el trabajo para ver si tira pistas",
+        "puntos": 13
+      },
+      {
+        "texto": "Pedirle el celular para que agende su contacto",
+        "puntos": 7
+      },
+      {
+        "texto": "Confesarle entre risas que tenés memoria de pez",
+        "puntos": 4
+      },
+      {
+        "texto": "Buscar con la mirada a alguien para que los presente",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 85,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés cuando suena el portero de tu casa y no estás esperando a nadie?",
+    "respuestas": [
+      {
+        "texto": "Quedarse en silencio total en la oscuridad sin moverse",
+        "puntos": 45
+      },
+      {
+        "texto": "Atender con voz desconfiada: '¿Quién es?'",
+        "puntos": 28
+      },
+      {
+        "texto": "Asomarse con sigilo a la ventana para ver la vereda",
+        "puntos": 15
+      },
+      {
+        "texto": "Ignorar el zumbido hasta que se cansen de tocar",
+        "puntos": 7
+      },
+      {
+        "texto": "Atender pensando que es un delivery equivocado",
+        "puntos": 3
+      },
+      {
+        "texto": "Pensar que son testigos de Jehová o vendedores",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 86,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés si te mandan un audio de WhatsApp de más de 2 minutos?",
+    "respuestas": [
+      {
+        "texto": "Ponerlo en velocidad 2x de inmediato",
+        "puntos": 52
+      },
+      {
+        "texto": "Escuchar los primeros 30 segundos y adivinar el resto",
+        "puntos": 22
+      },
+      {
+        "texto": "Dejarlo pendiente para 'después' y no escucharlo nunca",
+        "puntos": 14
+      },
+      {
+        "texto": "Contestarle: '¿Me tirás un resumen que estoy en reunión?'",
+        "puntos": 7
+      },
+      {
+        "texto": "Escucharlo completo con profunda resignación",
+        "puntos": 3
+      },
+      {
+        "texto": "Clavarle un sticker sin escuchar nada",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 87,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés en el supermercado si la tarjeta da 'Fondos insuficientes'?",
+    "respuestas": [
+      {
+        "texto": "Decirle al cajero: 'Probá de nuevo que a veces no lee el chip'",
+        "puntos": 44
+      },
+      {
+        "texto": "Sacar otra tarjeta del bolsillo a la velocidad de la luz",
+        "puntos": 26
+      },
+      {
+        "texto": "Preguntar si se puede pagar una parte en efectivo",
+        "puntos": 16
+      },
+      {
+        "texto": "Abrir la app del banco para transferir plata urgente",
+        "puntos": 8
+      },
+      {
+        "texto": "Ponerse colorado y pedir perdón a la fila de atrás",
+        "puntos": 4
+      },
+      {
+        "texto": "Decir que dejen dos o tres productos caros",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 88,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés si tropezás en la calle delante de un montón de gente?",
+    "respuestas": [
+      {
+        "texto": "Apurar el paso como si hubieras amagado a trotar",
+        "puntos": 45
+      },
+      {
+        "texto": "Darse vuelta a mirar el piso con bronca culpando a una baldosa",
+        "puntos": 28
+      },
+      {
+        "texto": "Tentarte de la risa solo por la torpeza propia",
+        "puntos": 15
+      },
+      {
+        "texto": "Fijarse de reojo si alguien te vio caer",
+        "puntos": 7
+      },
+      {
+        "texto": "Frotarse la pierna fingiendo que te dolió mucho",
+        "puntos": 3
+      },
+      {
+        "texto": "Doblar en la primera esquina para desaparecer",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 89,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés si un bebé te mira fijamente en el colectivo o sala de espera?",
+    "respuestas": [
+      {
+        "texto": "Hacerle caras graciosas y muecas con la boca",
+        "puntos": 46
+      },
+      {
+        "texto": "Sonreírle con ternura cada vez que gira la cabeza",
+        "puntos": 27
+      },
+      {
+        "texto": "Mirar para otro lado para no llamar su atención",
+        "puntos": 15
+      },
+      {
+        "texto": "Taparte la cara con las manos y hacer 'acá está'",
+        "puntos": 7
+      },
+      {
+        "texto": "Guiñarle un ojo",
+        "puntos": 3
+      },
+      {
+        "texto": "Hacerle un comentario al padre o la madre",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 90,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés cuando te llama un número desconocido que parece llamada comercial?",
+    "respuestas": [
+      {
+        "texto": "Cortar la llamada al primer segundo sin atender",
+        "puntos": 48
+      },
+      {
+        "texto": "Atender y quedarse en silencio esperando que hable el bot",
+        "puntos": 25
+      },
+      {
+        "texto": "Bloquear el número y marcarlo como spam",
+        "puntos": 15
+      },
+      {
+        "texto": "Atender con tono grave: 'Comisaría Seccional 4ta, dígame'",
+        "puntos": 6
+      },
+      {
+        "texto": "Dejar que suene la melodía hasta que se corte",
+        "puntos": 4
+      },
+      {
+        "texto": "Insultar al telemarketer que ofrece planes",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 91,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés en un restaurante si te traen el plato primero a vos y a los demás no?",
+    "respuestas": [
+      {
+        "texto": "Esperar a que le sirvan a los demás para no comer solo",
+        "puntos": 43
+      },
+      {
+        "texto": "Decir: 'Empiezo un poquito que si no se enfría'",
+        "puntos": 30
+      },
+      {
+        "texto": "Comer de una sin ningún tipo de culpa",
+        "puntos": 15
+      },
+      {
+        "texto": "Ofrecerles a los demás para que vayan picando de tu plato",
+        "puntos": 7
+      },
+      {
+        "texto": "Agarrar el celular para hacer tiempo disimuladamente",
+        "puntos": 3
+      },
+      {
+        "texto": "Cortar la comida en pedacitos chiquitos para tardar más",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 92,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés si te llega por error un mensaje que claramente hablaba de vos?",
+    "respuestas": [
+      {
+        "texto": "Sacarle captura de pantalla antes de que lo borre",
+        "puntos": 45
+      },
+      {
+        "texto": "Responderle con ironía: '¿Esto era para mí, no?'",
+        "puntos": 27
+      },
+      {
+        "texto": "Clavarle el visto y disfrutar viendo cómo escribe y borra",
+        "puntos": 15
+      },
+      {
+        "texto": "Preguntarle directamente: '¿Tenés algún problema conmigo?'",
+        "puntos": 7
+      },
+      {
+        "texto": "Bloquear el contacto sin decir nada",
+        "puntos": 4
+      },
+      {
+        "texto": "Quedarte maquinando y angustiado todo el día",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 93,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés cuando un compañero te cuenta un chiste malísimo sin remate?",
+    "respuestas": [
+      {
+        "texto": "Reírte falsamente por compromiso: 'Jaja... qué bárbaro'",
+        "puntos": 47
+      },
+      {
+        "texto": "Sonreír en silencio esperando el remate que nunca llegó",
+        "puntos": 24
+      },
+      {
+        "texto": "Cambiar de tema de conversación inmediatamente",
+        "puntos": 15
+      },
+      {
+        "texto": "Decirle en la cara: 'Dedicáte a otra cosa, sos malísimo'",
+        "puntos": 8
+      },
+      {
+        "texto": "Mirarlo con cara de póker sin emitir sonido",
+        "puntos": 4
+      },
+      {
+        "texto": "Preguntarle en serio: '¿Y al final qué pasó?'",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 94,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés en un local de ropa cuando el vendedor no para de seguirte?",
+    "respuestas": [
+      {
+        "texto": "Decir la frase mágica: 'Solo estoy mirando, gracias'",
+        "puntos": 54
+      },
+      {
+        "texto": "Salir del local disimuladamente a los 10 segundos",
+        "puntos": 22
+      },
+      {
+        "texto": "Tocar una prenda cualquiera fingiendo mucho interés",
+        "puntos": 13
+      },
+      {
+        "texto": "Preguntarle el precio de la campera más cara para que se vaya",
+        "puntos": 6
+      },
+      {
+        "texto": "Mirar a tu acompañante con cara de auxilio",
+        "puntos": 3
+      },
+      {
+        "texto": "Fingir que te suena el teléfono para alejarte",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 95,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés en el cine si los de la fila de atrás hablan durante toda la película?",
+    "respuestas": [
+      {
+        "texto": "Darse vuelta y clavarles una mirada asesina",
+        "puntos": 41
+      },
+      {
+        "texto": "Pegarles un chistido bien fuerte: '¡Shhh!'",
+        "puntos": 29
+      },
+      {
+        "texto": "Masticar bronca en silencio apretando los dientes",
+        "puntos": 16
+      },
+      {
+        "texto": "Pedirles con calma: '¿Podrían hacer silencio, por favor?'",
+        "puntos": 8
+      },
+      {
+        "texto": "Cambiarse de butaca a una fila más adelante",
+        "puntos": 4
+      },
+      {
+        "texto": "Ir a quejarse con el empleado de la sala",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 96,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés si un desconocido te pecha fuerte por la calle y no pide perdón?",
+    "respuestas": [
+      {
+        "texto": "Gritarle o murmurar: '¡Disculpá, eh! ¡La vereda es ancha!'",
+        "puntos": 44
+      },
+      {
+        "texto": "Darse vuelta y clavarle una mirada fulminante",
+        "puntos": 26
+      },
+      {
+        "texto": "Seguir caminando masticando furia por dentro",
+        "puntos": 17
+      },
+      {
+        "texto": "Tocarse rápido los bolsillos para ver si tenés la billetera",
+        "puntos": 8
+      },
+      {
+        "texto": "Devolverle un hombrazo si viene caminando de frente",
+        "puntos": 3
+      },
+      {
+        "texto": "Decirle: '¡Mirá por dónde vas!'",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 97,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés cuando se te acaban las palabras con alguien en un viaje largo?",
+    "respuestas": [
+      {
+        "texto": "Clavarse los auriculares para cortar la charla",
+        "puntos": 45
+      },
+      {
+        "texto": "Fingir que te quedás profundamente dormido",
+        "puntos": 26
+      },
+      {
+        "texto": "Sacar el celular y no soltarlo en todo el trayecto",
+        "puntos": 17
+      },
+      {
+        "texto": "Preguntar sobre series o películas para revivir el tema",
+        "puntos": 7
+      },
+      {
+        "texto": "Comentar sobre los autos o el paisaje del camino",
+        "puntos": 3
+      },
+      {
+        "texto": "Ofrecerle un caramelo o chicle",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 98,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés en un probador si te probás una ropa y te queda horrible?",
+    "respuestas": [
+      {
+        "texto": "Sacártela a los tirones en 5 segundos",
+        "puntos": 43
+      },
+      {
+        "texto": "Mirarte en el espejo con cara de espanto e incredulidad",
+        "puntos": 27
+      },
+      {
+        "texto": "Salir y decirle al vendedor: 'No me convenció el calce'",
+        "puntos": 18
+      },
+      {
+        "texto": "Dejar la prenda colgada adentro y salir caminando rápido",
+        "puntos": 7
+      },
+      {
+        "texto": "Mostrarle a tu acompañante para reírse juntos",
+        "puntos": 3
+      },
+      {
+        "texto": "Preguntar por otro talle sabiendo que no la vas a comprar",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 99,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué te pasa si te despiertan de golpe en medio de una siesta pesada?",
+    "respuestas": [
+      {
+        "texto": "Despertar completamente desorientado sin saber qué día ni año es",
+        "puntos": 46
+      },
+      {
+        "texto": "Putear al aire con voz ronca y mal humor",
+        "puntos": 27
+      },
+      {
+        "texto": "Quedarse inmóvil con el corazón latiendo a mil por hora",
+        "puntos": 16
+      },
+      {
+        "texto": "Intentar volver a dormir tapándote la cabeza con la almohada",
+        "puntos": 6
+      },
+      {
+        "texto": "Levantarte con un dolor de cabeza asesino",
+        "puntos": 3
+      },
+      {
+        "texto": "Mirar el reloj con miedo a haber llegado tarde a algo",
+        "puntos": 2
+      }
+    ]
+  },
+  {
+    "id": 100,
+    "categoria": "situaciones",
+    "pregunta": "¿Qué hacés cuando te ofrecen una muestra gratis de comida en el supermercado?",
+    "respuestas": [
+      {
+        "texto": "Comértela asintiendo con cara de experto catador",
+        "puntos": 46
+      },
+      {
+        "texto": "Preguntar el precio para fingir interés y después no comprar",
+        "puntos": 26
+      },
+      {
+        "texto": "Comértela rápido y salir rajando de ese pasillo",
+        "puntos": 16
+      },
+      {
+        "texto": "Agarrar disimuladamente una segunda porción al pasar",
+        "puntos": 7
+      },
+      {
+        "texto": "Agradecer con una sonrisa enorme y seguir de largo",
+        "puntos": 3
+      },
+      {
+        "texto": "Comprar el paquete por pura vergüenza y culpa",
+        "puntos": 2
+      }
+    ]
+  }
+];
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = root.CONSIGNAS_BUNDLE;
+}
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
