@@ -330,53 +330,61 @@
   // =========================================================================
   /**
    * Genera los huecos disponibles entre las cartas colocadas en el círculo.
-   * Las cartas están ordenadas por número ascendente: 0, 33, 66...
+   * Las cartas están ordenadas por número ascendente con la carta 100/0 al inicio.
+   * Omite huecos entre números consecutivos donde es imposible colocar una carta.
    */
   function calculateCurrentGaps() {
     const cards = [...state.placedCards].sort((a, b) => a.number - b.number);
     const gaps = [];
+    const N = cards.length;
+    let letterCode = 65; // 'A'
 
-    for (let i = 0; i < cards.length; i++) {
+    for (let i = 0; i < N; i++) {
       const prev = cards[i];
-      const next = cards[(i + 1) % cards.length];
-      const letter = String.fromCharCode(65 + i); // 'A', 'B', 'C'...
+      const next = cards[(i + 1) % N];
 
-      const prevNumStr = prev.number === 0 ? '100/0' : prev.number;
-      const nextNumStr = next.number === 0 ? '100/0' : next.number;
+      const prevVal = prev.number !== undefined ? Number(prev.number) : Number(prev.numero);
+      const nextVal = next.number !== undefined ? Number(next.number) : Number(next.numero);
 
-      gaps.push({
-        id: letter,
-        index: i,
-        prevCard: prev,
-        nextCard: next,
-        prevCardIndex: i,
-        nextCardIndex: (i + 1) % cards.length,
-        prevNumStr,
-        nextNumStr,
-        label: `Hueco ${letter}: [${prevNumStr} ${prev.word}] ↔ [${nextNumStr} ${next.word}]`,
-        description: `Entre [${prevNumStr}: ${prev.word}] y [${nextNumStr}: ${next.word}]`
-      });
+      // limiteInferior: Si cartaActual es 100/0 (valor 0 o 100), su valor es 0. De lo contrario, su número.
+      const limiteInferior = (prevVal === 0 || prevVal === 100) ? 0 : prevVal;
+      // limiteSuperior: Si cartaSiguiente es 100/0 (cierra la vuelta), su valor es 100. De lo contrario, su número.
+      const limiteSuperior = (nextVal === 0 || nextVal === 100) ? 100 : nextVal;
+
+      // Condición de existencia: solo existe hueco si (limiteSuperior - limiteInferior) > 1
+      if ((limiteSuperior - limiteInferior) > 1) {
+        const letter = String.fromCharCode(letterCode++);
+        const prevNumStr = (prevVal === 0 || prevVal === 100) ? '100/0' : prevVal;
+        const nextNumStr = (nextVal === 0 || nextVal === 100) ? '100/0' : nextVal;
+
+        gaps.push({
+          id: letter,
+          index: i,
+          prevCard: prev,
+          nextCard: next,
+          prevCardIndex: i,
+          nextCardIndex: (i + 1) % N,
+          limiteInferior,
+          limiteSuperior,
+          prevNumStr,
+          nextNumStr,
+          label: `Hueco ${letter}: [${prevNumStr} ${prev.word}] ↔ [${nextNumStr} ${next.word}]`,
+          description: `Entre [${prevNumStr}: ${prev.word}] y [${nextNumStr}: ${next.word}]`
+        });
+      }
     }
     return gaps;
   }
 
   /**
-   * Determina a qué hueco (id 'A', 'B'...) pertenece un número dado.
+   * Determina a qué hueco (id 'A', 'B'...) pertenece un número dado verificando
+   * directamente si limiteInferior < num && num < limiteSuperior.
    */
   function getCorrectGapForNumber(num) {
     const gaps = calculateCurrentGaps();
-    for (const g of gaps) {
-      const min = g.prevCard.number;
-      const max = g.nextCard.number;
-
-      if (max === 0) {
-        // Hueco entre la carta más alta y el 100/0 (cubre desde min+1 hasta 99)
-        if (num > min) return g.id;
-      } else {
-        if (num > min && num < max) return g.id;
-      }
-    }
-    return gaps[0] ? gaps[0].id : 'A';
+    const targetNum = Number(num);
+    const correctGap = gaps.find(g => g.limiteInferior < targetNum && targetNum < g.limiteSuperior);
+    return correctGap ? correctGap.id : (gaps[0] ? gaps[0].id : 'A');
   }
 
   // =========================================================================
@@ -974,8 +982,12 @@
   // =========================================================================
   function resolveGapChoice(chosenGapId) {
     stopTimer();
-    const correctGapId = getCorrectGapForNumber(state.currentCard.number);
-    const isCorrect = chosenGapId === correctGapId;
+    const gaps = calculateCurrentGaps();
+    const chosenGap = gaps.find(g => g.id === chosenGapId);
+    const num = Number(state.currentCard.number);
+    const isCorrect = chosenGap ? (chosenGap.limiteInferior < num && num < chosenGap.limiteSuperior) : false;
+    const correctGap = gaps.find(g => g.limiteInferior < num && num < g.limiteSuperior);
+    const correctGapId = correctGap ? correctGap.id : (gaps[0] ? gaps[0].id : 'A');
     const isLastCard = state.mainDeck.length === 1;
 
     state.phase = 3;
@@ -1034,12 +1046,18 @@
   }
 
   function resolveStealAttempt(chosenGapId) {
-    const correctGapId = state.lastResolution.correctGapId;
+    const gaps = calculateCurrentGaps();
+    const chosenGap = gaps.find(g => g.id === chosenGapId);
+    const num = Number(state.currentCard.number);
+    const stoleSuccess = chosenGap ? (chosenGap.limiteInferior < num && num < chosenGap.limiteSuperior) : false;
+    const correctGap = gaps.find(g => g.limiteInferior < num && num < g.limiteSuperior);
+    const correctGapId = correctGap ? correctGap.id : (state.lastResolution ? state.lastResolution.correctGapId : (gaps[0] ? gaps[0].id : 'A'));
     const rivalTeam = state.activeTeam === 'blue' ? 'red' : 'blue';
-    const stoleSuccess = chosenGapId === correctGapId;
 
     state.lastResolution.awaitingSteal = false;
     state.lastResolution.stealSuccess = stoleSuccess;
+    state.lastResolution.stealChosenGapId = chosenGapId;
+    state.lastResolution.correctGapId = correctGapId;
 
     if (stoleSuccess) {
       playCorrectSound();
@@ -1241,7 +1259,7 @@
 
     // 2. Arco conector iluminado entre las dos cartas del hueco seleccionado
     if (selectedGap && state.phase >= 2 && gapsArcs) {
-      const idx = selectedGap.index;
+      const idx = selectedGap.prevCardIndex;
       const angleStart = -90 + (idx * (360 / N));
       const angleEnd = -90 + ((idx + 1) * (360 / N));
       const radStart = (angleStart * Math.PI) / 180;
@@ -1315,11 +1333,12 @@
       cardsLayer.appendChild(g);
     });
 
-    // 4. Dibujar Huecos Disponibles sobre el mismo anillo (Ángulo medio: -90 + (i + 0.5) * (360 / N))
+    // 4. Dibujar Huecos Disponibles sobre el mismo anillo (Ángulo medio: -90 + (segIdx + 0.5) * (360 / N))
     // Casillero / Slot punteado con signo "+" y la letra grande (+ A, + B...)
     if (state.phase >= 2) {
-      gaps.forEach((gap, i) => {
-        const angleGap = -90 + ((i + 0.5) * (360 / N));
+      gaps.forEach((gap) => {
+        const segIdx = gap.prevCardIndex;
+        const angleGap = -90 + ((segIdx + 0.5) * (360 / N));
         const radGap = (angleGap * Math.PI) / 180;
         const gx = 400 + R_TRACK * Math.cos(radGap);
         const gy = 400 + R_TRACK * Math.sin(radGap);

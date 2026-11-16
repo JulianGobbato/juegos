@@ -219,42 +219,6 @@ body {
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
 }
 
-.status-badge {
-  font-size: 0.76rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-}
-
-.modality-badge {
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.status-badge.available {
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
-}
-
-.status-badge.coming-soon {
-  background: rgba(148, 163, 184, 0.15);
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-}
-
 .game-title {
   font-family: var(--font-display);
   font-size: 2.2rem;
@@ -264,41 +228,12 @@ body {
   color: #ffffff;
 }
 
-.game-meta-badge {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #e2e8f0;
-  border-radius: var(--radius-pill);
-  padding: 4px 12px;
-  font-size: 0.84rem;
-  font-weight: 600;
-  margin-bottom: 16px;
-}
-
 .game-desc {
   color: var(--hub-text-muted);
   font-size: 0.98rem;
   line-height: 1.55;
   margin-bottom: 24px;
   flex: 1;
-}
-
-.game-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 24px;
-}
-
-.game-tag {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-sm);
-  padding: 3px 8px;
-  font-size: 0.78rem;
-  color: #94a3b8;
-  font-weight: 600;
 }
 
 /* Botones principales de acción en tarjeta */
