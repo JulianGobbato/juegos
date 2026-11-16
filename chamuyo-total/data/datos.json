@@ -1,0 +1,1502 @@
+[
+  {
+    "id": 1,
+    "categoria": "argentina",
+    "consigna": "En 1999, un vecino de Mar del Plata alertó a las autoridades porque en su patio había caído un ________.",
+    "respuesta": "Pingüino empetrolado",
+    "aceptadas": [
+      "pinguino",
+      "un pinguino",
+      "pinguino empetrolado"
+    ],
+    "datoExtra": "El animal se había extraviado desde una reserva costera cercana."
+  },
+  {
+    "id": 2,
+    "categoria": "argentina",
+    "consigna": "En la provincia de La Pampa, un conductor fue demorado por llevar como copiloto atado a un ________.",
+    "respuesta": "Chancho con cinturón",
+    "aceptadas": [
+      "chancho",
+      "un chancho",
+      "cerdo"
+    ],
+    "datoExtra": "El dueño afirmó que el animal se asustaba si viajaba atrás en la caja."
+  },
+  {
+    "id": 3,
+    "categoria": "argentina",
+    "consigna": "Durante el siglo XIX, en Buenos Aires se organizó un insólito campeonato callejero de cazar ________.",
+    "respuesta": "Ratas con gomera",
+    "aceptadas": [
+      "ratas",
+      "cazar ratas",
+      "lauchas"
+    ],
+    "datoExtra": "El municipio ofrecía diez centavos por cada roedor entregado para frenar plagas."
+  },
+  {
+    "id": 4,
+    "categoria": "argentina",
+    "consigna": "En una comisaría de Córdoba, detuvieron a un loro que fue entrenado para avisar la llegada de ________.",
+    "respuesta": "La policía",
+    "aceptadas": [
+      "policia",
+      "los canas",
+      "la cana"
+    ],
+    "datoExtra": "El ave gritaba alertando a los puesteros ilegales cada vez que veía uniformes."
+  },
+  {
+    "id": 5,
+    "categoria": "argentina",
+    "consigna": "En 1806, durante las invasiones inglesas, un batallón británico fue atacado por un enjambre de ________.",
+    "respuesta": "Avispas salvajes",
+    "aceptadas": [
+      "avispas",
+      "abejas",
+      "avispas furiosas"
+    ],
+    "datoExtra": "Los soldados rompieron filas desesperados tras tirar abajo un panal en un matorral."
+  },
+  {
+    "id": 6,
+    "categoria": "argentina",
+    "consigna": "En el pueblo santafesino de Serodino, instalaron un monumento oficial dedicado a un ________.",
+    "respuesta": "Zapato gigante",
+    "aceptadas": [
+      "zapato",
+      "un zapato",
+      "calzado"
+    ],
+    "datoExtra": "La comuna homenajeó de esa forma a los antiguos artesanos zapateros del lugar."
+  },
+  {
+    "id": 7,
+    "categoria": "argentina",
+    "consigna": "En los años 70, un avión de cabotaje tuvo que realizar un aterrizaje forzoso en Salta por culpa de un ________.",
+    "respuesta": "Chivo suelto",
+    "aceptadas": [
+      "chivo",
+      "un chivo",
+      "cabra"
+    ],
+    "datoExtra": "El animal se escapó de la bodega de carga y masticó cables en la cabina."
+  },
+  {
+    "id": 8,
+    "categoria": "argentina",
+    "consigna": "En Mendoza, un hombre intentó pagar la fianza para salir del calabozo ofreciendo un cajón de ________.",
+    "respuesta": "Mellizos de sandía",
+    "aceptadas": [
+      "sandias",
+      "sandia",
+      "frutas"
+    ],
+    "datoExtra": "El juez rechazó la mercadería pero la anécdota quedó registrada en el acta judicial."
+  },
+  {
+    "id": 9,
+    "categoria": "argentina",
+    "consigna": "En un supermercado de Quilmes, un cliente quedó atrapado toda la noche adentro de una cámara de ________.",
+    "respuesta": "Quesos duros",
+    "aceptadas": [
+      "queso",
+      "quesos",
+      "lacteos"
+    ],
+    "datoExtra": "Sobrevivió al frío abrigándose con cartones y comiendo trozos de provolone."
+  },
+  {
+    "id": 10,
+    "categoria": "argentina",
+    "consigna": "En el lago Nahuel Huapi, antes del mito del monstruo acuático, los lugareños aseguraban haber visto un ________.",
+    "respuesta": "Buey volador",
+    "aceptadas": [
+      "buey",
+      "un buey",
+      "toro"
+    ],
+    "datoExtra": "En realidad eran ráfagas de viento blanco levantando ramas con formas extrañas."
+  },
+  {
+    "id": 11,
+    "categoria": "argentina",
+    "consigna": "En 1987, en la provincia de Entre Ríos, suspendieron un partido de fútbol porque la cancha se llenó de ________.",
+    "respuesta": "Ranas venenosas",
+    "aceptadas": [
+      "ranas",
+      "sapos",
+      "rana"
+    ],
+    "datoExtra": "Una inundación empujó a miles de batracios hacia el césped municipal."
+  },
+  {
+    "id": 12,
+    "categoria": "argentina",
+    "consigna": "Un inventor tucumano patentó un ventilador portátil diseñado exclusivamente para enfriar un plato de ________.",
+    "respuesta": "Guiso caliente",
+    "aceptadas": [
+      "guiso",
+      "un guiso",
+      "sopa"
+    ],
+    "datoExtra": "El dispositivo funcionaba con pilas medianas y se enganchaba al borde del plato hondo."
+  },
+  {
+    "id": 13,
+    "categoria": "argentina",
+    "consigna": "En San Juan, un ladrón fue capturado porque se quedó profundamente dormido sobre un fardo de ________.",
+    "respuesta": "Alfalfa fresca",
+    "aceptadas": [
+      "alfalfa",
+      "pasto",
+      "heno"
+    ],
+    "datoExtra": "El delincuente se cansó de correr y el aroma relajante de la hierba lo noqueó."
+  },
+  {
+    "id": 14,
+    "categoria": "argentina",
+    "consigna": "En la Patagonia, un cartero rural recorría sesenta kilómetros diarios montado sobre una ________.",
+    "respuesta": "Mula terca",
+    "aceptadas": [
+      "mula",
+      "una mula",
+      "burra"
+    ],
+    "datoExtra": "El animal conocía de memoria cada tranquera y frenaba solo ante cada buzón."
+  },
+  {
+    "id": 15,
+    "categoria": "argentina",
+    "consigna": "En Rosario, unos vecinos denunciaron ruidos molestos nocturnos y descubrieron que el causante era un ________.",
+    "respuesta": "Ñandú insomne",
+    "aceptadas": [
+      "nandu",
+      "un nandu",
+      "avestruz"
+    ],
+    "datoExtra": "El ave picoteaba chapas de zinc buscando bichos atraídos por la luz del farol."
+  },
+  {
+    "id": 16,
+    "categoria": "argentina",
+    "consigna": "En el siglo XIX, Domingo Faustino Sarmiento trajo a la Argentina cientos de ejemplares de ________.",
+    "respuesta": "Gorriones europeos",
+    "aceptadas": [
+      "gorriones",
+      "gorrion",
+      "pajaros"
+    ],
+    "datoExtra": "Pensaba que comerían insectos dañinos, pero se convirtieron en plaga agrícola."
+  },
+  {
+    "id": 17,
+    "categoria": "argentina",
+    "consigna": "En la ciudad de Ushuaia, un concurso premia cada invierno a la persona que construya el mejor ________.",
+    "respuesta": "Castillo de nieve",
+    "aceptadas": [
+      "castillo",
+      "castillo de hielo",
+      "muneco"
+    ],
+    "datoExtra": "Participan escultores de todo el país usando motosierras y palas de precisión."
+  },
+  {
+    "id": 18,
+    "categoria": "argentina",
+    "consigna": "En un banco de La Plata, tuvieron que evacuar la sucursal porque un usuario olvidó una bolsa con ________.",
+    "respuesta": "Chorizos secos",
+    "aceptadas": [
+      "chorizos",
+      "embutidos",
+      "chacinados"
+    ],
+    "datoExtra": "La grasa desprendió olor intenso y la brigada sospechó que se trataba de químicos."
+  },
+  {
+    "id": 19,
+    "categoria": "argentina",
+    "consigna": "Un intendente correntino prohibió por decreto el uso de gomina para evitar que la gente se pareciera a un ________.",
+    "respuesta": "Gángster porteño",
+    "aceptadas": [
+      "gangster",
+      "malevo",
+      "compadrito"
+    ],
+    "datoExtra": "El jefe comunal consideraba que el peinado engominado incitaba a las peleas nocturnas."
+  },
+  {
+    "id": 20,
+    "categoria": "argentina",
+    "consigna": "En Jujuy, arqueólogos hallaron un instrumento prehispánico que imitaba a la perfección el llanto de un ________.",
+    "respuesta": "Puma bebé",
+    "aceptadas": [
+      "puma",
+      "un puma",
+      "felino"
+    ],
+    "datoExtra": "Los cazadores aborígenes lo tocaban para atraer presas o espantar depredadores."
+  },
+  {
+    "id": 21,
+    "categoria": "argentina",
+    "consigna": "En 1950, un concurso radial en Buenos Aires regalaba una vivienda amoblada a quien coleccionara más ________.",
+    "respuesta": "Chapitas doradas",
+    "aceptadas": [
+      "chapitas",
+      "tapas",
+      "chapas"
+    ],
+    "datoExtra": "El ganador presentó más de trescientas mil unidades guardadas en bolsas de arpillera."
+  },
+  {
+    "id": 22,
+    "categoria": "argentina",
+    "consigna": "En Catamarca, una escuela rural bautizó a su equipo deportivo con el nombre de ________.",
+    "respuesta": "Los cardones veloces",
+    "aceptadas": [
+      "cardones",
+      "cardon",
+      "cactus"
+    ],
+    "datoExtra": "Eligieron ese nombre porque a pesar de ser espinosos nunca abandonan su tierra."
+  },
+  {
+    "id": 23,
+    "categoria": "argentina",
+    "consigna": "En un control vial de Chaco, encontraron adentro del baúl de un coche a un ejemplar adulto de ________.",
+    "respuesta": "Yacaré overo",
+    "aceptadas": [
+      "yacare",
+      "caiman",
+      "cocodrilo"
+    ],
+    "datoExtra": "El chofer argumentó que lo llevaba a una laguna porque lo había visto deshidratado."
+  },
+  {
+    "id": 24,
+    "categoria": "argentina",
+    "consigna": "Durante una sequía histórica en La Rioja, los colonos realizaban procesiones cargando un recipiente con ________.",
+    "respuesta": "Vino bendito",
+    "aceptadas": [
+      "vino",
+      "botella de vino",
+      "bebida"
+    ],
+    "datoExtra": "Creían que rociar los viñedos con tinto consagrado conmovería al cielo para que lloviera."
+  },
+  {
+    "id": 25,
+    "categoria": "argentina",
+    "consigna": "En la feria de Mataderos, un artesano ganó celebridad por esculpir figuras de próceres usando bloques de ________.",
+    "respuesta": "Grasa vacuna",
+    "aceptadas": [
+      "grasa",
+      "sebo",
+      "manteca"
+    ],
+    "datoExtra": "Las esculturas debían mantenerse en heladeras portátiles para no derretirse en verano."
+  },
+  {
+    "id": 26,
+    "categoria": "historia_insolita",
+    "consigna": "En 1325, las ciudades italianas de Módena y Bolonia desataron una guerra que dejó miles de bajas por culpa de un ________.",
+    "respuesta": "Balde de roble",
+    "aceptadas": [
+      "balde",
+      "un balde",
+      "cubo"
+    ],
+    "datoExtra": "Soldados modeneses robaron el balde de un pozo público boloñés y aún lo exhiben en su torre."
+  },
+  {
+    "id": 27,
+    "categoria": "historia_insolita",
+    "consigna": "En 1932, el ejército de Australia declaró formalmente la guerra y desplegó ametralladoras contra una plaga de ________.",
+    "respuesta": "Emúes salvajes",
+    "aceptadas": [
+      "emues",
+      "emu",
+      "avestruces"
+    ],
+    "datoExtra": "Las aves eran veloces y esquivaban las balas; los militares debieron retirarse derrotados."
+  },
+  {
+    "id": 28,
+    "categoria": "historia_insolita",
+    "consigna": "Durante la Guerra Fría, la CIA gastó millones de dólares entrenando a un agente especial que era un ________.",
+    "respuesta": "Gato espía",
+    "aceptadas": [
+      "gato",
+      "un gato",
+      "felino"
+    ],
+    "datoExtra": "El proyecto se llamó Operation Acoustic Kitty; el felino murió atropellado en su primera misión."
+  },
+  {
+    "id": 29,
+    "categoria": "historia_insolita",
+    "consigna": "En el siglo XVIII, el rey Federico Guillermo I de Prusia formó un regimiento militar integrado solo por hombres con ________.",
+    "respuesta": "Estatura gigante",
+    "aceptadas": [
+      "gigantes",
+      "alta estatura",
+      "hombres altos"
+    ],
+    "datoExtra": "Los llamaban los Gigantes de Potsdam y medían más de un metro noventa cada uno."
+  },
+  {
+    "id": 30,
+    "categoria": "historia_insolita",
+    "consigna": "En 1814, en las calles de Londres se produjo un desastre donde murieron ocho personas ahogadas en una ola de ________.",
+    "respuesta": "Cerveza negra",
+    "aceptadas": [
+      "cerveza",
+      "birra",
+      "licor"
+    ],
+    "datoExtra": "Reventó un tanque gigante de una fábrica y liberó más de un millón de litros a presión."
+  },
+  {
+    "id": 31,
+    "categoria": "historia_insolita",
+    "consigna": "El emperador romano Calígula nombró como senador del imperio y cónsul honorario a su querido ________.",
+    "respuesta": "Caballo veloz",
+    "aceptadas": [
+      "caballo",
+      "su caballo",
+      "potro"
+    ],
+    "datoExtra": "El animal se llamaba Incitatus y comía avena mezclada con finas hojuelas de oro."
+  },
+  {
+    "id": 32,
+    "categoria": "historia_insolita",
+    "consigna": "En 1919, en la ciudad estadounidense de Boston, veintiuna personas perdieron la vida atrapadas por un torrente de ________.",
+    "respuesta": "Melaza dulce",
+    "aceptadas": [
+      "melaza",
+      "miel",
+      "almibar"
+    ],
+    "datoExtra": "Un contenedor portuario explotó y esparció una masa viscosa a cincuenta kilómetros por hora."
+  },
+  {
+    "id": 33,
+    "categoria": "historia_insolita",
+    "consigna": "Durante la Segunda Guerra Mundial, el ejército británico construyó un tanque señuelo fabricado íntegramente con ________.",
+    "respuesta": "Cartón pintado",
+    "aceptadas": [
+      "carton",
+      "madera",
+      "papel"
+    ],
+    "datoExtra": "Buscaban engañar a los aviones de reconocimiento alemanes en el desierto africano."
+  },
+  {
+    "id": 34,
+    "categoria": "historia_insolita",
+    "consigna": "En el antiguo Egipto, cuando fallecía el felino de la casa, los dueños se afeitaban por completo sus ________.",
+    "respuesta": "Cejas pobladas",
+    "aceptadas": [
+      "cejas",
+      "las cejas",
+      "pestanas"
+    ],
+    "datoExtra": "Era una señal visible de profundo luto y respeto hacia el dios protector del hogar."
+  },
+  {
+    "id": 35,
+    "categoria": "historia_insolita",
+    "consigna": "En 1974, un explorador japonés en Filipinas descubrió a un soldado imperial que permanecía combatiendo porque creía que ________.",
+    "respuesta": "Seguía la guerra",
+    "aceptadas": [
+      "habia guerra",
+      "la guerra continuaba",
+      "guerra"
+    ],
+    "datoExtra": "Hiroo Onoda pasó veintinueve años escondido en la selva hasta que su viejo superior le ordenó rendirse."
+  },
+  {
+    "id": 36,
+    "categoria": "historia_insolita",
+    "consigna": "En la Francia medieval, un tribunal de justicia condenó formalmente a la horca a una ________.",
+    "respuesta": "Cerda rabiosa",
+    "aceptadas": [
+      "cerda",
+      "chancha",
+      "puerca"
+    ],
+    "datoExtra": "El animal había atacado a un niño; fue juzgada con abogados y vestida con ropa humana."
+  },
+  {
+    "id": 37,
+    "categoria": "historia_insolita",
+    "consigna": "En 1896, la contienda armada más corta de la historia universal entre Gran Bretaña y Zanzíbar duró apenas ________.",
+    "respuesta": "38 minutos",
+    "aceptadas": [
+      "38 minutos",
+      "treinta y ocho minutos",
+      "cuarenta minutos"
+    ],
+    "datoExtra": "El sultán huyó de su palacio bombardeado y la bandera blanca se izó antes de la hora."
+  },
+  {
+    "id": 38,
+    "categoria": "historia_insolita",
+    "consigna": "Napoleón Bonaparte fue obligado a huir en su carruaje tras ser atacado en el campo por una horda de ________.",
+    "respuesta": "Conejos hambrientos",
+    "aceptadas": [
+      "conejos",
+      "liebres",
+      "conejitos"
+    ],
+    "datoExtra": "Habían liberado cientos de ejemplares domesticados para una cacería y corrieron hacia él por comida."
+  },
+  {
+    "id": 39,
+    "categoria": "historia_insolita",
+    "consigna": "En el siglo XVII, los nobles de los Países Bajos llegaron a pagar el valor de una mansión por un simple bulbo de ________.",
+    "respuesta": "Tulipán exótico",
+    "aceptadas": [
+      "tulipan",
+      "tulipanes",
+      "flor"
+    ],
+    "datoExtra": "Fue la primera gran burbuja especulativa financiera registrada en la historia moderna."
+  },
+  {
+    "id": 40,
+    "categoria": "historia_insolita",
+    "consigna": "En 1904, durante la maratón de los Juegos Olímpicos de San Luis, el primer corredor cruzó la meta montado en ________.",
+    "respuesta": "Un automóvil",
+    "aceptadas": [
+      "auto",
+      "automovil",
+      "un auto"
+    ],
+    "datoExtra": "Fred Lorz se acalambró en el kilómetro catorce, subió al auto de su DT y corrió solo el tramo final."
+  },
+  {
+    "id": 41,
+    "categoria": "historia_insolita",
+    "consigna": "En el siglo XVI, el rey Enrique VIII de Inglaterra cobraba un tributo especial a todo súbdito que llevara puesta una ________.",
+    "respuesta": "Barba larga",
+    "aceptadas": [
+      "barba",
+      "su barba",
+      "barba tupida"
+    ],
+    "datoExtra": "El impuesto variaba según el estatus social y la extensión del vello facial del caballero."
+  },
+  {
+    "id": 42,
+    "categoria": "historia_insolita",
+    "consigna": "En 1969, dos naciones centroamericanas entraron en conflicto bélico luego de disputar un partido de ________.",
+    "respuesta": "Fútbol clasificatorio",
+    "aceptadas": [
+      "futbol",
+      "pelota",
+      "partido de futbol"
+    ],
+    "datoExtra": "Honduras y El Salvador rompieron lazos tras las tensiones de las eliminatorias para el Mundial."
+  },
+  {
+    "id": 43,
+    "categoria": "historia_insolita",
+    "consigna": "El filósofo griego Esquilo falleció según los cronistas cuando un águila arrojó sobre su cabeza calva una ________.",
+    "respuesta": "Tortuga marina",
+    "aceptadas": [
+      "tortuga",
+      "una tortuga",
+      "tortuguita"
+    ],
+    "datoExtra": "El ave confundió su cabeza despejada con una roca lisa para romper el caparazón de su presa."
+  },
+  {
+    "id": 44,
+    "categoria": "historia_insolita",
+    "consigna": "Durante el asedio romano a Cartago, los defensores untaron aceite inflamable sobre el lomo de decenas de ________.",
+    "respuesta": "Cerdos chillones",
+    "aceptadas": [
+      "cerdos",
+      "chanchos",
+      "puercos"
+    ],
+    "datoExtra": "Los chillidos desesperados de los chanchos asustaron a los elefantes de guerra rivales."
+  },
+  {
+    "id": 45,
+    "categoria": "historia_insolita",
+    "consigna": "En 1518, en la ciudad de Estrasburgo, cientos de personas no pudieron parar de realizar una continua ________.",
+    "respuesta": "Danza frenética",
+    "aceptadas": [
+      "danza",
+      "baile",
+      "coreografia"
+    ],
+    "datoExtra": "Bailaron durante semanas sin comer hasta desmayarse por lo que hoy se cree fue histeria colectiva."
+  },
+  {
+    "id": 46,
+    "categoria": "historia_insolita",
+    "consigna": "En 1859, los imperios británico y norteamericano estuvieron a punto de iniciar combates por la muerte de un ________.",
+    "respuesta": "Cerdo comilón",
+    "aceptadas": [
+      "cerdo",
+      "chancho",
+      "un cerdo"
+    ],
+    "datoExtra": "Un granjero le disparó al animal por comerse sus papas en una isla fronteriza en disputa."
+  },
+  {
+    "id": 47,
+    "categoria": "historia_insolita",
+    "consigna": "El compositor Wolfgang Amadeus Mozart le dedicó una pieza de concierto a su querida mascota que era un ________.",
+    "respuesta": "Estornino cantor",
+    "aceptadas": [
+      "estornino",
+      "pajaro",
+      "ave"
+    ],
+    "datoExtra": "El pájaro aprendió a silbar el tema principal de su Concierto para piano número diecisiete."
+  },
+  {
+    "id": 48,
+    "categoria": "historia_insolita",
+    "consigna": "En la antigua Roma, los gladiadores vendían a las damas de la aristocracia frascos que contenían su propio ________.",
+    "respuesta": "Sudor corporal",
+    "aceptadas": [
+      "sudor",
+      "sudor seco",
+      "olor"
+    ],
+    "datoExtra": "Las mujeres lo usaban como crema facial afrodisíaca y tónico embellecedor de la piel."
+  },
+  {
+    "id": 49,
+    "categoria": "historia_insolita",
+    "consigna": "En el siglo XIX, un matemático inglés calculó la fecha exacta del fin de los tiempos basándose en la medida de una ________.",
+    "respuesta": "Pirámide egipcia",
+    "aceptadas": [
+      "piramide",
+      "piramides",
+      "tumba"
+    ],
+    "datoExtra": "Creía que las galerías internas de Guiza eran una línea de tiempo profética milimétrica."
+  },
+  {
+    "id": 50,
+    "categoria": "historia_insolita",
+    "consigna": "En 1923, un jockey norteamericano ganó una carrera hípica en Nueva York a pesar de haber sufrido en el recorrido un ________.",
+    "respuesta": "Paro cardíaco",
+    "aceptadas": [
+      "ataque",
+      "infarto",
+      "desmayo"
+    ],
+    "datoExtra": "Frank Hayes murió a mitad de carrera pero su cuerpo se mantuvo encorvado sobre la montura hasta ganar."
+  },
+  {
+    "id": 51,
+    "categoria": "leyes_absurdas",
+    "consigna": "En el Reino Unido, es un delito de gravedad manipular en circunstancias sospechosas un paquete de ________.",
+    "respuesta": "Salmón fresco",
+    "aceptadas": [
+      "salmon",
+      "pescado",
+      "peces"
+    ],
+    "datoExtra": "La ley Salmon Act de 1986 buscaba combatir la pesca furtiva y el contrabando de truchas."
+  },
+  {
+    "id": 52,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Suiza, una ordenanza municipal prohíbe tirar la cadena del inodoro después de las diez de la noche en un ________.",
+    "respuesta": "Edificio comunal",
+    "aceptadas": [
+      "edificio",
+      "departamento",
+      "inmueble"
+    ],
+    "datoExtra": "La normativa protege la tranquilidad acústica de los vecinos colindantes durante el descanso."
+  },
+  {
+    "id": 53,
+    "categoria": "leyes_absurdas",
+    "consigna": "En la ciudad de Venecia, las autoridades aplican severas multas a cualquier turista que alimente a una ________.",
+    "respuesta": "Paloma urbana",
+    "aceptadas": [
+      "paloma",
+      "palomas",
+      "ave"
+    ],
+    "datoExtra": "El ácido de los excrementos deteriora los mármoles históricos de la Plaza San Marcos."
+  },
+  {
+    "id": 54,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Singapur, la importación y comercialización de un producto clásico está terminantemente penada por ley: el ________.",
+    "respuesta": "Chicle masticable",
+    "aceptadas": [
+      "chicle",
+      "goma de mascar",
+      "los chicles"
+    ],
+    "datoExtra": "Se prohibió en 1992 para evitar que la gente pegara gomas en los sensores de las puertas del metro."
+  },
+  {
+    "id": 55,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Milán, Italia, existe un antiguo reglamento que exige sonreír en todo momento en público salvo en un ________.",
+    "respuesta": "Velorio familiar",
+    "aceptadas": [
+      "velorio",
+      "funeral",
+      "entierro"
+    ],
+    "datoExtra": "La ordenanza data de la época del dominio austríaco para evitar rostros hostiles en la calle."
+  },
+  {
+    "id": 56,
+    "categoria": "leyes_absurdas",
+    "consigna": "En el estado de Florida, una vieja disposición legal prohíbe soltar ventosidades en sitios públicos pasadas las ________.",
+    "respuesta": "Dieciocho horas",
+    "aceptadas": [
+      "18 horas",
+      "las seis",
+      "seis de la tarde"
+    ],
+    "datoExtra": "Nadie ha sido procesado en décadas, pero la norma continúa archivada en los códigos estatales."
+  },
+  {
+    "id": 57,
+    "categoria": "leyes_absurdas",
+    "consigna": "En la localidad francesa de Châteauneuf-du-Pape, un decreto prohíbe sobrevolar y aterrizar viñedos a un ________.",
+    "respuesta": "Plato volador",
+    "aceptadas": [
+      "ovni",
+      "plato volador",
+      "extraterrestre"
+    ],
+    "datoExtra": "El intendente emitió la norma en 1954 en plena fiebre por los avistamientos alienígenas."
+  },
+  {
+    "id": 58,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Australia Occidental, es ilícito poseer en el domicilio sin una autorización comercial más de cincuenta kilos de ________.",
+    "respuesta": "Papas cosechadas",
+    "aceptadas": [
+      "papas",
+      "patatas",
+      "tuberculos"
+    ],
+    "datoExtra": "La ley protegía el monopolio regulador de la corporación estatal de comercialización de tubérculos."
+  },
+  {
+    "id": 59,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Grecia, está totalmente prohibido ingresar a monumentos arqueológicos antiguos llevando calzado con ________.",
+    "respuesta": "Tacos altos",
+    "aceptadas": [
+      "tacos",
+      "tacones",
+      "taco aguja"
+    ],
+    "datoExtra": "Las puntas filosas de los tacos desgastaban y astillaban las piedras milenarias de la Acrópolis."
+  },
+  {
+    "id": 60,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Japón, la legislación nacional sanciona a las empresas si sus empleados superan el límite legal de ________.",
+    "respuesta": "Cintura ancha",
+    "aceptadas": [
+      "cintura",
+      "grasa",
+      "peso corporal"
+    ],
+    "datoExtra": "La Ley Metabo busca prevenir enfermedades cardiovasculares midiendo el abdomen en el examen anual."
+  },
+  {
+    "id": 61,
+    "categoria": "leyes_absurdas",
+    "consigna": "En el estado de Georgia, es ilegal transportar en el bolsillo trasero del pantalón un cono con ________.",
+    "respuesta": "Helado cremoso",
+    "aceptadas": [
+      "helado",
+      "cucurucho",
+      "cono de helado"
+    ],
+    "datoExtra": "Era una treta antigua de los cuatreros: ponían helado para tentar caballos y llevarlos sin tirar de la rienda."
+  },
+  {
+    "id": 62,
+    "categoria": "leyes_absurdas",
+    "consigna": "En la isla de Capri, las autoridades prohibieron el uso público de calzado que produzca excesivo ________.",
+    "respuesta": "Ruido molesto",
+    "aceptadas": [
+      "ruido",
+      "sonido",
+      "eco"
+    ],
+    "datoExtra": "Los suecos de madera están vedados para preservar el silencio pacífico de sus callejuelas empedradas."
+  },
+  {
+    "id": 63,
+    "categoria": "leyes_absurdas",
+    "consigna": "En la provincia canadiense de Alberta, pintar una casa de madera usando dos tonos chillones requiere permiso de un ________.",
+    "respuesta": "Pintor matriculado",
+    "aceptadas": [
+      "pintor",
+      "artista",
+      "decorador"
+    ],
+    "datoExtra": "Las comunas buscaban conservar una estética armónica uniforme en las fachadas de los suburbios."
+  },
+  {
+    "id": 64,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Samoa, los tribunales consideran un delito punible que un marido olvide la fecha exacta del ________.",
+    "respuesta": "Cumpleaños conyugal",
+    "aceptadas": [
+      "cumpleanos",
+      "su cumpleanos",
+      "aniversario"
+    ],
+    "datoExtra": "La esposa ofendida puede presentar una queja formal y el marido debe pagar una multa a la familia."
+  },
+  {
+    "id": 65,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Escocia, la tradición jurídica impone abrir la puerta del hogar a cualquier viajero que pida prestado un ________.",
+    "respuesta": "Retrete limpio",
+    "aceptadas": [
+      "bano",
+      "inodoro",
+      "retrete"
+    ],
+    "datoExtra": "La antigua norma de hospitalidad obligaba a brindar socorro a quien necesitara un alivio fisiológico."
+  },
+  {
+    "id": 66,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Tailandia, pisar un billete de curso legal caído al piso es motivo de prisión porque lleva el rostro de un ________.",
+    "respuesta": "Rey respetado",
+    "aceptadas": [
+      "rey",
+      "monarca",
+      "soberano"
+    ],
+    "datoExtra": "La figura del rey es sagrada bajo las leyes de lesa majestad y pisarla se considera una afrenta directa."
+  },
+  {
+    "id": 67,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Dinamarca, antes de arrancar el motor de un vehículo, el conductor debe verificar que no haya niños debajo del ________.",
+    "respuesta": "Chasis metálico",
+    "aceptadas": [
+      "auto",
+      "chasis",
+      "coche"
+    ],
+    "datoExtra": "La norma se implementó en tiempos de carruajes y coches altos para evitar atropellar infantes jugando."
+  },
+  {
+    "id": 68,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Baltimore, Estados Unidos, es ilegal llevar al cine como espectador a un ejemplar domesticado de ________.",
+    "respuesta": "León africano",
+    "aceptadas": [
+      "leon",
+      "un leon",
+      "felino"
+    ],
+    "datoExtra": "Se aprobó tras un incidente en los años veinte cuando un domador llevó a su felino al estreno de una película."
+  },
+  {
+    "id": 69,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Hawái, los carteles publicitarios gigantes están vedados en las rutas para no tapar la vista de un ________.",
+    "respuesta": "Volcán verde",
+    "aceptadas": [
+      "volcan",
+      "paisaje",
+      "arbol"
+    ],
+    "datoExtra": "Desde 1927 se busca preservar los horizontes naturales libres de polución visual comercial."
+  },
+  {
+    "id": 70,
+    "categoria": "leyes_absurdas",
+    "consigna": "En el Reino Unido, cualquier ballena o esturión hallado muerto en las costas pertenece por decreto a la reina o al ________.",
+    "respuesta": "Rey coronado",
+    "aceptadas": [
+      "rey",
+      "monarca",
+      "soberano"
+    ],
+    "datoExtra": "La ley del siglo XIV 'Peces Reales' reserva esos animales marinos para el banquete de la Corona."
+  },
+  {
+    "id": 71,
+    "categoria": "leyes_absurdas",
+    "consigna": "En la ciudad de Turín, Italia, multan con quinientos euros al propietario que no saque a pasear a su can tres veces por ________.",
+    "respuesta": "Día completo",
+    "aceptadas": [
+      "dia",
+      "jornada",
+      "cada dia"
+    ],
+    "datoExtra": "La ordenanza de bienestar animal castiga con dureza el encierro sedentario de las mascotas caninas."
+  },
+  {
+    "id": 72,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Alemania, quedarse sin combustible mientras se circula por la autopista sin peajes Autobahn se castiga con una ________.",
+    "respuesta": "Multa severa",
+    "aceptadas": [
+      "multa",
+      "sancion",
+      "infraccion"
+    ],
+    "datoExtra": "Detenerse en la autopista de alta velocidad por negligencia es considerado un peligro público gravísimo."
+  },
+  {
+    "id": 73,
+    "categoria": "leyes_absurdas",
+    "consigna": "En la ciudad de Quitman, Georgia, está expresamente prohibido que un pollo cruce caminando solo una ________.",
+    "respuesta": "Calle céntrica",
+    "aceptadas": [
+      "calle",
+      "avenida",
+      "ruta"
+    ],
+    "datoExtra": "Los dueños de las granjas avícolas debían mantener a sus aves bajo estricto corral y custodia."
+  },
+  {
+    "id": 74,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Francia, el Código Rural impedía hasta hace poco bautizar a un cerdo de granja con el nombre de ________.",
+    "respuesta": "Napoleón",
+    "aceptadas": [
+      "napoleon",
+      "bonaparte",
+      "el emperador"
+    ],
+    "datoExtra": "Se consideraba una falta de patriotismo comparar al emperador de los franceses con un puerco."
+  },
+  {
+    "id": 75,
+    "categoria": "leyes_absurdas",
+    "consigna": "En Singapur, los oficiales pueden multar a los residentes si no bajan la tapa y tiran el agua al retirarse de un ________.",
+    "respuesta": "Baño público",
+    "aceptadas": [
+      "bano",
+      "sanitario",
+      "toilette"
+    ],
+    "datoExtra": "Inspectores encubiertos verifican el aseo en las terminales y centros comerciales de la ciudad."
+  },
+  {
+    "id": 76,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Los castores poseen una particularidad anatómica dental: su esmalte es de un llamativo color ________.",
+    "respuesta": "Naranja fuerte",
+    "aceptadas": [
+      "naranja",
+      "anaranjado",
+      "rojizo"
+    ],
+    "datoExtra": "Contienen una altísima concentración de hierro que les otorga dureza para roer troncos."
+  },
+  {
+    "id": 77,
+    "categoria": "ciencia_y_animales",
+    "consigna": "El excremento del uómbat, un marsupial de Oceanía, es único en el reino animal por tener forma de ________.",
+    "respuesta": "Cubo perfecto",
+    "aceptadas": [
+      "cubo",
+      "dado",
+      "cubito"
+    ],
+    "datoExtra": "La forma cúbica evita que las heces rueden de las piedras donde marcan su territorio."
+  },
+  {
+    "id": 78,
+    "categoria": "ciencia_y_animales",
+    "consigna": "En la alta atmósfera del planeta Saturno se producen tormentas tan densas que literalmente llueven cristales de ________.",
+    "respuesta": "Diamante puro",
+    "aceptadas": [
+      "diamante",
+      "diamantes",
+      "carbono"
+    ],
+    "datoExtra": "El metano es comprimido por la colosal presión y se cristaliza en piedras preciosas al caer."
+  },
+  {
+    "id": 79,
+    "categoria": "ciencia_y_animales",
+    "consigna": "El corazón de un camarón marino no está ubicado en el pecho sino adentro de su ________.",
+    "respuesta": "Cabeza pequeña",
+    "aceptadas": [
+      "cabeza",
+      "su cabeza",
+      "testa"
+    ],
+    "datoExtra": "Su tórax y cabeza están fusionados en un cefalotórax protegido por una gruesa coraza."
+  },
+  {
+    "id": 80,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Los flamencos rosados nacen con plumaje grisáceo y cambian de tono al alimentarse exclusivamente de ________.",
+    "respuesta": "Crustáceos rojos",
+    "aceptadas": [
+      "crustaceos",
+      "algas",
+      "camaroncitos"
+    ],
+    "datoExtra": "Los carotenoides presentes en las larvas tiñen sus plumas de ese rosado característico."
+  },
+  {
+    "id": 81,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Las vacas lecheras aumentan notablemente su producción láctea si escuchan en el tambo melodías de ________.",
+    "respuesta": "Música lenta",
+    "aceptadas": [
+      "musica suave",
+      "musica clasica",
+      "musica"
+    ],
+    "datoExtra": "Los ritmos pausados reducen los niveles de estrés en las ubres y facilitan la bajada de leche."
+  },
+  {
+    "id": 82,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Un grupo de científicos descubrió que los pulpos acuáticos tienen en su sistema circulatorio tres corazones y sangre ________.",
+    "respuesta": "Azul brillante",
+    "aceptadas": [
+      "azul",
+      "color azul",
+      "celeste"
+    ],
+    "datoExtra": "Usan hemocianina con cobre en vez de hierro para transportar oxígeno en aguas heladas."
+  },
+  {
+    "id": 83,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Las huellas dactilares de un koala arbóreo son tan similares a las humanas que pueden confundir a un perito en una escena de ________.",
+    "respuesta": "Crimen confuso",
+    "aceptadas": [
+      "crimen",
+      "homicidio",
+      "delito"
+    ],
+    "datoExtra": "Bajo el microscopio electrónico las crestas y remolinos son casi idénticos a los nuestros."
+  },
+  {
+    "id": 84,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Las nutrias marinas duermen flotando de espaldas en el oleaje y para no separarse por la corriente se toman de la ________.",
+    "respuesta": "Mano derecha",
+    "aceptadas": [
+      "mano",
+      "las manos",
+      "patas"
+    ],
+    "datoExtra": "Forman balsas comunitarias y se sujetan entre parejas para descansar sin extraviarse."
+  },
+  {
+    "id": 85,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Los cuervos salvajes poseen memoria prodigiosa y son capaces de recordar durante muchos años la forma de un ________.",
+    "respuesta": "Rostro humano",
+    "aceptadas": [
+      "rostro",
+      "una cara",
+      "la cara"
+    ],
+    "datoExtra": "Si una persona los agrede, avisan a toda la bandada para que la ataquen a picotazos."
+  },
+  {
+    "id": 86,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Para comunicarse y coordinar la navegación en el fondo del mar, los arenques expulsan ruidosamente burbujas de ________.",
+    "respuesta": "Gas digestivo",
+    "aceptadas": [
+      "gas",
+      "gases",
+      "pedos"
+    ],
+    "datoExtra": "Liberan flatulencias acústicas de alta frecuencia para mantenerse agrupados en la oscuridad."
+  },
+  {
+    "id": 87,
+    "categoria": "ciencia_y_animales",
+    "consigna": "A diferencia de la mayoría de los reptiles terrestres, las tortugas de agua dulce pueden respirar debajo del agua a través de su ________.",
+    "respuesta": "Cloaca posterior",
+    "aceptadas": [
+      "cloaca",
+      "ano",
+      "cola"
+    ],
+    "datoExtra": "Tienen sacos vascularizados en la cavidad posterior que absorben oxígeno del agua en invierno."
+  },
+  {
+    "id": 88,
+    "categoria": "ciencia_y_animales",
+    "consigna": "El graznido de un pato de granja no produce ningún eco acústico demostrable cuando rebota contra una ________.",
+    "respuesta": "Pared lisa",
+    "aceptadas": [
+      "pared",
+      "roca",
+      "montana"
+    ],
+    "datoExtra": "Mito clásico puesto a prueba por acústicos británicos: el eco existe pero se mezcla con el sonido original."
+  },
+  {
+    "id": 89,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Un grupo de entomólogos comprobó que las cucarachas comunes pueden sobrevivir varias semanas con vida si pierden su ________.",
+    "respuesta": "Cabeza entera",
+    "aceptadas": [
+      "cabeza",
+      "su cabeza",
+      "cerebro"
+    ],
+    "datoExtra": "Respiran por orificios en sus segmentos corporales y solo mueren de sed al no poder beber agua."
+  },
+  {
+    "id": 90,
+    "categoria": "ciencia_y_animales",
+    "consigna": "El animal que posee los ojos más descomunales del planeta es el calamar gigante, con un diámetro similar a un ________.",
+    "respuesta": "Plato hondo",
+    "aceptadas": [
+      "plato",
+      "balon",
+      "disco"
+    ],
+    "datoExtra": "Llegan a medir veintisiete centímetros de ancho para captar luz débil en las profundidades abisales."
+  },
+  {
+    "id": 91,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Las jirafas de la sabana africana poseen una lengua prensil tan extensa que son capaces de limpiarse sus propias ________.",
+    "respuesta": "Orejas largas",
+    "aceptadas": [
+      "orejas",
+      "sus orejas",
+      "narinas"
+    ],
+    "datoExtra": "Mide más de cincuenta centímetros y es de color negro azulado para protegerse de quemaduras del sol."
+  },
+  {
+    "id": 92,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Una medusa oceánica llamada Turritopsis dohrnii es considerada biológicamente asombrosa porque puede alcanzar la ________.",
+    "respuesta": "Inmortalidad",
+    "aceptadas": [
+      "vida eterna",
+      "inmortalidad",
+      "eterna juventud"
+    ],
+    "datoExtra": "Cuando envejece o sufre estrés, revierte sus células adultas a pólipos jóvenes y recomienza el ciclo."
+  },
+  {
+    "id": 93,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Las mariposas diurnas no saborean los néctares con su trompa probóscide sino a través de las papilas de sus ________.",
+    "respuesta": "Patas delanteras",
+    "aceptadas": [
+      "patas",
+      "sus patas",
+      "pies"
+    ],
+    "datoExtra": "Al posarse sobre una hoja o pétalo detectan al instante si la planta es apta para comer."
+  },
+  {
+    "id": 94,
+    "categoria": "ciencia_y_animales",
+    "consigna": "El sudor corporal que secretan los hipopótamos en los días tórridos es de un llamativo color ________.",
+    "respuesta": "Rojo carmesí",
+    "aceptadas": [
+      "rojo",
+      "rosado",
+      "colorado"
+    ],
+    "datoExtra": "Contiene ácidos que actúan como protector solar natural y potente antibacteriano contra heridas."
+  },
+  {
+    "id": 95,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Los osos polares que habitan el Círculo Ártico tienen la piel debajo de su denso pelaje de color ________.",
+    "respuesta": "Negro azabache",
+    "aceptadas": [
+      "negro",
+      "color negro",
+      "oscura"
+    ],
+    "datoExtra": "La piel oscura absorbe los rayos térmicos del sol, mientras los pelos translúcidos atrapan el calor."
+  },
+  {
+    "id": 96,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Los caracoles terrestres de jardín pueden entrar en estado de hibernación continua durmiendo durante tres ________.",
+    "respuesta": "Años seguidos",
+    "aceptadas": [
+      "anos",
+      "tres anos",
+      "meses"
+    ],
+    "datoExtra": "Se sellan con mucosidad protectora y reducen su metabolismo al mínimo ante sequías severas."
+  },
+  {
+    "id": 97,
+    "categoria": "ciencia_y_animales",
+    "consigna": "El pez pulmonado africano puede sobrevivir enterrado en el lodo seco sin tocar una sola gota de agua usando un capullo de ________.",
+    "respuesta": "Baba reseca",
+    "aceptadas": [
+      "baba",
+      "moco",
+      "mucosidad"
+    ],
+    "datoExtra": "Entra en estivación hasta que regresan las lluvias torrenciales cuatro años más tarde."
+  },
+  {
+    "id": 98,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Los dientes de un tiburón blanco se regeneran continuamente a lo largo de su existencia, pudiendo mudar más de treinta mil ________.",
+    "respuesta": "Piezas filosas",
+    "aceptadas": [
+      "piezas",
+      "dientes",
+      "colmillos"
+    ],
+    "datoExtra": "Crecen en hileras como una cinta transportadora que avanza cada vez que un diente se rompe cazando."
+  },
+  {
+    "id": 99,
+    "categoria": "ciencia_y_animales",
+    "consigna": "Las abejas obreras comunican a las demás integrantes de la colmena dónde hay flores realizando un particular ________.",
+    "respuesta": "Baile en ocho",
+    "aceptadas": [
+      "baile",
+      "ocho",
+      "danzar"
+    ],
+    "datoExtra": "El ángulo del contorneo respecto al sol y su duración indican la dirección y la distancia del néctar."
+  },
+  {
+    "id": 100,
+    "categoria": "ciencia_y_animales",
+    "consigna": "En el espacio exterior, debido a la falta de fuerza gravitatoria, los astronautas no pueden derramar una sola lágrima ni tampoco emitir un ________.",
+    "respuesta": "Eructo gaseoso",
+    "aceptadas": [
+      "eructo",
+      "eructar",
+      "gas"
+    ],
+    "datoExtra": "Sin gravedad, los gases y los líquidos no se separan en el estómago y saldrían en forma de vómito."
+  },
+  {
+    "id": 101,
+    "categoria": "cultura_curiosa",
+    "consigna": "El inventor del popular juego de mesa Frisbee fue cremado y por pedido testamentario sus cenizas se convirtieron en un ________.",
+    "respuesta": "Disco volador",
+    "aceptadas": [
+      "disco",
+      "frisbee",
+      "un frisbee"
+    ],
+    "datoExtra": "Walter Morrison quiso que sus restos siguieran jugando con los niños en los parques."
+  },
+  {
+    "id": 102,
+    "categoria": "cultura_curiosa",
+    "consigna": "En el siglo XIX, los dentistas utilizaban como material de empaste para tapar muelas cariadas una masa hecha con ________.",
+    "respuesta": "Plomo fundido",
+    "aceptadas": [
+      "plomo",
+      "mercurio",
+      "oro"
+    ],
+    "datoExtra": "El calor y la toxicidad del metal causaban graves dolores a los pacientes antes de la amalgama."
+  },
+  {
+    "id": 103,
+    "categoria": "cultura_curiosa",
+    "consigna": "En Japón existe una isla entera llamada Aoshima donde los residentes humanos son superados seis a uno por miles de ________.",
+    "respuesta": "Gatos mimosos",
+    "aceptadas": [
+      "gatos",
+      "los gatos",
+      "felinos"
+    ],
+    "datoExtra": "Fueron introducidos para cazar ratones en los barcos de pescadores y se adueñaron de la villa."
+  },
+  {
+    "id": 104,
+    "categoria": "cultura_curiosa",
+    "consigna": "El creador del muñeco infantil de plastilina Play-Doh ideó el producto en sus inicios para que sirviera como limpiador de ________.",
+    "respuesta": "Empapelado sucio",
+    "aceptadas": [
+      "empapelado",
+      "papel tapiz",
+      "paredes"
+    ],
+    "datoExtra": "Quitaba el hollín de las estufas de carbón en las paredes antes de que las escuelas lo adoptaran."
+  },
+  {
+    "id": 105,
+    "categoria": "cultura_curiosa",
+    "consigna": "En Finlandia, el campeonato deportivo anual más concurrido consiste en correr una pista llevando a cuestas a la ________.",
+    "respuesta": "Esposa querida",
+    "aceptadas": [
+      "esposa",
+      "mujer",
+      "pareja"
+    ],
+    "datoExtra": "El ganador del concurso 'Cargar a la esposa' recibe el peso exacto de su compañera en cerveza rubia."
+  },
+  {
+    "id": 106,
+    "categoria": "cultura_curiosa",
+    "consigna": "En 1977, una estación de radio estadounidense transmitió durante veinticuatro horas ininterrumpidas el sonido de un ________.",
+    "respuesta": "Corazón latiendo",
+    "aceptadas": [
+      "corazon",
+      "latido",
+      "pulso"
+    ],
+    "datoExtra": "Fue un experimento acústico para una campaña contra el estrés urbano que fascinó a la audiencia."
+  },
+  {
+    "id": 107,
+    "categoria": "cultura_curiosa",
+    "consigna": "En Islandia, una encuesta nacional reveló que más del cincuenta por ciento de los ciudadanos cree firmemente en la existencia de ________.",
+    "respuesta": "Elfos ocultos",
+    "aceptadas": [
+      "elfos",
+      "los elfos",
+      "duendes"
+    ],
+    "datoExtra": "Los ingenieros de vialidad desvían rutas para no mover grandes piedras consideradas hogares élficos."
+  },
+  {
+    "id": 108,
+    "categoria": "cultura_curiosa",
+    "consigna": "Antes de inventar la goma de borrar flexible, los dibujantes retiraban las marcas de grafito frotando miga de ________.",
+    "respuesta": "Pan blanco",
+    "aceptadas": [
+      "pan",
+      "miga",
+      "pan viejo"
+    ],
+    "datoExtra": "El pan amasado absorbía el carbón pero dejaba grasa hasta que Edward Nairne patentó el caucho."
+  },
+  {
+    "id": 109,
+    "categoria": "cultura_curiosa",
+    "consigna": "En la ceremonia de coronación de los monarcas británicos, el soberano se sienta sobre un sillón que guarda una vieja ________.",
+    "respuesta": "Piedra mística",
+    "aceptadas": [
+      "piedra",
+      "roca",
+      "piedra de scone"
+    ],
+    "datoExtra": "La legendaria Piedra del Destino fue tomada de Escocia en 1296 para legitimar el trono."
+  },
+  {
+    "id": 110,
+    "categoria": "cultura_curiosa",
+    "consigna": "El inventor del rifle automático Kalashnikov diseñó en sus últimos años de vida una máquina para cortar ________.",
+    "respuesta": "Césped parejo",
+    "aceptadas": [
+      "cesped",
+      "pasto",
+      "hierba"
+    ],
+    "datoExtra": "Mikhail Kalashnikov buscaba crear un implemento de paz útil para las huertas de su aldea natal."
+  },
+  {
+    "id": 111,
+    "categoria": "cultura_curiosa",
+    "consigna": "En 1998, una empresa de calzado deportivo contrató a un detective privado para averiguar por qué sus zapatillas olían a ________.",
+    "respuesta": "Pescado podrido",
+    "aceptadas": [
+      "pescado",
+      "pescaderia",
+      "peces"
+    ],
+    "datoExtra": "Descubrieron que una fábrica china usaba pegamento derivado de desechos de atún contaminado."
+  },
+  {
+    "id": 112,
+    "categoria": "cultura_curiosa",
+    "consigna": "En un restaurante temático de Taiwán, toda la comida se sirve adentro de platos con forma de minúsculos ________.",
+    "respuesta": "Inodoros blancos",
+    "aceptadas": [
+      "inodoros",
+      "retretes",
+      "inodoro"
+    ],
+    "datoExtra": "El local se llama Modern Toilet y sirve helado de chocolate con forma de torbellino fecal."
+  },
+  {
+    "id": 113,
+    "categoria": "cultura_curiosa",
+    "consigna": "La bandera oficial del estado de Oregón es la única de los Estados Unidos que tiene un diseño completamente distinto en su ________.",
+    "respuesta": "Lado reverso",
+    "aceptadas": [
+      "reverso",
+      "atras",
+      "dorso"
+    ],
+    "datoExtra": "En el frente muestra el escudo estatal y en la espalda ostenta la figura dorada de un castor."
+  },
+  {
+    "id": 114,
+    "categoria": "cultura_curiosa",
+    "consigna": "En el siglo XIX, los fotógrafos victorianos colocaban detrás de las personas que posaban un soporte de metal para fijar la ________.",
+    "respuesta": "Cabeza quieta",
+    "aceptadas": [
+      "cabeza",
+      "nuca",
+      "espalda"
+    ],
+    "datoExtra": "Los tiempos de exposición requerían estar varios minutos inmóviles sin pestañear para no salir borrosos."
+  },
+  {
+    "id": 115,
+    "categoria": "cultura_curiosa",
+    "consigna": "En la ciudad inglesa de Brockworth, cientos de valientes se tiran colina abajo persiguiendo una rueda rodante de ________.",
+    "respuesta": "Queso duro",
+    "aceptadas": [
+      "queso",
+      "un queso",
+      "queso gloucester"
+    ],
+    "datoExtra": "La carrera de Cooper's Hill deja fracturas todos los años, pero el vencedor se queda con la pieza de cuatro kilos."
+  },
+  {
+    "id": 116,
+    "categoria": "cultura_curiosa",
+    "consigna": "El billete de mayor denominación monetaria impreso en Zimbabue durante su hiperinflación tenía el valor de cien trillones de ________.",
+    "respuesta": "Dólares locales",
+    "aceptadas": [
+      "dolares",
+      "dolar",
+      "billetes"
+    ],
+    "datoExtra": "Apenas alcanzaba para comprar tres panes caseros debido a la devaluación extrema."
+  },
+  {
+    "id": 117,
+    "categoria": "cultura_curiosa",
+    "consigna": "En Corea del Sur, existe la superstición urbana generalizada de que dejar encendido toda la noche un ventilador puede causar la ________.",
+    "respuesta": "Muerte asfíctica",
+    "aceptadas": [
+      "muerte",
+      "la muerte",
+      "asfixia"
+    ],
+    "datoExtra": "Muchos modelos surcoreanos incluyen temporizadores obligatorios para tranquilizar a los usuarios."
+  },
+  {
+    "id": 118,
+    "categoria": "cultura_curiosa",
+    "consigna": "En el Museo de Arte Moderno de San Francisco, unos adolescentes dejaron en el piso unos lentes de ver y la gente creyó que era una ________.",
+    "respuesta": "Obra maestra",
+    "aceptadas": [
+      "obra de arte",
+      "escultura",
+      "instalacion"
+    ],
+    "datoExtra": "Decenas de visitantes se agacharon fascinados a tomarle fotos creyendo que era una crítica al consumo."
+  },
+  {
+    "id": 119,
+    "categoria": "cultura_curiosa",
+    "consigna": "El primer producto que se escaneó con un lector de código de barras en la caja de un supermercado fue un paquete de ________.",
+    "respuesta": "Chicles frutales",
+    "aceptadas": [
+      "chicles",
+      "goma de mascar",
+      "golosinas"
+    ],
+    "datoExtra": "Ocurrió en un supermercado Marsh de Ohio en 1974 y el paquete de Wrigley's se exhibe en el Smithsonian."
+  },
+  {
+    "id": 120,
+    "categoria": "cultura_curiosa",
+    "consigna": "En una subasta de Londres, un coleccionista anónimo pagó miles de libras esterlinas por una tostada mordida por una estrella de ________.",
+    "respuesta": "Música pop",
+    "aceptadas": [
+      "pop",
+      "rock",
+      "canto"
+    ],
+    "datoExtra": "Justin Timberlake dejó el pan con mermelada en el estudio de radio y el locutor la remató con fines benéficos."
+  },
+  {
+    "id": 121,
+    "categoria": "cultura_curiosa",
+    "consigna": "En Alemania existe un museo dedicado por completo a la historia y exhibición de diferentes modelos de ________.",
+    "respuesta": "Pan tradicional",
+    "aceptadas": [
+      "pan",
+      "panes",
+      "panaderia"
+    ],
+    "datoExtra": "El Museo de la Cultura del Pan en Ulm alberga dieciocho mil piezas pero ninguna es comestible."
+  },
+  {
+    "id": 122,
+    "categoria": "cultura_curiosa",
+    "consigna": "En 1960, el diseñador del logo de Nike recibió por dibujar el famoso diseño curvo una remuneración de apenas treinta y cinco ________.",
+    "respuesta": "Dólares billete",
+    "aceptadas": [
+      "dolares",
+      "pesos",
+      "monedas"
+    ],
+    "datoExtra": "Carolyn Davidson cobró dos dólares por hora, aunque años después la firma le regaló acciones millonarias."
+  },
+  {
+    "id": 123,
+    "categoria": "cultura_curiosa",
+    "consigna": "En la biblioteca de la Universidad de Harvard, se descubrió un antiguo ejemplar del siglo XIX encuadernado con auténtica piel de ________.",
+    "respuesta": "Cuerpo humano",
+    "aceptadas": [
+      "humano",
+      "persona",
+      "hombre"
+    ],
+    "datoExtra": "La encuadernación antropodérmica pertenecía a una paciente psiquiátrica que falleció sin reclamos deudos."
+  },
+  {
+    "id": 124,
+    "categoria": "cultura_curiosa",
+    "consigna": "Para filmar los rugidos temibles del león en la saga cinematográfica de Narnia, los sonidistas grabaron los gruñidos de un ________.",
+    "respuesta": "Oso pardo",
+    "aceptadas": [
+      "oso",
+      "tigre",
+      "leopardo"
+    ],
+    "datoExtra": "El rugido de león real es más seco y no transmitía la profundidad dramática que requería Aslan."
+  },
+  {
+    "id": 125,
+    "categoria": "cultura_curiosa",
+    "consigna": "El inventor de la máquina de algodón de azúcar de feria era de profesión un respetado ________.",
+    "respuesta": "Dentista de niños",
+    "aceptadas": [
+      "dentista",
+      "odontologo",
+      "medico"
+    ],
+    "datoExtra": "William Morrison inventó en 1897 el aparato centrífugo que paradójicamente provocaría caries a generaciones."
+  }
+]

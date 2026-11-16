@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#180e29">
+  <meta name="description" content="Chamuyo Total - Juego de mentiras creíbles y verdades insólitas para TV y celulares.">
+  <title>🎭 Chamuyo Total | Sala de Juegos</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Estilos del Juego -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Canvas de Confeti -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- ====================================================================
+       BARRA SUPERIOR UNIVERSAL
+       ==================================================================== -->
+  <header class="game-header">
+    <div class="brand-wrap">
+      <span class="brand-icon">🎭</span>
+      <div>
+        <h1 class="brand-title">CHAMUYO TOTAL</h1>
+        <span class="brand-sub">Mentiras Creíbles &bull; Verdades Insólitas</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Indicador de Sala activa (se llena por JS) -->
+      <div id="roomBadgeWrap" class="d-none">
+        <span class="badge-room">SALA: <strong id="headerRoomCode">----</strong></span>
+      </div>
+
+      <!-- Botón Sonido -->
+      <button type="button" class="btn-top-action" id="btnToggleSound" title="Alternar Sonido">
+        <span id="soundIcon">🔊</span>
+      </button>
+
+      <!-- Botón Pantalla Completa -->
+      <button type="button" class="btn-top-action" id="btnToggleFs" title="Pantalla Completa">
+        <span id="fsIcon">📺</span>
+      </button>
+
+      <!-- Volver al Hub -->
+      <a href="../index.html" class="btn-top-action btn-back-hub" title="Volver a la Sala de Juegos">
+        <span>🏠</span>
+        <span class="d-none d-md-inline">Volver</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       CONTENEDOR PRINCIPAL
+       ==================================================================== -->
+  <main class="game-container">
+
+    <!-- 1. PANTALLA DE PORTADA (Elegir TV o Celular) -->
+    <section id="screenLanding" class="screen-section active">
+      <div class="landing-hero text-center">
+        <div class="hero-mask-badge">🎭</div>
+        <h2 class="hero-title">¿QUIÉN ES EL REY DEL CHAMUYO?</h2>
+        <p class="hero-subtitle">
+          Inspirado en <em>Fibbage</em> y <em>Balderdash</em>. Un juego social de engaño para <strong>3 a 10 jugadores</strong>.
+          La TV muestra las historias insólitas y cada uno juega desde su propio celular.
+        </p>
+
+        <div class="role-cards-grid">
+          <!-- Opción 1: Pantalla TV -->
+          <div class="role-card tv-card" id="btnSelectTvMode">
+            <div class="role-icon">📺</div>
+            <h3 class="role-name">Abrir como Pantalla TV</h3>
+            <p class="role-desc">Crea una sala pública con código gigante y código QR para que todos escaneen con su celular.</p>
+            <button type="button" class="btn-role btn-tv-launch">
+              <span>▶️ Crear Sala en la TV</span>
+            </button>
+          </div>
+
+          <!-- Opción 2: Celular Jugador -->
+          <div class="role-card phone-card" id="btnSelectPhoneMode">
+            <div class="role-icon">📱</div>
+            <h3 class="role-name">Unirme desde mi Celular</h3>
+            <p class="role-desc">Ingresá el código de 4 letras que ves en la pantalla de la TV y jugá como participante.</p>
+            <div class="phone-join-quick">
+              <input type="text" id="inputManualRoomCode" class="input-room-code" placeholder="CÓDIGO" maxlength="4" autocomplete="off" autocapitalize="characters">
+              <button type="button" class="btn-role btn-phone-launch" id="btnManualJoinRoom">
+                <span>Ingresar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         VISTA PANTALLA TV (HOST)
+         ================================================================== -->
+    <section id="screenTv" class="screen-section d-none">
+      
+      <!-- TV: LOBBY -->
+      <div id="tvViewLobby" class="tv-view active">
+        <div class="lobby-header-bar">
+          <div class="lobby-title-wrap">
+            <span class="live-pulse"></span>
+            <h2 class="lobby-headline">SALA DE ESPERA</h2>
+          </div>
+          <div class="lobby-status-pill">
+            <span id="tvPlayerCountBadge">0</span> / 10 JUGADORES
+            <span class="min-notice">(Mínimo 3)</span>
+          </div>
+        </div>
+
+        <div class="tv-lobby-grid">
+          <!-- Columna Izquierda: QR y Código -->
+          <div class="tv-qr-panel">
+            <div class="qr-box">
+              <div id="tvQrCodeContainer" class="qr-canvas-wrap"></div>
+              <p class="qr-instruction">Escaneá con tu celular para unirte</p>
+            </div>
+            <div class="room-code-display">
+              <span class="code-label">CÓDIGO DE SALA:</span>
+              <span class="code-value" id="tvRoomCodeText">----</span>
+            </div>
+            <div class="room-url-sub" id="tvRoomUrlSub">...</div>
+          </div>
+
+          <!-- Columna Derecha: Jugadores Conectados y Ajustes -->
+          <div class="tv-players-panel">
+            <div class="panel-section-title">
+              <span>👥 Jugadores en la Mesa</span>
+              <span class="vip-legend">👑 = Anfitrión VIP</span>
+            </div>
+
+            <!-- Grilla de Tarjetas de Jugadores -->
+            <div id="tvPlayersGrid" class="players-live-grid">
+              <!-- Se inyectan dinámicamente -->
+              <div class="no-players-hint">Esperando que se conecte el primer jugador...</div>
+            </div>
+
+            <!-- Resumen de Configuración -->
+            <div class="tv-settings-summary">
+              <div class="setting-chip">
+                <span>📚 Categorías:</span>
+                <strong id="tvSummaryCats">Todas</strong>
+              </div>
+              <div class="setting-chip">
+                <span>🎯 Rondas:</span>
+                <strong id="tvSummaryRounds">7 (Normal)</strong>
+              </div>
+              <div class="setting-chip">
+                <span>⏱️ Reloj:</span>
+                <strong id="tvSummaryTimer">45s</strong>
+              </div>
+            </div>
+
+            <!-- Botón de Inicio en la TV (también controlable por VIP) -->
+            <div class="tv-lobby-actions">
+              <button type="button" class="btn-tv-start" id="btnTvStartGame" disabled>
+                <span>▶️ ¡Arrancar Partida!</span>
+                <small class="d-block text-muted" id="tvStartHint">Se necesitan al menos 3 jugadores</small>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TV: EN JUEGO (FASES 1 a 5) -->
+      <div id="tvViewGame" class="tv-view d-none">
+        
+        <!-- Barra de Progreso de la Ronda -->
+        <div class="tv-game-topbar">
+          <div class="round-badge-wrap">
+            <span class="badge-round" id="tvCurrentRoundBadge">Ronda 1 de 7</span>
+            <span class="badge-double-pts d-none" id="tvDoublePtsBadge">🔥 ¡ÚLTIMA RONDA DOBLE x2!</span>
+          </div>
+
+          <div class="cat-badge-wrap">
+            <span class="badge-cat" id="tvCurrentCatBadge">Argentina</span>
+          </div>
+
+          <!-- Temporizador Circular / Barra -->
+          <div class="timer-box d-none" id="tvTimerBox">
+            <span class="timer-icon">⏳</span>
+            <span class="timer-sec" id="tvTimerSec">45</span>
+          </div>
+
+          <!-- Botón de Emergencia para Forzar Pase de Fase -->
+          <button type="button" class="btn-tv-skip-phase" id="btnTvSkipPhase" title="Forzar siguiente fase si alguien se colgó">
+            <span>⏭️ Avanzar</span>
+          </button>
+        </div>
+
+        <!-- FASE 1: LECTURA DE LA CONSIGNA -->
+        <div id="tvPhase1" class="phase-panel active text-center">
+          <div class="phase-tag">FASE 1: LA CONSIGNA</div>
+          <div class="consigna-tv-card">
+            <p class="consigna-text" id="tvConsignaText">Cargando consigna...</p>
+          </div>
+          <div class="phase1-auto-hint" id="tvPhase1Countdown">Preparando celulares...</div>
+        </div>
+
+        <!-- FASE 2: ESCRIBIENDO CHAMUYOS -->
+        <div id="tvPhase2" class="phase-panel d-none text-center">
+          <div class="phase-tag">FASE 2: INVENTANDO EL CHAMUYO</div>
+          <div class="consigna-tv-mini">
+            <p id="tvConsignaMiniText">...</p>
+          </div>
+          <h3 class="phase2-headline">¡Escribí en tu celular una mentira creíble para engañar al resto!</h3>
+
+          <!-- Grid de Estado de Jugadores Escribiendo -->
+          <div id="tvPhase2PlayersGrid" class="phase-status-grid">
+            <!-- Inyectado por JS: avatar + nombre + status (✍️ Pensando... / ✅ ¡Listo!) -->
+          </div>
+        </div>
+
+        <!-- FASE 3: VOTACIÓN SECRETA -->
+        <div id="tvPhase3" class="phase-panel d-none text-center">
+          <div class="phase-tag">FASE 3: ¿CUÁL ES LA VERDAD?</div>
+          <div class="consigna-tv-mini">
+            <p id="tvConsignaMiniTextVotacion">...</p>
+          </div>
+          <h3 class="phase3-headline">¡Votá en tu celular cuál de estas opciones es la VERDADERA!</h3>
+
+          <!-- Opciones Mezcladas en la TV -->
+          <div id="tvOptionsGrid" class="tv-options-grid">
+            <!-- Inyectadas por JS: Opción A, B, C... -->
+          </div>
+
+          <!-- Estado de Votos -->
+          <div id="tvPhase3VotedGrid" class="phase-status-grid mt-4">
+            <!-- Avatares con 🤔 / 🗳️ -->
+          </div>
+        </div>
+
+        <!-- FASE 4: REVELACIÓN DRAMÁTICA SECUENCIAL -->
+        <div id="tvPhase4" class="phase-panel d-none text-center">
+          <div class="phase-tag">FASE 4: LA REVELACIÓN</div>
+          <div class="consigna-tv-mini">
+            <p id="tvConsignaMiniTextReveal">...</p>
+          </div>
+
+          <!-- Tablero de Opciones para Revelar -->
+          <div id="tvRevealGrid" class="tv-options-grid">
+            <!-- Se actualiza con animaciones de votos, autor y verdad -->
+          </div>
+
+          <!-- Caja de Remate / Dato Extra Real -->
+          <div id="tvDatoExtraBox" class="dato-extra-box d-none">
+            <div class="dato-extra-title">📖 LA HISTORIA REAL:</div>
+            <p class="dato-extra-content" id="tvDatoExtraText">...</p>
+          </div>
+
+          <!-- Botón de avance para TV / VIP -->
+          <div class="mt-4 d-none" id="tvPhase4Actions">
+            <button type="button" class="btn-tv-next-phase" id="btnTvNextFromReveal">
+              <span>📊 Ver Tabla de Posiciones</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- FASE 5: TABLA DE POSICIONES INTERMEDIA O FINAL -->
+        <div id="tvPhase5" class="phase-panel d-none text-center">
+          <div class="phase-tag" id="tvLeaderboardTitle">TABLA DE POSICIONES</div>
+          
+          <!-- Podio Especial si es Fin de Partida -->
+          <div id="tvPodiumContainer" class="podium-container d-none">
+            <div class="podium-title">🏆 ¡CAMPEONES DE LA PARTIDA!</div>
+            <div class="podium-steps" id="tvPodiumSteps">
+              <!-- Inyectado por JS -->
+            </div>
+            <!-- Mención especial Rey del Chamuyo -->
+            <div class="special-award-card" id="tvSpecialAward">
+              <span class="award-icon">🥇</span>
+              <div class="award-info">
+                <h4>REY DEL CHAMUYO</h4>
+                <p id="tvReyChamuyoName">Nadie engañó a nadie</p>
+                <small id="tvReyChamuyoVictims">0 víctimas en total</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla Ranking Regular -->
+          <div class="leaderboard-table-wrap">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Puesto</th>
+                  <th>Jugador</th>
+                  <th>Ronda</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="tvLeaderboardBody">
+                <!-- Inyectado por JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Acciones de Siguiente Ronda o Reinicio -->
+          <div class="tv-phase5-actions mt-4">
+            <button type="button" class="btn-tv-next-round" id="btnTvNextRound">
+              <span>▶️ Siguiente Ronda</span>
+            </button>
+            <button type="button" class="btn-tv-restart d-none" id="btnTvRestartGame">
+              <span>🔄 Jugar Otra Partida</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         VISTA CELULAR JUGADOR (MANDO)
+         ================================================================== -->
+    <section id="screenPhone" class="screen-section d-none">
+      
+      <!-- CELULAR: PASO 1 - LOGIN / REGISTRO -->
+      <div id="phoneViewJoin" class="phone-view active">
+        <div class="phone-card-container">
+          <div class="phone-hero-badge">📱</div>
+          <h2 class="phone-title">UNIRME A LA PARTIDA</h2>
+          <p class="phone-sub">Elegí tu nombre y tu avatar para entrar a la mesa.</p>
+
+          <form id="formJoinGame" class="phone-form" onsubmit="return false;">
+            <!-- Código de Sala -->
+            <div class="form-group mb-3">
+              <label for="inputPhoneRoom">Código de Sala:</label>
+              <input type="text" id="inputPhoneRoom" class="form-control text-uppercase font-weight-bold" maxlength="4" placeholder="XXXX" required>
+            </div>
+
+            <!-- Nombre -->
+            <div class="form-group mb-3">
+              <label for="inputPhoneName">Tu Nombre o Apodo:</label>
+              <input type="text" id="inputPhoneName" class="form-control" maxlength="12" placeholder="Ej: Santi" required autocomplete="nickname">
+            </div>
+
+            <!-- Selector de Avatar Emoji -->
+            <div class="form-group mb-4">
+              <label>Elegí tu Avatar:</label>
+              <div class="avatar-grid" id="avatarPickerGrid">
+                <!-- 16 Emojis inyectados por JS -->
+              </div>
+              <input type="hidden" id="inputChosenAvatar" value="🦊">
+            </div>
+
+            <!-- Botón Conectar -->
+            <button type="button" class="btn-phone-submit" id="btnSubmitJoin">
+              <span>🚀 ¡Entrar a la Sala!</span>
+            </button>
+          </form>
+
+          <div id="phoneJoinAlert" class="phone-alert d-none"></div>
+        </div>
+      </div>
+
+      <!-- CELULAR: PASO 2 - LOBBY EN ESPERA -->
+      <div id="phoneViewLobby" class="phone-view d-none">
+        <div class="phone-card-container text-center">
+          <div class="phone-user-badge">
+            <span class="user-avatar-lg" id="phoneMyAvatar">🦊</span>
+            <h3 class="user-name-lg" id="phoneMyName">Jugador</h3>
+            <span class="vip-crown-badge d-none" id="phoneVipBadge">👑 ANFITRIÓN VIP</span>
+          </div>
+
+          <div class="phone-connected-info">
+            <span class="dot-online"></span> Conectado a la Sala <strong id="phoneRoomLabel">----</strong>
+          </div>
+
+          <!-- Si NO es VIP: Mensaje de espera -->
+          <div id="phoneNonVipMsg" class="mt-4">
+            <div class="waiting-spinner">⏳</div>
+            <p class="text-muted">Esperando que el anfitrión VIP inicie la partida...</p>
+            <p class="text-secondary small">¡Preparate para chamuyar a todos!</p>
+          </div>
+
+          <!-- Si ES VIP: Panel de Configuración -->
+          <div id="phoneVipControls" class="vip-controls-panel d-none mt-4">
+            <div class="vip-panel-title">⚙️ AJUSTES DE LA PARTIDA</div>
+
+            <!-- Categorías -->
+            <div class="vip-setting-group">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="setting-label">Categorías:</label>
+                <button type="button" class="btn-toggle-all-cats" id="btnVipToggleAllCats">Todas</button>
+              </div>
+              <div class="cats-checkbox-grid">
+                <label class="cat-pill">
+                  <input type="checkbox" name="vipCat" value="argentina" checked>
+                  <span>🇦🇷 Argentina</span>
+                </label>
+                <label class="cat-pill">
+                  <input type="checkbox" name="vipCat" value="historia_insolita" checked>
+                  <span>📜 Historia</span>
+                </label>
+                <label class="cat-pill">
+                  <input type="checkbox" name="vipCat" value="leyes_absurdas" checked>
+                  <span>⚖️ Leyes</span>
+                </label>
+                <label class="cat-pill">
+                  <input type="checkbox" name="vipCat" value="ciencia_y_animales" checked>
+                  <span>🔬 Ciencia</span>
+                </label>
+                <label class="cat-pill">
+                  <input type="checkbox" name="vipCat" value="cultura_curiosa" checked>
+                  <span>🎩 Cultura</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Cantidad de Rondas -->
+            <div class="vip-setting-group">
+              <label class="setting-label">Duración:</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="vipRounds" id="rounds5" value="5">
+                <label class="btn btn-outline-light btn-sm" for="rounds5">5 Rondas</label>
+
+                <input type="radio" class="btn-check" name="vipRounds" id="rounds7" value="7" checked>
+                <label class="btn btn-outline-light btn-sm" for="rounds7">7 Rondas</label>
+
+                <input type="radio" class="btn-check" name="vipRounds" id="rounds10" value="10">
+                <label class="btn btn-outline-light btn-sm" for="rounds10">10 Rondas</label>
+              </div>
+            </div>
+
+            <!-- Tiempo por Fase -->
+            <div class="vip-setting-group">
+              <label class="setting-label">Tiempo por fase:</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="vipTimer" id="timer0" value="0">
+                <label class="btn btn-outline-light btn-sm" for="timer0">Sin tiempo</label>
+
+                <input type="radio" class="btn-check" name="vipTimer" id="timer45" value="45" checked>
+                <label class="btn btn-outline-light btn-sm" for="timer45">45s</label>
+
+                <input type="radio" class="btn-check" name="vipTimer" id="timer60" value="60">
+                <label class="btn btn-outline-light btn-sm" for="timer60">60s</label>
+              </div>
+            </div>
+
+            <!-- Botón Arrancar Partida VIP -->
+            <button type="button" class="btn-phone-vip-start mt-3" id="btnPhoneVipStart" disabled>
+              <span>▶️ ¡Arrancar Partida!</span>
+              <small class="d-block" id="phoneVipStartHint">(Mínimo 3 jugadores)</small>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CELULAR: FASE 1 - LECTURA -->
+      <div id="phonePhase1" class="phone-view d-none">
+        <div class="phone-card-container text-center">
+          <div class="phase-indicator-pill">RONDA <span id="phoneP1Round">1</span></div>
+          <div class="tv-eye-icon">📺</div>
+          <h3 class="phone-headline">¡Mirá la pantalla de la TV!</h3>
+          <p class="text-muted">Leé la consigna y andá pensando tu mejor mentira...</p>
+        </div>
+      </div>
+
+      <!-- CELULAR: FASE 2 - ESCRIBIR CHAMUYO -->
+      <div id="phonePhase2" class="phone-view d-none">
+        <div class="phone-card-container">
+          <div class="phase-indicator-pill">FASE 2: TU CHAMUYO</div>
+
+          <div class="phone-consigna-box">
+            <p id="phoneP2Consigna">...</p>
+          </div>
+
+          <!-- Formulario de Chamuyo -->
+          <div id="phoneWriteBox">
+            <label for="inputChamuyo" class="form-label font-weight-bold">Escribí tu mentira creíble para el espacio en blanco:</label>
+            <textarea id="inputChamuyo" class="form-control phone-textarea" rows="2" maxlength="40" placeholder="Ej: Un pingüino en paracaídas..."></textarea>
+            
+            <div class="char-counter text-end mt-1">
+              <span id="chamuyoCharCount">0</span>/40
+            </div>
+
+            <!-- Alerta Anti-Verdad / Duplicados -->
+            <div id="phoneChamuyoAlert" class="phone-alert d-none mt-2"></div>
+
+            <button type="button" class="btn-phone-submit mt-3" id="btnSubmitChamuyo">
+              <span>🗣️ Enviar Chamuyo</span>
+            </button>
+          </div>
+
+          <!-- Estado post-envío -->
+          <div id="phoneChamuyoSent" class="text-center d-none mt-4">
+            <div class="sent-check-icon">✅</div>
+            <h3>¡Chamuyo Enviado!</h3>
+            <p class="text-muted">Tu mentira es: <strong id="phoneMyLieText" class="text-warning">...</strong></p>
+            <p class="small text-secondary">Esperando que los demás jugadores terminen de escribir...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CELULAR: FASE 3 - VOTACIÓN -->
+      <div id="phonePhase3" class="phone-view d-none">
+        <div class="phone-card-container">
+          <div class="phase-indicator-pill">FASE 3: ¿CUÁL ES LA VERDAD?</div>
+
+          <div class="phone-consigna-box mb-3">
+            <p id="phoneP3Consigna">...</p>
+          </div>
+
+          <h4 class="vote-heading">Elegí la opción que creés que es REAL:</h4>
+          <p class="small text-muted mb-3">(Tu propio chamuyo no aparece en tu lista)</p>
+
+          <!-- Lista de Botones de Opciones -->
+          <div id="phoneVotingOptionsList" class="voting-options-list">
+            <!-- Inyectados por JS -->
+          </div>
+
+          <!-- Estado post-voto -->
+          <div id="phoneVoteSent" class="text-center d-none mt-4">
+            <div class="sent-check-icon">🗳️</div>
+            <h3>¡Voto Registrado!</h3>
+            <p class="text-muted">Votaste por: <strong id="phoneMyVotedOption" class="text-success">...</strong></p>
+            <p class="small text-secondary">¡Mirá la pantalla de la TV para la gran revelación!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CELULAR: FASE 4 - REVELACIÓN -->
+      <div id="phonePhase4" class="phone-view d-none">
+        <div class="phone-card-container text-center">
+          <div class="phase-indicator-pill">FASE 4: LA REVELACIÓN</div>
+          <div class="tv-eye-icon">🎭</div>
+          <h3 class="phone-headline">¡Mirá la TV!</h3>
+          <p class="text-muted">Descubrí quién chamuyó a quién y cuál era la verdad oculta.</p>
+
+          <!-- Botón de avance exclusivo para el VIP si quiere pasar de fase desde el celular -->
+          <div id="phoneVipPhase4Action" class="d-none mt-4">
+            <button type="button" class="btn-phone-submit" id="btnPhoneVipNextFromReveal">
+              <span>📊 Ver Tabla de Posiciones</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CELULAR: FASE 5 - TABLA / RESULTADOS PERSONALES -->
+      <div id="phonePhase5" class="phone-view d-none">
+        <div class="phone-card-container text-center">
+          <div class="phase-indicator-pill">RESULTADOS DE LA RONDA</div>
+          
+          <div class="personal-score-card mt-3">
+            <div class="rank-badge" id="phoneMyRankBadge">#1</div>
+            <div class="score-points"><span id="phoneMyTotalScore">0</span> PTS</div>
+            <div class="score-delta" id="phoneMyScoreDelta">+0 pts en esta ronda</div>
+          </div>
+
+          <div class="round-breakdown-box mt-3" id="phoneRoundBreakdown">
+            <!-- Detalles de engaños y aciertos -->
+          </div>
+
+          <!-- Si es VIP: Botón para arrancar la siguiente ronda o nueva partida -->
+          <div id="phoneVipNextRoundWrap" class="d-none mt-4">
+            <button type="button" class="btn-phone-submit" id="btnPhoneVipNextRound">
+              <span>▶️ Siguiente Ronda</span>
+            </button>
+            <button type="button" class="btn-phone-vip-start d-none mt-2" id="btnPhoneVipRestart">
+              <span>🔄 Jugar Otra Partida</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ====================================================================
+       SCRIPTS
+       ==================================================================== -->
+  <!-- PeerJS -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <!-- QRCode.js -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <!-- Bundle de Datos Offline -->
+  <script src="data/datos-bundle.js"></script>
+
+  <!-- Lógica Principal del Juego -->
+  <script src="js/app.js"></script>
+</body>
+</html>
