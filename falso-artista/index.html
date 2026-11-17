@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="description" content="El Falso Artista - Juego social de dibujo y engaño para TV y celulares.">
+  <title>🎨 El Falso Artista | Sala de Juegos</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Estilos del Juego -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Canvas de Confeti -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- ====================================================================
+       BARRA SUPERIOR UNIVERSAL
+       ==================================================================== -->
+  <header class="game-header">
+    <div class="brand-wrap">
+      <span class="brand-icon">🎨</span>
+      <div>
+        <h1 class="brand-title">EL FALSO ARTISTA</h1>
+        <span class="brand-sub">Arte &bull; Engaño &bull; Deducción Social</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Indicador de Sala activa -->
+      <div id="roomBadgeWrap" class="d-none">
+        <span class="badge-room">SALA: <strong id="headerRoomCode">----</strong></span>
+      </div>
+
+      <!-- Botón Sonido -->
+      <button type="button" class="btn-top-action" id="btnToggleSound" title="Alternar Sonido">
+        <span id="soundIcon">🔊</span>
+      </button>
+
+      <!-- Botón Pantalla Completa -->
+      <button type="button" class="btn-top-action" id="btnToggleFs" title="Pantalla Completa">
+        <span id="fsIcon">📺</span>
+      </button>
+
+      <!-- Volver al Hub -->
+      <a href="../index.html" class="btn-top-action btn-back-hub" title="Volver a la Sala de Juegos">
+        <span>🏠</span>
+        <span class="d-none d-md-inline">Volver</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       CONTENEDOR PRINCIPAL
+       ==================================================================== -->
+  <main class="game-container">
+
+    <!-- 1. PORTADA: ELECCIÓN DE MODO (TV O CELULAR) -->
+    <section id="screenLanding" class="screen-section active">
+      <div class="landing-hero text-center">
+        <div class="hero-palette-badge">🎨</div>
+        <h2 class="hero-title">¿QUIÉN DIBUJA SIN SABER LA PALABRA?</h2>
+        <p class="hero-subtitle">
+          Inspirado en <em>A Fake Artist Goes to New York</em>. Juego de deducción para <strong>3 a 10 jugadores</strong>.
+          La TV muestra el lienzo común y cada uno dibuja un único trazo con su celular mientras intentan descubrir al impostor.
+        </p>
+
+        <div class="role-cards-grid">
+          <!-- Opción 1: Pantalla TV -->
+          <div class="role-card tv-card" id="btnSelectTvMode">
+            <div class="role-icon">📺</div>
+            <h3 class="role-name">Abrir como Pantalla TV</h3>
+            <p class="role-desc">Crea una sala pública con lienzo gigante y código QR para que todos escaneen con su celular.</p>
+            <button type="button" class="btn-role btn-tv-launch">
+              <span>▶️ Crear Sala en la TV</span>
+            </button>
+          </div>
+
+          <!-- Opción 2: Celular Jugador -->
+          <div class="role-card phone-card" id="btnSelectPhoneMode">
+            <div class="role-icon">📱</div>
+            <h3 class="role-name">Unirme desde mi Celular</h3>
+            <p class="role-desc">Ingresá el código de 4 letras que ves en la pantalla de la TV y dibujá con tu dedo.</p>
+            <div class="phone-join-quick">
+              <input type="text" id="inputManualRoomCode" class="input-room-code" placeholder="CÓDIGO" maxlength="4" autocomplete="off" autocapitalize="characters">
+              <button type="button" class="btn-role btn-phone-launch" id="btnManualJoinRoom">
+                <span>Ingresar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. MODO TV: PANTALLA PÚBLICA (HOST) -->
+    <section id="screenTv" class="screen-section d-none">
+
+      <!-- TV: LOBBY DE ESPERA -->
+      <div id="tvViewLobby" class="tv-view">
+        <div class="tv-lobby-header text-center">
+          <h2 class="tv-lobby-title">¡ÚNANSE A LA PARTIDA!</h2>
+          <p class="tv-lobby-subtitle">Escaneen el código QR con la cámara del celular o ingresen a la web con el código:</p>
+        </div>
+
+        <div class="tv-lobby-center-grid">
+          <!-- Columna Izquierda: QR y Código -->
+          <div class="tv-qr-box">
+            <div id="tvQrContainer" class="qr-canvas-wrap"></div>
+            <div class="tv-room-code-tag">
+              <span class="code-label">CÓDIGO DE SALA:</span>
+              <span class="code-value" id="tvRoomCode">----</span>
+            </div>
+            <div class="tv-join-url" id="tvJoinUrlText">cargando enlace...</div>
+          </div>
+
+          <!-- Columna Derecha: Jugadores Conectados -->
+          <div class="tv-roster-box">
+            <div class="tv-roster-header">
+              <span class="roster-title">Artistas en la Sala</span>
+              <span class="roster-count" id="tvPlayerCount">0 / 10 (Mínimo 3)</span>
+            </div>
+            
+            <div class="tv-roster-grid" id="tvPlayerRoster">
+              <!-- Se llena dinámicamente con los jugadores -->
+            </div>
+
+            <div class="tv-lobby-footer text-center">
+              <div class="lobby-status-msg" id="tvLobbyStatusMsg">
+                Esperando que el 👑 VIP configure y arranque la partida desde su celular...
+              </div>
+              <button type="button" class="btn-action-primary btn-lg mt-2 d-none" id="btnTvStartGame">
+                <span>▶️ Iniciar Partida desde la TV</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TV: FASE 1 - ANUNCIO DE ROLES Y CATEGORÍA -->
+      <div id="tvViewPhase1" class="tv-view d-none">
+        <div class="tv-phase-header text-center">
+          <div class="phase-pill">RONDA <span id="tvRoundNumPill">1</span> &bull; REPARTO SECRETO</div>
+          <h2 class="category-banner-title">
+            CATEGORÍA: <span id="tvCategoryName" class="highlight-category">ANIMALES</span>
+          </h2>
+          <p class="category-banner-sub">
+            🤫 ¡Los roles fueron enviados a los celulares! Miren su pantalla en privado para conocer su palabra secreta.
+          </p>
+        </div>
+
+        <div class="tv-role-reveal-box text-center">
+          <div class="secret-envelope-icon">📩</div>
+          <div class="role-wait-instruction">
+            <span>Uno de ustedes es <strong>El Falso Artista</strong> y NO sabe qué van a dibujar.</span>
+            <div class="tv-countdown-badge mt-3" id="tvRoleCountdown">Iniciando dibujo en 6s...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TV: FASE 2 - LIENZO PÚBLICO Y TURNOS DE DIBUJO -->
+      <div id="tvViewPhase2" class="tv-view d-none">
+        <div class="tv-game-top-bar">
+          <div class="bar-left">
+            <span class="badge-lap" id="tvLapBadge">VUELTA 1 DE 2</span>
+            <span class="badge-cat" id="tvGameCategory">🐾 ANIMALES</span>
+          </div>
+
+          <div class="bar-center">
+            <div class="active-turn-indicator" id="tvActiveTurnIndicator">
+              <span class="turn-label">TURNO DE:</span>
+              <span class="turn-avatar" id="tvTurnAvatar">🎨</span>
+              <strong class="turn-name" id="tvTurnName">Jugador</strong>
+              <span class="turn-color-dot" id="tvTurnColorDot"></span>
+            </div>
+          </div>
+
+          <div class="bar-right">
+            <span class="badge-strokes-counter" id="tvStrokesCounter">Trazo 1 / 6</span>
+          </div>
+        </div>
+
+        <!-- Escenario del Lienzo y Leyenda -->
+        <div class="tv-canvas-stage">
+          <!-- Canvas Gigante 800x600 -->
+          <div class="tv-canvas-frame">
+            <canvas id="tvDrawingCanvas" width="800" height="600"></canvas>
+            <div id="tvCanvasLiveIndicator" class="live-drawing-badge d-none">
+              <span class="pulse-dot"></span> Dibujando trazo en vivo...
+            </div>
+          </div>
+
+          <!-- Leyenda Lateral de Jugadores y Colores -->
+          <div class="tv-canvas-sidebar">
+            <h4 class="sidebar-title">PALETA DE ARTISTAS</h4>
+            <div class="tv-palette-list" id="tvPaletteList">
+              <!-- Tarjetas de jugadores con su color y estado de trazo -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TV: FASE 3 - DEBATE Y VOTACIÓN -->
+      <div id="tvViewPhase3" class="tv-view d-none">
+        <div class="tv-phase-header text-center">
+          <div class="phase-pill">DEBATE Y VOTACIÓN SECRETA</div>
+          <h2 class="debate-title">🔍 ¿QUIÉN DIBUJÓ SIN SABER LA PALABRA?</h2>
+          <p class="debate-subtitle">
+            Observen los colores de cada trazo en el lienzo y voten en su celular quién es <strong>El Falso Artista</strong>.
+          </p>
+        </div>
+
+        <div class="tv-canvas-stage">
+          <div class="tv-canvas-frame">
+            <canvas id="tvDebateCanvas" width="800" height="600"></canvas>
+          </div>
+
+          <div class="tv-canvas-sidebar">
+            <h4 class="sidebar-title">ESTADO DE VOTOS</h4>
+            <div class="votes-progress-bar">
+              <span id="tvVotesCountLabel">0 / 0 votos emitidos</span>
+              <div class="progress mt-1" style="height: 10px; background: rgba(255,255,255,0.1);">
+                <div id="tvVotesProgressBar" class="progress-bar bg-warning" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="tv-palette-list mt-3" id="tvDebatePaletteList">
+              <!-- Lista con check de quién votó -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TV: FASE 4 - REVELACIÓN Y ÚLTIMA OPORTUNIDAD -->
+      <div id="tvViewPhase4" class="tv-view d-none">
+        <div class="tv-phase-header text-center">
+          <div class="phase-pill">RESULTADOS DE LA ACUSACIÓN</div>
+          <h2 class="reveal-title" id="tvRevealTitle">REVELANDO AL FALSO ARTISTA...</h2>
+        </div>
+
+        <div class="tv-reveal-container">
+          <!-- Grilla de Votos Recibidos -->
+          <div class="tv-votes-grid" id="tvVotesRevealGrid">
+            <!-- Tarjetas de cada jugador con su barra de votos -->
+          </div>
+
+          <!-- Spotlight Central de Veredicto -->
+          <div class="tv-verdict-box mt-4 text-center" id="tvVerdictBox">
+            <div class="verdict-role-badge" id="tvVerdictBadge">🕵️ EL FALSO ARTISTA ERA:</div>
+            <h3 class="verdict-player-name" id="tvVerdictPlayerName">---</h3>
+            <p class="verdict-desc" id="tvVerdictDesc">Calculando veredicto...</p>
+
+            <!-- Zona de Última Oportunidad (Caso B) -->
+            <div class="fake-guess-stage d-none mt-3" id="tvFakeGuessStage">
+              <div class="guess-wait-badge" id="tvGuessWaitBadge">
+                ⏳ El Falso Artista está escribiendo su respuesta en su celular...
+              </div>
+
+              <div class="guess-comparison-box d-none mt-3" id="tvGuessComparisonBox">
+                <div class="row align-items-center">
+                  <div class="col-md-6 mb-2 mb-md-0">
+                    <span class="guess-label">El Falso Artista dijo:</span>
+                    <div class="guess-value" id="tvFakeGuessValue">"..."</div>
+                  </div>
+                  <div class="col-md-6">
+                    <span class="guess-label">La Palabra Secreta era:</span>
+                    <div class="real-word-value" id="tvRealWordValue">"..."</div>
+                  </div>
+                </div>
+
+                <!-- Botones de validación manual para Host / VIP si hace falta -->
+                <div class="host-judge-actions d-none mt-3" id="tvHostJudgeActions">
+                  <span class="judge-hint">¿La respuesta es válida o equivalente?</span>
+                  <div class="d-flex justify-content-center gap-3 mt-2">
+                    <button type="button" class="btn btn-success btn-lg" id="btnTvJudgeValid">
+                      ✅ Dar por válida (Gana Falso Artista)
+                    </button>
+                    <button type="button" class="btn btn-danger btn-lg" id="btnTvJudgeInvalid">
+                      ❌ Incorrecta (Ganan Artistas Reales)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botón para ver puntajes -->
+            <button type="button" class="btn-action-primary mt-4 d-none" id="btnTvShowScores">
+              <span>📊 Ver Tabla de Posiciones</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TV: FASE 5 - TABLA DE POSICIONES Y PODIO -->
+      <div id="tvViewPhase5" class="tv-view d-none">
+        <div class="tv-phase-header text-center">
+          <div class="phase-pill" id="tvScoresPill">TABLA DE POSICIONES</div>
+          <h2 class="scores-title" id="tvScoresTitle">PUNTAJES ACUMULADOS</h2>
+        </div>
+
+        <div class="tv-scores-card-container">
+          <div class="tv-leaderboard-table" id="tvLeaderboardTable">
+            <!-- Filas del ranking de jugadores -->
+          </div>
+
+          <div class="tv-scores-actions text-center mt-4">
+            <button type="button" class="btn-action-primary btn-lg" id="btnTvNextRound">
+              <span>▶️ Siguiente Ronda</span>
+            </button>
+            <button type="button" class="btn-action-primary btn-lg d-none" id="btnTvRestartGame">
+              <span>🔄 Jugar Otra Partida</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 3. MODO CELULAR: MANDO PRIVADO Y LIENZO TÁCTIL -->
+    <section id="screenPhone" class="screen-section d-none">
+
+      <!-- CELULAR: INGRESO / REGISTRO -->
+      <div id="phoneViewJoin" class="phone-view">
+        <div class="phone-card-container">
+          <div class="text-center mb-3">
+            <span class="phone-app-badge">🎨 JUGADOR</span>
+            <h3 class="phone-title mt-2">Ingresar a la Sala</h3>
+          </div>
+
+          <!-- Alerta de Error / Desconexión -->
+          <div id="phoneJoinAlert" class="phone-alert alert-danger d-none"></div>
+
+          <form id="formPhoneJoin" onsubmit="return false;">
+            <div class="form-group mb-3">
+              <label for="inputPhoneRoom" class="form-label">Código de la Sala (4 letras):</label>
+              <input type="text" id="inputPhoneRoom" class="form-control text-uppercase text-center font-monospace fs-4 fw-bold" maxlength="4" placeholder="XXXX" required autocomplete="off" autocapitalize="characters">
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="inputPhoneName" class="form-label">Tu Nombre o Apodo:</label>
+              <input type="text" id="inputPhoneName" class="form-control fs-5" maxlength="14" placeholder="Ej: Lucas" required autocomplete="name">
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label">Elegí tu Avatar:</label>
+              <div class="avatar-picker-grid" id="phoneAvatarPicker">
+                <!-- Emojis seleccionables -->
+              </div>
+              <input type="hidden" id="inputPhoneAvatar" value="🦊">
+            </div>
+
+            <button type="button" class="btn-phone-submit" id="btnPhoneJoin">
+              <span>Entrar al Juego</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- CELULAR: LOBBY DE ESPERA -->
+      <div id="phoneViewLobby" class="phone-view d-none">
+        <div class="phone-card-container">
+          <div class="phone-user-header">
+            <div class="user-avatar-tag" id="phoneMyAvatar">🦊</div>
+            <div class="user-info-tag">
+              <h4 id="phoneMyName">Jugador</h4>
+              <span class="user-status-text" id="phoneMyRoleBadge">🎨 Artista</span>
+            </div>
+            <div class="user-color-badge" id="phoneMyColorBadge" title="Tu color de pincel asignado">
+              <span class="color-swatch-dot" id="phoneMyColorDot"></span>
+              <span class="color-swatch-name" id="phoneMyColorName">Rojo</span>
+            </div>
+          </div>
+
+          <div class="room-indicator-card my-3 text-center">
+            <span class="text-muted small">SALA ACTUAL:</span>
+            <div class="room-code-display" id="phoneRoomLabel">----</div>
+          </div>
+
+          <!-- PANEL EXCLUSIVO DEL VIP -->
+          <div id="phoneVipPanel" class="phone-vip-box d-none">
+            <div class="vip-badge-tag">👑 Sos el Anfitrión de la Mesa</div>
+            
+            <div class="mt-3">
+              <label class="form-label fw-bold small">Duración de la partida:</label>
+              <div class="d-flex gap-2 justify-content-center">
+                <button type="button" class="btn btn-outline-light btn-sm flex-fill btn-round-opt active" data-rounds="3">3 Rondas</button>
+                <button type="button" class="btn btn-outline-light btn-sm flex-fill btn-round-opt" data-rounds="5">5 Rondas</button>
+                <button type="button" class="btn btn-outline-light btn-sm flex-fill btn-round-opt" data-rounds="7">7 Rondas</button>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label fw-bold small">Categorías disponibles:</label>
+              <div class="category-toggle-grid" id="phoneCategoryToggles">
+                <!-- Se llena por JS -->
+              </div>
+            </div>
+
+            <button type="button" class="btn-phone-vip-start mt-3" id="btnPhoneVipStart" disabled>
+              <span>▶️ ¡Arrancar Partida! (Mín. 3)</span>
+            </button>
+          </div>
+
+          <!-- PANEL PARA NO-VIP -->
+          <div id="phoneWaitHostPanel" class="phone-wait-box text-center my-3">
+            <div class="spinner-border text-primary my-2" role="status"></div>
+            <p class="mb-0" id="phoneWaitHostMsg">Esperando que el anfitrión 👑 inicie la partida...</p>
+          </div>
+
+          <!-- Lista de jugadores en la sala -->
+          <div class="connected-players-block mt-3">
+            <span class="block-title">Jugadores conectados (<span id="phonePlayersCount">0</span>):</span>
+            <div class="connected-pills-list mt-2" id="phonePlayersList">
+              <!-- Pills de jugadores -->
+            </div>
+          </div>
+
+          <!-- Botón de desconexión / cambio de sala -->
+          <div class="text-center mt-4">
+            <button type="button" class="btn btn-link text-muted btn-sm" id="btnChangeRoomPhone">
+              🔄 Conectar a otra sala
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CELULAR: FASE 1 - VER ROL SECRETO -->
+      <div id="phonePhase1" class="phone-view d-none">
+        <div class="phone-card-container text-center">
+          <div class="phase-indicator-pill">RONDA <span id="phoneRoundNum">1</span></div>
+          <h3 class="phone-screen-title mt-2">Tu Rol Secreto</h3>
+          <p class="text-muted small">Mantené presionado o tocá el botón para ver tu rol en privado sin que nadie mire tu pantalla.</p>
+
+          <div class="role-peek-card mt-3" id="phoneRolePeekCard">
+            <!-- Estado Oculto -->
+            <div id="phoneRoleHiddenState" class="role-hidden-box">
+              <span class="eye-icon">👁️</span>
+              <span class="peek-instruction">TOCÁ PARA ESPIAR TU ROL</span>
+            </div>
+
+            <!-- Estado Revelado -->
+            <div id="phoneRoleVisibleState" class="role-visible-box d-none">
+              <div class="role-badge-pill" id="phoneMyRolePill">🎨 ARTISTA REAL</div>
+              <div class="role-cat-label mt-2">Categoría: <strong id="phoneMyCategory">ANIMALES</strong></div>
+              <div class="role-word-label mt-3">
+                <span class="word-subtitle">Palabra secreta a dibujar:</span>
+                <div class="secret-word-display" id="phoneMySecretWord">JIRAFA</div>
+              </div>
+              <p class="role-advice-text mt-3" id="phoneMyRoleAdvice">
+                Hacé un trazo que demuestre que sabés la palabra sin hacérsela demasiado obvia al Falso Artista.
+              </p>
+            </div>
+          </div>
+
+          <div class="role-peek-toggle-wrap mt-3">
+            <button type="button" class="btn btn-outline-light btn-sm" id="btnToggleRolePeek">
+              👁️ Ocultar / Mostrar
+            </button>
+          </div>
+
+          <p class="text-muted small mt-4">
+            ⏳ La ronda comenzará en cuanto todos vean su rol...
+          </p>
+        </div>
+      </div>
+
+      <!-- CELULAR: FASE 2 - DIBUJO CON UN SOLO TRAZO -->
+      <div id="phonePhase2" class="phone-view d-none">
+        <div class="phone-drawing-wrapper">
+          <!-- Cabecera compacta -->
+          <div class="phone-draw-header">
+            <div>
+              <span class="badge-round-small" id="phoneDrawRoundLabel">R1</span>
+              <span class="badge-lap-small" id="phoneDrawLapLabel">Vuelta 1</span>
+              <span class="badge-cat-small" id="phoneDrawCatLabel">ANIMALES</span>
+            </div>
+            <div class="phone-my-turn-badge" id="phoneTurnStatusBadge">
+              👀 Mirá la TV
+            </div>
+          </div>
+
+          <!-- Banner de Instrucción -->
+          <div class="phone-turn-banner" id="phoneTurnBanner">
+            ✏️ ¡Tu turno! Apoyá el dedo y hacé <strong>UN SOLO TRAZO</strong> continuo
+          </div>
+
+          <!-- Lienzo Táctil 800x600 -->
+          <div class="phone-canvas-container">
+            <canvas id="phoneDrawingCanvas" width="800" height="600"></canvas>
+            <div id="phoneCanvasOverlayLock" class="canvas-lock-overlay d-none">
+              <span>🔒 Esperando tu turno...</span>
+            </div>
+          </div>
+
+          <!-- Botones de Acción de Trazo (Aparecen al levantar el dedo) -->
+          <div class="phone-stroke-actions d-none mt-2" id="phoneStrokeActions">
+            <button type="button" class="btn btn-outline-warning flex-fill" id="btnPhoneRedoStroke">
+              🔄 Rehacer trazo
+            </button>
+            <button type="button" class="btn btn-success flex-fill fw-bold" id="btnPhoneConfirmStroke">
+              ✅ Confirmar y Pasar
+            </button>
+          </div>
+
+          <!-- Recordatorio de la palabra para los artistas reales -->
+          <div class="phone-word-reminder text-center mt-2" id="phoneWordReminder">
+            Palabra: <strong id="phoneReminderWord">JIRAFA</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- CELULAR: FASE 3 - VOTACIÓN SECRETA -->
+      <div id="phonePhase3" class="phone-view d-none">
+        <div class="phone-card-container">
+          <div class="text-center mb-3">
+            <span class="phone-app-badge">🗳️ VOTACIÓN SECRETA</span>
+            <h3 class="phone-title mt-2">¿Quién es el Falso Artista?</h3>
+            <p class="text-muted small">
+              Votá al jugador que creés que dibujó sin conocer la palabra secreta:
+            </p>
+          </div>
+
+          <!-- Lista de Opciones para Votar -->
+          <div class="vote-candidates-list" id="phoneVoteList">
+            <!-- Tarjetas de jugadores (no incluye a uno mismo) -->
+          </div>
+
+          <div id="phoneVoteConfirmedMsg" class="phone-voted-box d-none text-center my-3">
+            <div class="fs-1">✅</div>
+            <h4>¡Voto registrado!</h4>
+            <p class="text-muted small">Esperando que todos los artistas terminen de votar...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CELULAR: FASE 4 - ÚLTIMA OPORTUNIDAD DEL FALSO ARTISTA -->
+      <div id="phonePhase4" class="phone-view d-none">
+        <div class="phone-card-container text-center">
+          <div class="phase-indicator-pill">ÚLTIMA OPORTUNIDAD</div>
+
+          <!-- Sub-vista A: Falso Artista arriesga palabra -->
+          <div id="phoneFakeGuessForm" class="d-none">
+            <div class="alert alert-warning text-start mt-3">
+              🚨 <strong>¡Te descubrieron!</strong> Pero tenés una última oportunidad: si adivinás la palabra exacta que estaban dibujando, <strong>te robás la victoria (+2 pts)</strong>.
+            </div>
+
+            <div class="form-group mt-3 text-start">
+              <label for="inputFakeGuess" class="form-label fw-bold">🎯 ¿Qué estaban dibujando?</label>
+              <input type="text" id="inputFakeGuess" class="form-control fs-4 text-center fw-bold" placeholder="Escribí la palabra..." autocomplete="off">
+            </div>
+
+            <button type="button" class="btn-phone-submit mt-3" id="btnPhoneSubmitGuess">
+              <span>Enviar mi Respuesta</span>
+            </button>
+          </div>
+
+          <!-- Sub-vista B: Esperando respuesta del Falso Artista -->
+          <div id="phoneWaitGuessBox" class="my-4">
+            <div class="spinner-grow text-warning my-2" role="status"></div>
+            <h4 class="mt-2">¡Descubrieron al Falso Artista!</h4>
+            <p class="text-muted small">
+              Está intentando adivinar la palabra secreta desde su celular para robar la victoria...
+            </p>
+          </div>
+
+          <!-- Sub-vista C: VIP Juez manual (si la respuesta no fue idéntica) -->
+          <div id="phoneVipJudgeBox" class="d-none text-start mt-3">
+            <div class="alert alert-info">
+              👑 <strong>Sos el VIP:</strong> El Falso Artista arriesgó una palabra similar. Decidí si es un sinónimo o concepto válido:
+            </div>
+            <div class="p-3 bg-dark rounded border mb-3">
+              <div>Dijo: <strong class="text-warning fs-5" id="phoneJudgeSaid">"..."</strong></div>
+              <div>Era: <strong class="text-success fs-5" id="phoneJudgeReal">"..."</strong></div>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-success flex-fill" id="btnPhoneVipAccept">
+                ✅ Es Válida
+              </button>
+              <button type="button" class="btn btn-danger flex-fill" id="btnPhoneVipReject">
+                ❌ No es Válida
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CELULAR: FASE 5 - RESULTADOS DE LA RONDA -->
+      <div id="phonePhase5" class="phone-view d-none">
+        <div class="phone-card-container text-center">
+          <div class="phase-indicator-pill">RESULTADOS DE LA RONDA</div>
+
+          <div class="personal-score-card mt-3">
+            <div class="rank-badge" id="phoneMyRankBadge">#1</div>
+            <div class="score-points"><span id="phoneMyTotalScore">0</span> PTS</div>
+            <div class="score-delta" id="phoneMyScoreDelta">+0 pts en esta ronda</div>
+          </div>
+
+          <div class="round-breakdown-box mt-3" id="phoneRoundBreakdown">
+            <!-- Detalles de engaño o acierto -->
+          </div>
+
+          <!-- Controles VIP para continuar -->
+          <div id="phoneVipNextWrap" class="d-none mt-4">
+            <button type="button" class="btn-phone-submit" id="btnPhoneVipNextRound">
+              <span>▶️ Siguiente Ronda</span>
+            </button>
+            <button type="button" class="btn-phone-vip-start d-none mt-2" id="btnPhoneVipRestart">
+              <span>🔄 Jugar Otra Partida</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ====================================================================
+       SCRIPTS
+       ==================================================================== -->
+  <!-- PeerJS -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <!-- QRCode.js -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <!-- Bundle de Palabras Offline -->
+  <script src="data/palabras-bundle.js"></script>
+
+  <!-- Lógica Principal del Juego -->
+  <script src="js/app.js"></script>
+</body>
+</html>
