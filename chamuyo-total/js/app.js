@@ -257,10 +257,37 @@
   }
 
   // =========================================================================
+  // LIMPIEZA DE CONEXIONES PREVIAS (Anti-bloqueos al cambiar de sala)
+  // =========================================================================
+  function limpiarConexionPrevia() {
+    if (appState.heartbeatInterval) {
+      clearInterval(appState.heartbeatInterval);
+      appState.heartbeatInterval = null;
+    }
+    if (appState.phone && appState.phone.conn) {
+      try { appState.phone.conn.close(); } catch(e) {}
+      appState.phone.conn = null;
+    }
+    if (appState.tv && appState.tv.players) {
+      appState.tv.players.forEach(p => {
+        if (p.conn) {
+          try { p.conn.close(); } catch(e) {}
+          p.conn = null;
+        }
+      });
+    }
+    if (appState.peer && !appState.peer.destroyed) {
+      try { appState.peer.destroy(); } catch(e) {}
+      appState.peer = null;
+    }
+  }
+
+  // =========================================================================
   // 6. MOTOR DE PANTALLA TV (HOST)
   // =========================================================================
   const TvHost = {
     init(customCode) {
+      limpiarConexionPrevia();
       appState.mode = 'tv';
       appState.roomCode = (customCode || generateRoomCode()).toUpperCase();
 
@@ -801,12 +828,11 @@
       this.setPhase('phase4');
 
       document.getElementById('tvConsignaMiniTextReveal').innerHTML = tv.currentQuestion.consigna.replace('________', '<strong>________</strong>');
-      document.getElementById('tvDatoExtraBox').classList.add('d-none');
       document.getElementById('tvPhase4Actions').classList.add('d-none');
+      document.getElementById('tvRoundSummarySection').classList.add('d-none');
 
-      // Reutilizamos el grid de opciones para la revelación dramática
-      const grid = document.getElementById('tvRevealGrid');
-      grid.innerHTML = document.getElementById('tvOptionsGrid').innerHTML;
+      const stage = document.getElementById('tvSpotlightStage');
+      stage.classList.remove('d-none');
 
       this.broadcastPhaseState();
 
@@ -819,92 +845,142 @@
         .filter(o => !o.isTruth && o.voters.length > 0)
         .sort((a, b) => a.voters.length - b.voters.length);
 
-      // Secuencia de revelación de chamuyos
+      const spotlightCard = document.getElementById('spotlightCard');
+      const spotlightOptLabel = document.getElementById('spotlightOptionLabel');
+      const spotlightAnswer = document.getElementById('spotlightAnswerText');
+      const spotlightVotersTitle = document.getElementById('spotlightVotersTitle');
+      const spotlightVotersWrap = document.getElementById('spotlightVotersWrap');
+      const spotlightBottomBar = document.getElementById('spotlightBottomBar');
+      const spotlightVerdict = document.getElementById('spotlightVerdictContent');
+      const spotlightPoints = document.getElementById('spotlightPointsBadge');
+      const spotlightDatoExtra = document.getElementById('spotlightDatoExtra');
+
+      // Secuencia de revelación en Spotlight para cada chamuyo votado
+      let lieIndex = 1;
       for (const lie of votedLies) {
-        const card = grid.querySelector(`#tv-card-${lie.id}`);
-        if (card) {
-          card.classList.add('revealing');
-          sound.playDrumroll();
-          await this.delay(1200);
+        spotlightCard.className = 'spotlight-card revealing';
+        spotlightOptLabel.textContent = `CHAMUYO #${lieIndex}`;
+        spotlightAnswer.textContent = lie.text;
+        spotlightVotersTitle.textContent = `¿Quiénes cayeron en esta trampa?`;
+        spotlightDatoExtra.classList.add('d-none');
+        spotlightBottomBar.classList.add('d-none');
 
-          // Mostrar votos de las víctimas
-          const votersBox = card.querySelector(`#voters-${lie.id}`);
-          if (votersBox) {
-            votersBox.innerHTML = lie.voters.map(v => 
-              `<span class="voter-avatar-chip">${v.avatar} ${v.name}</span>`
-            ).join('');
-          }
+        spotlightVotersWrap.innerHTML = lie.voters.map(v => 
+          `<span class="spotlight-voter-pill">${v.avatar} ${v.name}</span>`
+        ).join('');
 
-          await this.delay(1400);
+        sound.playDrumroll();
+        await this.delay(1200);
 
-          // Revelar de quién era la mentira y sumar puntos al autor
-          card.classList.remove('revealing');
-          card.classList.add('is-lie');
-          sound.playFooled();
+        // Desplegar veredicto inferior tras 1.2 segundos
+        spotlightCard.className = 'spotlight-card is-lie';
+        sound.playFooled();
 
-          const author = tv.players.get(lie.authorId);
-          if (author) {
-            const earned = lie.voters.length * pointsPerFool;
-            author.score += earned;
-            author.roundScore += earned;
-            author.fooledVictims += lie.voters.length;
-
-            const badge = document.createElement('div');
-            badge.className = 'author-reveal-badge';
-            badge.textContent = `🤥 ¡CHAMUYO DE ${author.name}! (+${earned} pts)`;
-            card.appendChild(badge);
-          }
-
-          await this.delay(2800);
+        const author = tv.players.get(lie.authorId);
+        const earned = lie.voters.length * pointsPerFool;
+        if (author) {
+          author.score += earned;
+          author.roundScore += earned;
+          author.fooledVictims += lie.voters.length;
         }
+
+        spotlightBottomBar.className = 'spotlight-bottom-bar lie-verdict';
+        spotlightVerdict.innerHTML = `🤥 ¡CHAMUYO DE ${lie.authorAvatar} ${lie.authorName}!`;
+        spotlightPoints.textContent = `+${earned} PTS`;
+        spotlightBottomBar.classList.remove('d-none');
+
+        lieIndex++;
+        await this.delay(3000);
       }
 
-      // 2. Revelar la VERDAD
+      // 2. Revelar la VERDAD en Spotlight
       const truthOpt = tv.options.find(o => o.isTruth);
       if (truthOpt) {
-        const card = grid.querySelector(`#tv-card-${truthOpt.id}`);
-        if (card) {
-          card.classList.add('revealing');
-          sound.playDrumroll();
-          await this.delay(1200);
+        spotlightCard.className = 'spotlight-card revealing';
+        spotlightOptLabel.textContent = 'LA VERDAD';
+        spotlightAnswer.textContent = truthOpt.text;
+        spotlightVotersTitle.textContent = '¿Quiénes descubrieron la verdad?';
+        spotlightBottomBar.classList.add('d-none');
+        spotlightDatoExtra.classList.add('d-none');
 
-          card.classList.remove('revealing');
-          card.classList.add('is-truth');
-          sound.playTruth();
-
-          // Mostrar quiénes acertaron
-          const votersBox = card.querySelector(`#voters-${truthOpt.id}`);
-          if (votersBox) {
-            votersBox.innerHTML = truthOpt.voters.map(v => 
-              `<span class="voter-avatar-chip">${v.avatar} ${v.name}</span>`
-            ).join('');
-          }
-
-          // Asignar puntos a los que acertaron la verdad
-          truthOpt.voters.forEach(v => {
-            const p = tv.players.get(v.id);
-            if (p) {
-              p.score += pointsForTruth;
-              p.roundScore += pointsForTruth;
-            }
-          });
-
-          const truthBadge = document.createElement('div');
-          truthBadge.className = 'truth-reveal-badge';
-          truthBadge.textContent = `✅ ¡LA VERDAD! (+${pointsForTruth} pts a quienes acertaron)`;
-          card.appendChild(truthBadge);
-
-          await this.delay(1500);
-
-          // Revelar Dato Extra Curioso
-          const datoBox = document.getElementById('tvDatoExtraBox');
-          document.getElementById('tvDatoExtraText').textContent = tv.currentQuestion.datoExtra;
-          datoBox.classList.remove('d-none');
+        if (truthOpt.voters.length > 0) {
+          spotlightVotersWrap.innerHTML = truthOpt.voters.map(v => 
+            `<span class="spotlight-voter-pill">${v.avatar} ${v.name}</span>`
+          ).join('');
+        } else {
+          spotlightVotersWrap.innerHTML = '<span class="spotlight-zero-voters">¡Nadie acertó la verdad!</span>';
         }
+
+        sound.playDrumroll();
+        await this.delay(1200);
+
+        spotlightCard.className = 'spotlight-card is-truth';
+        sound.playTruth();
+
+        // Asignar puntos a los que acertaron la verdad
+        truthOpt.voters.forEach(v => {
+          const p = tv.players.get(v.id);
+          if (p) {
+            p.score += pointsForTruth;
+            p.roundScore += pointsForTruth;
+          }
+        });
+
+        spotlightBottomBar.className = 'spotlight-bottom-bar truth-verdict';
+        spotlightVerdict.innerHTML = '✅ ¡LA VERDAD!';
+        spotlightPoints.textContent = `+${pointsForTruth} PTS a cada acertante`;
+        spotlightBottomBar.classList.remove('d-none');
+
+        // Mostrar Dato Extra
+        document.getElementById('spotlightDatoExtraText').textContent = tv.currentQuestion.datoExtra;
+        spotlightDatoExtra.classList.remove('d-none');
+
+        await this.delay(3500);
       }
 
-      // Habilitar botón de continuar a Posiciones
+      // 3. Momento B: Resumen Final de la Ronda (Grilla Limpia de 2 Columnas)
+      stage.classList.add('d-none');
+
+      const summaryGrid = document.getElementById('tvSummaryGrid');
+      summaryGrid.innerHTML = '';
+
+      // Ordenar: primero la verdad, luego el resto de opciones
+      const orderedOptions = [...tv.options].sort((a, b) => (b.isTruth ? 1 : 0) - (a.isTruth ? 1 : 0));
+
+      orderedOptions.forEach(opt => {
+        const card = document.createElement('div');
+        card.className = `summary-card ${opt.isTruth ? 'is-truth' : 'is-lie'}`;
+
+        const badgeHtml = opt.isTruth
+          ? `<span class="summary-author-badge">✅ LA VERDAD</span>`
+          : `<span class="summary-author-badge">🤥 De: ${opt.authorAvatar} ${opt.authorName}</span>`;
+
+        let votersHtml = '';
+        if (opt.voters && opt.voters.length > 0) {
+          votersHtml = opt.voters.map(v => 
+            `<span class="summary-voter-pill">${v.avatar} ${v.name}</span>`
+          ).join('');
+        } else {
+          votersHtml = opt.isTruth 
+            ? `<span class="summary-zero-voters">Nadie acertó</span>`
+            : `<span class="summary-zero-voters">Nadie cayó en este chamuyo</span>`;
+        }
+
+        card.innerHTML = `
+          <div class="summary-card-header">
+            <span class="summary-answer-title">${opt.text}</span>
+            ${badgeHtml}
+          </div>
+          <div class="summary-card-footer">
+            ${votersHtml}
+          </div>
+        `;
+        summaryGrid.appendChild(card);
+      });
+
+      document.getElementById('tvRoundSummarySection').classList.remove('d-none');
       document.getElementById('tvPhase4Actions').classList.remove('d-none');
+
       this.broadcast({
         type: 'PHASE4_REVEAL_DONE'
       });
@@ -1212,6 +1288,7 @@
   // =========================================================================
   const PhoneClient = {
     init(preloadedRoomCode) {
+      limpiarConexionPrevia();
       appState.mode = 'phone';
       const phone = appState.phone;
 
@@ -1223,7 +1300,17 @@
       // Cargar datos previos
       phone.name = sessionStorage.getItem('chamuyo_player_name') || '';
       phone.avatar = sessionStorage.getItem('chamuyo_player_avatar') || '🦊';
-      const savedRoom = sessionStorage.getItem('chamuyo_room_code') || preloadedRoomCode || '';
+      
+      const storedRoom = (sessionStorage.getItem('chamuyo_room_code') || sessionStorage.getItem('codigoSala') || '').trim().toUpperCase();
+      const targetRoom = (preloadedRoomCode || storedRoom || '').trim().toUpperCase();
+
+      // Si el código target es diferente al guardado previamente, sobrescribir y limpiar ronda previa
+      if (targetRoom && targetRoom !== storedRoom) {
+        sessionStorage.setItem('chamuyo_room_code', targetRoom);
+        sessionStorage.setItem('codigoSala', targetRoom);
+        phone.myLie = '';
+        phone.myVotedId = null;
+      }
 
       document.getElementById('screenLanding').classList.add('d-none');
       document.getElementById('screenLanding').classList.remove('active');
@@ -1233,16 +1320,16 @@
       this.renderAvatarPicker();
       this.bindUiEvents();
 
-      if (savedRoom) {
-        document.getElementById('inputPhoneRoom').value = savedRoom.toUpperCase();
+      if (targetRoom) {
+        document.getElementById('inputPhoneRoom').value = targetRoom;
       }
       if (phone.name) {
         document.getElementById('inputPhoneName').value = phone.name;
       }
 
-      // Si ya tiene todo guardado, reconectar automáticamente
-      if (savedRoom && phone.name) {
-        this.connectToTv(savedRoom.toUpperCase(), phone.name, phone.avatar);
+      // Si ya tiene sala y nombre, conectar automáticamente
+      if (targetRoom && phone.name) {
+        this.connectToTv(targetRoom, phone.name, phone.avatar);
       }
     },
 
@@ -1267,18 +1354,20 @@
     },
 
     connectToTv(roomCode, playerName, avatar) {
+      limpiarConexionPrevia();
       const phone = appState.phone;
       phone.name = playerName;
       phone.avatar = avatar;
-      appState.roomCode = roomCode;
+      appState.roomCode = (roomCode || '').trim().toUpperCase();
 
-      sessionStorage.setItem('chamuyo_room_code', roomCode);
+      sessionStorage.setItem('chamuyo_room_code', appState.roomCode);
+      sessionStorage.setItem('codigoSala', appState.roomCode);
       sessionStorage.setItem('chamuyo_player_name', playerName);
       sessionStorage.setItem('chamuyo_player_avatar', avatar);
 
       document.getElementById('roomBadgeWrap').classList.remove('d-none');
-      document.getElementById('headerRoomCode').textContent = roomCode;
-      document.getElementById('phoneRoomLabel').textContent = roomCode;
+      document.getElementById('headerRoomCode').textContent = appState.roomCode;
+      document.getElementById('phoneRoomLabel').textContent = appState.roomCode;
       document.getElementById('phoneMyAvatar').textContent = avatar;
       document.getElementById('phoneMyName').textContent = playerName;
 
@@ -1292,7 +1381,7 @@
       appState.peer = peer;
 
       peer.on('open', (id) => {
-        const targetHostId = PEER_PREFIX + roomCode;
+        const targetHostId = PEER_PREFIX + appState.roomCode;
         const conn = peer.connect(targetHostId, { reliable: true });
         phone.conn = conn;
 
@@ -1309,8 +1398,9 @@
           this.showView('phoneViewLobby');
 
           // Heartbeat para mantener activo el canal WebRTC en celular
-          setInterval(() => {
-            if (conn.open) {
+          if (appState.heartbeatInterval) clearInterval(appState.heartbeatInterval);
+          appState.heartbeatInterval = setInterval(() => {
+            if (conn && conn.open) {
               conn.send({ type: 'PING' });
             }
           }, 5000);
@@ -1326,17 +1416,43 @@
 
         conn.on('error', (err) => {
           console.error('Error de conexión con TV:', err);
-          alertEl.className = 'phone-alert alert-danger';
-          alertEl.textContent = 'No se pudo conectar a la sala. Verificá el código.';
-          alertEl.classList.remove('d-none');
+          this.handlePeerUnavailable(appState.roomCode);
         });
       });
 
       peer.on('error', (err) => {
         console.error('Error Peer Celular:', err);
-        alertEl.className = 'phone-alert alert-danger';
-        alertEl.textContent = 'Error de red. Verificá tu conexión.';
-        alertEl.classList.remove('d-none');
+        if (err.type === 'peer-unavailable') {
+          this.handlePeerUnavailable(appState.roomCode);
+        } else {
+          alertEl.className = 'phone-alert alert-danger';
+          alertEl.textContent = 'Error de red. Verificá tu conexión o código de sala.';
+          alertEl.classList.remove('d-none');
+        }
+      });
+    },
+
+    handlePeerUnavailable(roomCode) {
+      sessionStorage.removeItem('chamuyo_room_code');
+      sessionStorage.removeItem('codigoSala');
+      limpiarConexionPrevia();
+
+      this.showView('phoneViewJoin');
+      const alertEl = document.getElementById('phoneJoinAlert');
+      alertEl.className = 'phone-alert alert-warning';
+      alertEl.innerHTML = `
+        <div>⚠️ La sala <strong>${roomCode}</strong> ya no existe o la TV cambió de sala.</div>
+        <button type="button" class="btn btn-sm btn-outline-light mt-2" id="btnRetryOtherRoom">🔄 Conectar a otra sala</button>
+      `;
+      alertEl.classList.remove('d-none');
+
+      document.getElementById('btnRetryOtherRoom')?.addEventListener('click', () => {
+        alertEl.classList.add('d-none');
+        const inputRoom = document.getElementById('inputPhoneRoom');
+        if (inputRoom) {
+          inputRoom.value = '';
+          inputRoom.focus();
+        }
       });
     },
 
@@ -1619,6 +1735,19 @@
           phone.conn.send({ type: 'VIP_RESTART_GAME' });
         }
       });
+
+      // Botón Cambiar de Sala desde el Celular
+      document.getElementById('btnChangeRoomPhone')?.addEventListener('click', () => {
+        sessionStorage.removeItem('chamuyo_room_code');
+        sessionStorage.removeItem('codigoSala');
+        limpiarConexionPrevia();
+        this.showView('phoneViewJoin');
+        const inputRoom = document.getElementById('inputPhoneRoom');
+        if (inputRoom) {
+          inputRoom.value = '';
+          inputRoom.focus();
+        }
+      });
     },
 
     emitVipSettings() {
@@ -1648,8 +1777,14 @@
     const roomParam = urlParams.get('sala');
 
     if (roomParam) {
+      const cleanRoom = roomParam.trim().toUpperCase();
+      const storedRoom = (sessionStorage.getItem('chamuyo_room_code') || sessionStorage.getItem('codigoSala') || '').trim().toUpperCase();
+      if (cleanRoom !== storedRoom) {
+        sessionStorage.setItem('chamuyo_room_code', cleanRoom);
+        sessionStorage.setItem('codigoSala', cleanRoom);
+      }
       // Escaneo de QR o enlace directo a sala -> Mando Celular directo
-      PhoneClient.init(roomParam.toUpperCase());
+      PhoneClient.init(cleanRoom);
     } else {
       // Portada con opciones
       document.getElementById('screenLanding').classList.add('active');
@@ -1661,7 +1796,10 @@
       document.getElementById('btnManualJoinRoom').addEventListener('click', () => {
         const code = document.getElementById('inputManualRoomCode').value.trim();
         if (code.length === 4) {
-          PhoneClient.init(code.toUpperCase());
+          const cleanManual = code.toUpperCase();
+          sessionStorage.setItem('chamuyo_room_code', cleanManual);
+          sessionStorage.setItem('codigoSala', cleanManual);
+          PhoneClient.init(cleanManual);
         } else {
           alert('Por favor ingresá un código de 4 letras.');
         }

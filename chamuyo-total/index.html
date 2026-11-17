@@ -241,22 +241,52 @@
           </div>
         </div>
 
-        <!-- FASE 4: REVELACIÓN DRAMÁTICA SECUENCIAL -->
+        <!-- FASE 4: REVELACIÓN DRAMÁTICA (MOMENTO A: SPOTLIGHT + MOMENTO B: RESUMEN DE LA RONDA) -->
         <div id="tvPhase4" class="phase-panel d-none text-center">
-          <div class="phase-tag">FASE 4: LA REVELACIÓN</div>
+          <div class="phase-tag" id="tvPhase4Tag">FASE 4: LA REVELACIÓN</div>
           <div class="consigna-tv-mini">
             <p id="tvConsignaMiniTextReveal">...</p>
           </div>
 
-          <!-- Tablero de Opciones para Revelar -->
-          <div id="tvRevealGrid" class="tv-options-grid">
-            <!-- Se actualiza con animaciones de votos, autor y verdad -->
+          <!-- MOMENTO A: ESCENARIO SPOTLIGHT (Tarjeta Gigante Central) -->
+          <div id="tvSpotlightStage" class="spotlight-stage">
+            <div class="spotlight-card" id="spotlightCard">
+              <!-- Zona Superior: La Respuesta -->
+              <div class="spotlight-top-zone">
+                <span class="spotlight-badge" id="spotlightOptionLabel">OPCIÓN A</span>
+                <h2 class="spotlight-answer" id="spotlightAnswerText">...</h2>
+              </div>
+
+              <!-- Zona Media: Quiénes la votaron -->
+              <div class="spotlight-middle-zone">
+                <div class="spotlight-voters-title" id="spotlightVotersTitle">¿Quiénes votaron esta opción?</div>
+                <div class="spotlight-voters-pills" id="spotlightVotersWrap">
+                  <!-- Pills de votantes inyectados dinámicamente -->
+                </div>
+              </div>
+
+              <!-- Zona Inferior: El Remate / Autor / Verdad -->
+              <div class="spotlight-bottom-bar d-none" id="spotlightBottomBar">
+                <div class="spotlight-verdict-content" id="spotlightVerdictContent">
+                  <!-- Inyectado por JS -->
+                </div>
+                <div class="spotlight-points-badge" id="spotlightPointsBadge">+500 PTS</div>
+              </div>
+
+              <!-- Recuadro elegante de Dato Extra (solo para La Verdad) -->
+              <div class="spotlight-dato-extra d-none" id="spotlightDatoExtra">
+                <div class="dato-extra-heading">📖 LA HISTORIA REAL:</div>
+                <p id="spotlightDatoExtraText">...</p>
+              </div>
+            </div>
           </div>
 
-          <!-- Caja de Remate / Dato Extra Real -->
-          <div id="tvDatoExtraBox" class="dato-extra-box d-none">
-            <div class="dato-extra-title">📖 LA HISTORIA REAL:</div>
-            <p class="dato-extra-content" id="tvDatoExtraText">...</p>
+          <!-- MOMENTO B: RESUMEN FINAL DE LA RONDA (Grilla Limpia de 2 Columnas) -->
+          <div id="tvRoundSummarySection" class="round-summary-section d-none">
+            <h3 class="summary-section-title">📋 RESUMEN DE LA RONDA</h3>
+            <div class="summary-cards-grid" id="tvSummaryGrid">
+              <!-- Inyectado por JS: 2 columnas, cada tarjeta con encabezado y pie fijo -->
+            </div>
           </div>
 
           <!-- Botón de avance para TV / VIP -->
@@ -374,6 +404,9 @@
 
           <div class="phone-connected-info">
             <span class="dot-online"></span> Conectado a la Sala <strong id="phoneRoomLabel">----</strong>
+            <div class="mt-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="btnChangeRoomPhone">🔄 Conectar a otra sala</button>
+            </div>
           </div>
 
           <!-- Si NO es VIP: Mensaje de espera -->

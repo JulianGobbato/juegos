@@ -785,95 +785,317 @@ body {
   line-height: 1.3;
 }
 
-/* FASE 4: Estados de Revelación */
-.tv-option-card.revealing {
-  transform: scale(1.05);
-  border-color: var(--accent-fuchsia);
-  box-shadow: 0 0 30px rgba(217, 70, 239, 0.6);
-  z-index: 10;
-}
+/* ==========================================================================
+   FASE 4: REVELACIÓN DRAMÁTICA (SPOTLIGHT + RESUMEN FINAL)
+   ========================================================================== */
 
-.tv-option-card.is-lie {
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.15);
-}
-
-.tv-option-card.is-truth {
-  border-color: var(--accent-green);
-  background: rgba(16, 185, 129, 0.25);
-  box-shadow: 0 0 40px rgba(16, 185, 129, 0.8);
-  transform: scale(1.06);
-}
-
-.voters-container {
+/* Momento A: Escenario Spotlight */
+.spotlight-stage {
   display: flex;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
+  align-items: center;
+  margin: 15px auto;
+  width: 100%;
 }
 
-.voter-avatar-chip {
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 4px 10px;
+.spotlight-card {
+  max-width: 900px;
+  width: 100%;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.spotlight-card.revealing {
+  border-color: var(--accent-fuchsia);
+  box-shadow: 0 0 40px rgba(217, 70, 239, 0.5);
+  transform: scale(1.02);
+}
+
+.spotlight-card.is-lie {
+  border-color: #ef4444;
+  box-shadow: 0 0 45px rgba(239, 68, 68, 0.4);
+}
+
+.spotlight-card.is-truth {
+  border-color: var(--accent-green);
+  background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15) 0%, var(--bg-surface) 75%);
+  box-shadow: 0 0 50px rgba(16, 185, 129, 0.55);
+}
+
+/* Zona Superior: La Respuesta */
+.spotlight-top-zone {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.spotlight-badge {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  color: var(--accent-purple);
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid var(--accent-purple);
+  padding: 4px 14px;
   border-radius: 50px;
-  font-size: 0.9rem;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.spotlight-answer {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.3;
+  margin: 0;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Zona Media: Quiénes la votaron */
+.spotlight-middle-zone {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.spotlight-voters-title {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.spotlight-voters-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  min-height: 52px;
+  align-items: center;
+}
+
+.spotlight-voter-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  padding: 8px 18px;
+  border-radius: 50px;
+  font-size: 1.25rem;
   font-weight: 700;
+  color: #fff;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  animation: popIn 0.3s ease;
+  gap: 8px;
+  animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.author-reveal-badge {
-  background: #ef4444;
+.spotlight-zero-voters {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Zona Inferior: El Remate / Autor */
+.spotlight-bottom-bar {
+  width: 100%;
+  padding: 16px 24px;
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: slideUpFade 0.4s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.spotlight-bottom-bar.lie-verdict {
+  background: linear-gradient(135deg, #b91c1c, #ea580c);
+  border: 2px solid #f97316;
   color: #fff;
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  font-weight: 800;
-  font-size: 1.05rem;
-  margin-top: 12px;
-  display: inline-block;
-  animation: popIn 0.4s ease;
 }
 
-.truth-reveal-badge {
-  background: var(--accent-green);
+.spotlight-bottom-bar.truth-verdict {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border: 2px solid #34d399;
   color: #022c22;
+}
+
+.spotlight-verdict-content {
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-align: left;
+  letter-spacing: 0.5px;
+}
+
+.spotlight-points-badge {
+  background: rgba(0, 0, 0, 0.4);
+  color: #fef08a;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 6px 14px;
   border-radius: var(--radius-sm);
-  font-weight: 900;
-  font-size: 1.15rem;
-  margin-top: 12px;
-  display: inline-block;
-  animation: popIn 0.4s ease;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  letter-spacing: 1px;
 }
 
-.dato-extra-box {
-  background: rgba(16, 185, 129, 0.15);
+.spotlight-bottom-bar.truth-verdict .spotlight-points-badge {
+  background: #022c22;
+  color: #6ee7b7;
+  border-color: #059669;
+}
+
+/* Recuadro elegante de Dato Extra */
+.spotlight-dato-extra {
+  background: rgba(16, 185, 129, 0.12);
   border: 2px solid var(--accent-green);
-  border-radius: var(--radius-lg);
-  padding: 24px 30px;
-  max-width: 880px;
-  margin: 24px auto 0 auto;
+  border-radius: var(--radius-md);
+  padding: 18px 24px;
+  width: 100%;
+  margin-top: 18px;
   text-align: left;
-  animation: fadeIn 0.5s ease;
+  animation: fadeIn 0.4s ease;
 }
 
-.dato-extra-title {
+.dato-extra-heading {
   color: var(--accent-green);
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1rem;
   letter-spacing: 1px;
   margin-bottom: 6px;
 }
 
-.dato-extra-content {
-  font-size: 1.3rem;
+.spotlight-dato-extra p {
+  font-size: 1.25rem;
   color: #fff;
   line-height: 1.5;
   margin: 0;
+}
+
+/* Momento B: Resumen Final de la Ronda (Grilla Limpia de 2 Columnas) */
+.round-summary-section {
+  width: 100%;
+  max-width: 1200px;
+  margin: 20px auto 0 auto;
+  animation: fadeIn 0.5s ease;
+}
+
+.summary-section-title {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  letter-spacing: 2px;
+  color: var(--accent-gold);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.summary-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .summary-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-card {
+  background: var(--bg-surface);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 110px;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.summary-card.is-truth {
+  border-color: var(--accent-green);
+  background: rgba(16, 185, 129, 0.12);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+}
+
+.summary-card.is-lie {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.summary-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.summary-answer-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.25;
+}
+
+.summary-author-badge {
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.summary-card.is-truth .summary-author-badge {
+  background: var(--accent-green);
+  color: #022c22;
+}
+
+.summary-card.is-lie .summary-author-badge {
+  background: rgba(249, 115, 22, 0.2);
+  border: 1px solid #f97316;
+  color: #fb923c;
+}
+
+.summary-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+}
+
+.summary-voter-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.summary-zero-voters {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .btn-tv-next-phase, .btn-tv-next-round, .btn-tv-restart {
