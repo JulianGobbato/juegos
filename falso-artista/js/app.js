@@ -309,6 +309,7 @@
     players: [], // { id, name, avatar, color, peerConn, score, roundDelta, strokesDone }
     roundIndex: 0,
     totalRounds: 5,
+    vueltasDibujo: 2, // 1, 2, 3 o 4 vueltas de dibujo por jugador
     selectedCategoryIds: ['animales', 'comida_y_bebida', 'objetos', 'lugares_y_vehiculos', 'personajes_y_oficios', 'argentina'],
     
     currentCategory: null,
@@ -316,7 +317,7 @@
     fakeArtistId: '',
     
     turnOrder: [], // Array de playerIds
-    currentTurnIndex: 0, // 0 a (players.length * 2) - 1
+    currentTurnIndex: 0, // 0 a (players.length * vueltasDibujo) - 1
     strokesHistory: [], // Array de { playerId, color, points }
     currentLiveStroke: null,
     
@@ -426,6 +427,35 @@
       document.getElementById('btnTvJudgeInvalid')?.addEventListener('click', () => {
         this.resolveFakeGuess(false);
       });
+
+      // Configuración de vueltas en la TV
+      document.querySelectorAll('.btn-tv-lap-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const laps = parseInt(btn.dataset.laps, 10) || 2;
+          this.vueltasDibujo = laps;
+          this.updateTvConfigUI();
+          this.broadcastSettings();
+        });
+      });
+    },
+
+    updateTvConfigUI() {
+      document.querySelectorAll('.btn-tv-lap-opt').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.laps, 10) === this.vueltasDibujo);
+      });
+      const rLabel = document.getElementById('tvConfigRoundsLabel');
+      if (rLabel) rLabel.textContent = `${this.totalRounds} Rondas`;
+    },
+
+    broadcastSettings() {
+      this.broadcast({
+        type: 'SETTINGS_SYNC',
+        payload: {
+          totalRounds: this.totalRounds,
+          vueltasDibujo: this.vueltasDibujo,
+          selectedCategoryIds: this.selectedCategoryIds
+        }
+      });
     },
 
     handleIncomingConnection(conn) {
@@ -520,6 +550,8 @@
           color: player.color,
           isVip: player.isVip,
           roomCode: appState.roomCode,
+          vueltasDibujo: this.vueltasDibujo,
+          totalRounds: this.totalRounds,
           categories: appState.catalog ? appState.catalog.categorias : []
         }
       });
@@ -548,12 +580,17 @@
     },
 
     updateVipSettings(settings) {
+      if (settings.vueltasDibujo) {
+        this.vueltasDibujo = parseInt(settings.vueltasDibujo, 10) || 2;
+      }
       if (settings.totalRounds) {
         this.totalRounds = parseInt(settings.totalRounds, 10) || 5;
       }
       if (settings.categoryIds && Array.isArray(settings.categoryIds)) {
         this.selectedCategoryIds = settings.categoryIds;
       }
+      this.updateTvConfigUI();
+      this.broadcastSettings();
     },
 
     renderLobbyRoster() {
@@ -608,7 +645,9 @@
         type: 'ROSTER_UPDATE',
         payload: {
           players: rosterData,
-          canStart: this.players.length >= 3
+          canStart: this.players.length >= 3,
+          vueltasDibujo: this.vueltasDibujo,
+          totalRounds: this.totalRounds
         }
       });
     },
@@ -687,6 +726,7 @@
       document.getElementById('tvCategoryName').textContent = `${this.currentCategory.icono} ${this.currentCategory.nombre.toUpperCase()}`;
 
       // Enviar a cada celular su rol en privado
+      const catDisplayName = `${this.currentCategory.icono} ${this.currentCategory.nombre}`;
       this.players.forEach(p => {
         const isFake = (p.id === this.fakeArtistId);
         try {
@@ -694,7 +734,10 @@
             type: 'ROUND_ROLE_ASSIGNED',
             payload: {
               roundNumber: this.roundIndex + 1,
-              categoryName: `${this.currentCategory.icono} ${this.currentCategory.nombre}`,
+              categoryName: catDisplayName,
+              categoriaNombre: catDisplayName,
+              vueltasDibujo: this.vueltasDibujo,
+              maxLaps: this.vueltasDibujo,
               isFakeArtist: isFake,
               secretWord: isFake ? null : this.secretWord
             }
@@ -729,10 +772,10 @@
     },
 
     renderTvCanvasHeader() {
-      const totalTurns = this.players.length * 2;
+      const totalTurns = this.players.length * this.vueltasDibujo;
       const currentLap = Math.floor(this.currentTurnIndex / this.players.length) + 1;
       
-      document.getElementById('tvLapBadge').textContent = `VUELTA ${currentLap} DE 2`;
+      document.getElementById('tvLapBadge').textContent = `VUELTA ${currentLap} DE ${this.vueltasDibujo}`;
       document.getElementById('tvGameCategory').textContent = `${this.currentCategory.icono} ${this.currentCategory.nombre}`;
       document.getElementById('tvStrokesCounter').textContent = `Trazo ${this.currentTurnIndex + 1} / ${totalTurns}`;
 
@@ -759,6 +802,12 @@
         const row = document.createElement('div');
         const isActive = (p.id === activePlayerId);
         row.className = `palette-player-row ${isActive ? 'active-turn' : ''}`;
+
+        let dotsHtml = '';
+        for (let i = 1; i <= this.vueltasDibujo; i++) {
+          dotsHtml += `<span class="stroke-dot-pill ${p.strokesDone >= i ? 'done' : ''}" title="Vuelta ${i}"></span>`;
+        }
+
         row.innerHTML = `
           <div class="palette-left-info">
             <span class="palette-color-box" style="background-color: ${p.color.hex}; color: ${p.color.hex};"></span>
@@ -766,8 +815,7 @@
             <span class="palette-player-name">${p.name}</span>
           </div>
           <div class="stroke-status-dots">
-            <span class="stroke-dot-pill ${p.strokesDone >= 1 ? 'done' : ''}" title="Vuelta 1"></span>
-            <span class="stroke-dot-pill ${p.strokesDone >= 2 ? 'done' : ''}" title="Vuelta 2"></span>
+            ${dotsHtml}
           </div>
         `;
         paletteList.appendChild(row);
@@ -775,9 +823,9 @@
     },
 
     promptNextTurn() {
-      const totalTurns = this.players.length * 2;
+      const totalTurns = this.players.length * this.vueltasDibujo;
       if (this.currentTurnIndex >= totalTurns) {
-        // Fin de las 2 vueltas -> FASE 3: Debate y Votación
+        // Fin de las vueltas configuradas -> FASE 3: Debate y Votación
         this.startPhase3();
         return;
       }
@@ -788,6 +836,7 @@
       const activePlayerId = this.turnOrder[this.currentTurnIndex % this.players.length];
       const activePlayer = this.players.find(p => p.id === activePlayerId);
       const currentLap = Math.floor(this.currentTurnIndex / this.players.length) + 1;
+      const catDisplayName = `${this.currentCategory.icono} ${this.currentCategory.nombre}`;
 
       // Notificar a todos los celulares del turno
       this.players.forEach(p => {
@@ -802,6 +851,11 @@
               activeColor: activePlayer.color,
               isMyTurn: isMyTurn,
               lap: currentLap,
+              maxLaps: this.vueltasDibujo,
+              vueltasDibujo: this.vueltasDibujo,
+              roundNumber: this.roundIndex + 1,
+              categoryName: catDisplayName,
+              categoriaNombre: catDisplayName,
               strokesHistory: this.strokesHistory
             }
           });
@@ -1175,6 +1229,8 @@
     avatar: '🦊',
     color: null,
     isVip: false,
+    vueltasDibujo: 2,
+    currentCategoryName: '',
 
     isMyTurn: false,
     hasDrawnThisTurn: false,
@@ -1561,6 +1617,19 @@
           document.getElementById('phoneJudgeReal').textContent = `"${msg.payload.realWord}"`;
           document.getElementById('phoneVipJudgeBox')?.classList.remove('d-none');
           break;
+        case 'SETTINGS_SYNC':
+          if (msg.payload.vueltasDibujo) {
+            this.vueltasDibujo = msg.payload.vueltasDibujo;
+            document.querySelectorAll('.btn-phone-lap-opt').forEach(b => {
+              b.classList.toggle('active', parseInt(b.getAttribute('data-laps'), 10) === this.vueltasDibujo);
+            });
+          }
+          if (msg.payload.totalRounds) {
+            document.querySelectorAll('.btn-round-opt').forEach(b => {
+              b.classList.toggle('active', parseInt(b.getAttribute('data-rounds'), 10) === msg.payload.totalRounds);
+            });
+          }
+          break;
         case 'ROUND_RESULTS':
           this.showPhase5Results(msg.payload);
           break;
@@ -1590,6 +1659,18 @@
       } else {
         document.getElementById('phoneVipPanel').classList.add('d-none');
         document.getElementById('phoneWaitHostPanel').classList.remove('d-none');
+      }
+
+      if (data.vueltasDibujo) {
+        this.vueltasDibujo = data.vueltasDibujo;
+        document.querySelectorAll('.btn-phone-lap-opt').forEach(b => {
+          b.classList.toggle('active', parseInt(b.getAttribute('data-laps'), 10) === this.vueltasDibujo);
+        });
+      }
+      if (data.totalRounds) {
+        document.querySelectorAll('.btn-round-opt').forEach(b => {
+          b.classList.toggle('active', parseInt(b.getAttribute('data-rounds'), 10) === data.totalRounds);
+        });
       }
 
       this.showView('phoneViewLobby');
@@ -1636,9 +1717,35 @@
           });
         });
       });
+
+      // Botones de vueltas de dibujo por jugador
+      document.querySelectorAll('.btn-phone-lap-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.btn-phone-lap-opt').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const laps = parseInt(btn.getAttribute('data-laps'), 10) || 2;
+          this.vueltasDibujo = laps;
+          PhoneClient.send({
+            type: 'VIP_SETTINGS',
+            payload: { vueltasDibujo: laps }
+          });
+        });
+      });
     },
 
     updateLobbyPlayers(data) {
+      if (data.vueltasDibujo) {
+        this.vueltasDibujo = data.vueltasDibujo;
+        document.querySelectorAll('.btn-phone-lap-opt').forEach(b => {
+          b.classList.toggle('active', parseInt(b.getAttribute('data-laps'), 10) === this.vueltasDibujo);
+        });
+      }
+      if (data.totalRounds) {
+        document.querySelectorAll('.btn-round-opt').forEach(b => {
+          b.classList.toggle('active', parseInt(b.getAttribute('data-rounds'), 10) === data.totalRounds);
+        });
+      }
+
       const listEl = document.getElementById('phonePlayersList');
       const countEl = document.getElementById('phonePlayersCount');
       if (countEl) countEl.textContent = data.players.length;
@@ -1667,8 +1774,17 @@
 
     showPhase1Role(data) {
       this.showView('phonePhase1');
-      document.getElementById('phoneRoundNum').textContent = data.roundNumber;
-      document.getElementById('phoneMyCategory').textContent = data.categoryName;
+      if (data.vueltasDibujo) this.vueltasDibujo = data.vueltasDibujo;
+      this.currentCategoryName = data.categoryName || data.categoriaNombre || '';
+
+      document.getElementById('phoneRoundNum').textContent = data.roundNumber || 1;
+      document.getElementById('phoneMyCategory').textContent = this.currentCategoryName;
+
+      // Actualizar categoría arriba del tablero en el celular
+      const mobileCat = document.getElementById('mobile-board-category') || document.getElementById('phoneDrawCatLabel');
+      if (mobileCat && this.currentCategoryName) {
+        mobileCat.textContent = this.currentCategoryName;
+      }
 
       const pill = document.getElementById('phoneMyRolePill');
       const word = document.getElementById('phoneMySecretWord');
@@ -1699,8 +1815,19 @@
       this.showView('phonePhase2');
       this.cachedStrokesHistory = data.strokesHistory || [];
 
-      document.getElementById('phoneDrawRoundLabel').textContent = `V${data.lap}`;
-      document.getElementById('phoneDrawLapLabel').textContent = `Vuelta ${data.lap} de 2`;
+      if (data.categoryName || data.categoriaNombre) {
+        this.currentCategoryName = data.categoryName || data.categoriaNombre;
+      }
+
+      // Actualizar categoría arriba del tablero en el celular
+      const mobileCat = document.getElementById('mobile-board-category') || document.getElementById('phoneDrawCatLabel');
+      if (mobileCat && this.currentCategoryName) {
+        mobileCat.textContent = this.currentCategoryName;
+      }
+
+      const maxLaps = data.maxLaps || data.vueltasDibujo || this.vueltasDibujo || 2;
+      document.getElementById('phoneDrawRoundLabel').textContent = `R${data.roundNumber || 1}`;
+      document.getElementById('phoneDrawLapLabel').textContent = `Vuelta ${data.lap} de ${maxLaps}`;
 
       // Recordatorio de palabra
       const reminder = document.getElementById('phoneWordReminder');

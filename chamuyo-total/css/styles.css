@@ -277,12 +277,18 @@ body {
 
 .phone-join-quick {
   display: flex;
-  gap: 8px;
   width: 100%;
+  max-width: 100%;
+  gap: 8px;
+  box-sizing: border-box;
+  align-items: stretch;
 }
 
 .input-room-code {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   background: rgba(0, 0, 0, 0.4);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -305,8 +311,20 @@ body {
 .btn-phone-launch {
   background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
   color: #fff;
-  flex: 1;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-sizing: border-box;
+  padding: 12px 20px;
   box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);
+}
+
+@media (max-width: 380px) {
+  .phone-join-quick {
+    flex-wrap: wrap;
+  }
+  .phone-join-quick .btn-phone-launch {
+    width: 100%;
+  }
 }
 
 /* ==========================================================================

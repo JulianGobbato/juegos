@@ -1243,6 +1243,16 @@ body {
   color: #fff;
 }
 
+.btn-round-opt.active,
+.btn-phone-lap-opt.active,
+.btn-tv-lap-opt.active {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #0f172a !important;
+  border-color: var(--accent-gold) !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
 .btn-phone-vip-start {
   width: 100%;
   background: linear-gradient(135deg, #10b981, #059669);
