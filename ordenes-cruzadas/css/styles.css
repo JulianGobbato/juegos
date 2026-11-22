@@ -1380,3 +1380,224 @@ body {
 .live-card-name {
   font-size: 1.2rem;
 }
+
+/* ==========================================================================
+   ADAPTACIONES PARA TV Y DISPOSITIVOS GRANDES (1920x936 / 1920x1080)
+   ========================================================================== */
+@media (min-width: 900px) and (min-aspect-ratio: 16/10) {
+  html, body {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .game-header {
+    height: 48px;
+    padding: 4px 18px;
+    flex-shrink: 0;
+  }
+
+  .brand-title {
+    font-size: 1.5rem;
+  }
+
+  .brand-sub {
+    font-size: 0.72rem;
+  }
+
+  .main-container {
+    padding: 6px 20px;
+    height: calc(100dvh - 48px);
+    max-height: calc(100dvh - 48px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .tv-view {
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* LOBBY TV */
+  .tv-lobby-header {
+    margin-bottom: 8px;
+    flex-shrink: 0;
+  }
+
+  .tv-lobby-title {
+    font-size: 1.8rem;
+    margin-bottom: 2px;
+  }
+
+  .tv-lobby-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .tv-lobby-center-grid {
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: 320px 1fr;
+  }
+
+  .tv-qr-box, .tv-players-box {
+    padding: 16px;
+  }
+
+  .room-code-value {
+    font-size: 3rem;
+  }
+
+  .qr-frame {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  .qr-frame #tvLobbyQr canvas, .qr-frame #tvLobbyQr img {
+    width: 140px;
+    height: 140px;
+  }
+
+  .tv-config-summary-bar {
+    padding: 6px 12px !important;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .tv-players-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  /* ARENA DE COMBATE: TABLERO 10 x 8 Y HUD */
+  .arena-top-hud {
+    padding: 6px 16px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  .badge-hud-round {
+    font-size: 1.35rem;
+    margin-right: 8px;
+  }
+
+  .badge-hud-map {
+    font-size: 0.82rem;
+    padding: 3px 8px;
+  }
+
+  .banner-title {
+    font-size: 1.35rem;
+  }
+
+  .banner-sub {
+    font-size: 0.78rem;
+  }
+
+  .timer-seconds {
+    font-size: 1.45rem;
+  }
+
+  .arena-pilots-strip {
+    margin-bottom: 6px;
+    gap: 8px;
+    padding-bottom: 2px;
+    flex-shrink: 0;
+  }
+
+  .pilot-chip {
+    padding: 4px 10px;
+    gap: 6px;
+  }
+
+  .chip-avatar {
+    font-size: 1.15rem;
+  }
+
+  .chip-name {
+    font-size: 0.85rem;
+  }
+
+  .chip-hp {
+    font-size: 0.78rem;
+  }
+
+  .chip-status {
+    font-size: 0.7rem;
+  }
+
+  .arena-execution-bar {
+    padding: 6px 12px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  .exec-bar-title {
+    font-size: 0.78rem;
+    margin-bottom: 4px;
+  }
+
+  .exec-card-item {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+  }
+
+  /* TABLERO DETERMINISTA 10x8: ALTO EXACTO */
+  .arena-board-outer {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2px 0;
+  }
+
+  .arena-board-wrap {
+    max-height: min(62dvh, 580px);
+    max-width: min(77.5dvh, 725px);
+    width: 100%;
+    aspect-ratio: 10 / 8;
+    margin: 0 auto;
+  }
+
+  /* PODIO DE CAMPEONES */
+  .podium-screen {
+    margin: 10px auto 0;
+  }
+
+  .podium-trophy {
+    font-size: 3.5rem;
+  }
+
+  .podium-headline {
+    font-size: 2.5rem;
+  }
+
+  .podium-winner-card {
+    padding: 16px;
+    margin-top: 10px;
+  }
+
+  .podium-stats-grid {
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .stat-card {
+    padding: 10px;
+  }
+}

@@ -927,3 +927,110 @@ body {
     min-height: 380px;
   }
 }
+
+/* ==========================================================================
+   ADAPTACIONES PARA TV Y DISPOSITIVOS GRANDES (1920x936 / 1920x1080)
+   ========================================================================== */
+@media (min-width: 900px) and (min-aspect-ratio: 16/10) {
+  html, body {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .game-header {
+    height: 48px;
+    padding: 4px 18px;
+    flex-shrink: 0;
+  }
+
+  .brand-title {
+    font-size: 1.5rem;
+  }
+
+  .brand-sub {
+    font-size: 0.72rem;
+  }
+
+  .tv-layout {
+    height: calc(100dvh - 48px);
+    max-height: calc(100dvh - 48px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 8px 24px;
+    max-width: 1400px;
+  }
+
+  .tv-top-bar {
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  .tv-team-badge {
+    padding: 4px 14px;
+    font-size: 0.95rem;
+  }
+
+  .tv-lives-container {
+    padding: 4px 14px;
+    font-size: 0.85rem;
+  }
+
+  .tv-timer-pill {
+    padding: 4px 12px;
+    font-size: 0.85rem;
+  }
+
+  .circle-stage-wrap {
+    flex: 1;
+    min-height: 0;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .circle-svg {
+    max-height: min(62dvh, 580px);
+    max-width: min(62dvh, 580px);
+    width: 100%;
+    height: auto;
+  }
+
+  .tv-ticker-bar {
+    font-size: 0.95rem;
+    padding: 6px 18px;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  /* Conexión QR en TV */
+  .tv-connect-card {
+    padding: 20px 28px;
+    max-width: 480px;
+  }
+
+  .tv-room-code-badge {
+    font-size: 2.8rem;
+    padding: 6px 18px;
+    margin: 12px 0;
+  }
+
+  .tv-qr-box {
+    padding: 10px;
+    margin: 10px 0;
+  }
+
+  .tv-qr-box canvas, .tv-qr-box img {
+    width: 160px;
+    height: 160px;
+  }
+}

@@ -1135,3 +1135,202 @@ body {
     flex: 1 1 100%;
   }
 }
+
+/* ==========================================================================
+   ADAPTACIONES PARA TV Y DISPOSITIVOS GRANDES (1920x936 / 1920x1080)
+   ========================================================================== */
+@media (min-width: 900px) and (min-aspect-ratio: 16/10) {
+  html, body {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .app-container {
+    max-width: 1200px;
+    width: 96%;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 6px 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .bondi-header {
+    height: 48px;
+    padding: 4px 10px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .bondi-header-top {
+    margin-bottom: 0;
+    width: 100%;
+  }
+
+  .cartelera-led {
+    display: none;
+  }
+
+  .linea-badge {
+    font-size: 1.1rem;
+    padding: 2px 8px;
+  }
+
+  /* Vista de Menú en TV */
+  #viewMenu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  #viewMenu .hero-bus-banner {
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+
+  #viewMenu .hero-bus-banner h2 {
+    font-size: 1.8rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  #viewMenu .hero-bus-icon {
+    font-size: 2.2rem;
+  }
+
+  #viewMenu .hero-bus-banner p {
+    margin-bottom: 6px !important;
+    font-size: 0.85rem !important;
+  }
+
+  #viewMenu .mode-card {
+    padding: 12px 18px;
+    margin-bottom: 10px;
+  }
+
+  /* Setup Digital en TV */
+  #viewDigitalSetup {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  #viewDigitalSetup .game-card {
+    padding: 12px 18px;
+    margin-bottom: 6px;
+  }
+
+  #viewDigitalSetup h3 {
+    font-size: 1.15rem !important;
+    margin-bottom: 6px !important;
+  }
+
+  /* Ronda Activa en TV */
+  #viewDigitalGame {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #viewDigitalGame .game-card {
+    padding: 8px 14px;
+    margin-bottom: 6px;
+  }
+
+  #gameQuestionText {
+    font-size: 1.25rem !important;
+    margin: 2px 0 4px !important;
+  }
+
+  .bet-display-board {
+    padding: 8px 16px;
+    margin-bottom: 6px;
+  }
+
+  .bet-value-giant {
+    font-size: 2.8rem;
+    line-height: 1;
+  }
+
+  .current-chofer-banner {
+    padding: 6px 14px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+  }
+
+  .passengers-container {
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .passenger-pill {
+    padding: 4px 10px;
+    font-size: 0.85rem;
+  }
+
+  /* Revelación y Resolución en TV */
+  #viewDigitalRoundResult {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #viewDigitalRoundResult .game-card {
+    padding: 8px 16px;
+    margin-bottom: 6px;
+  }
+
+  .answer-reveal-box {
+    padding: 10px 18px;
+    margin-bottom: 6px;
+  }
+
+  .answer-number {
+    font-size: 2.6rem;
+    line-height: 1;
+  }
+
+  .answer-note {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    margin-top: 4px;
+    max-height: 70px;
+    overflow-y: auto;
+  }
+
+  .sube-table-wrap {
+    max-height: 140px;
+    overflow-y: auto;
+  }
+
+  /* Fin de Partida / Podio en TV */
+  #viewDigitalGameOver {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+}

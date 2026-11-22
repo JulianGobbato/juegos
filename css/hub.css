@@ -292,21 +292,146 @@ body {
 }
 
 /* ==========================================================================
-   ADAPTACIONES PARA TV Y DISPOSITIVOS GRANDES
+   ADAPTACIONES PARA TV Y DISPOSITIVOS GRANDES (1920x936 / 1920x1080)
    ========================================================================== */
-@media (min-width: 1400px) {
+@media (min-width: 1200px) and (min-aspect-ratio: 16/10) {
+  html, body {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
   body {
-    font-size: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 15px;
   }
+
+  .hub-header {
+    height: 48px;
+    padding: 4px 0;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .hub-brand {
+    gap: 8px;
+  }
+
+  .hub-brand-icon {
+    font-size: 1.5rem;
+  }
+
   .hub-title {
-    font-size: 3rem;
+    font-size: 1.45rem;
   }
+
+  .hub-subtitle {
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+  }
+
+  .btn-tv-fullscreen {
+    padding: 5px 12px;
+    font-size: 0.82rem;
+  }
+
+  main.container {
+    max-width: 1840px;
+    width: 96%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    min-height: 0;
+  }
+
+  .games-section {
+    margin-top: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .section-header {
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 1.35rem;
+    margin-bottom: 0;
+  }
+
+  .section-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+    margin-bottom: 0;
+  }
+
+  .game-card {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 0;
+  }
+
+  .game-card-top {
+    margin-bottom: 4px;
+  }
+
+  .game-icon-badge {
+    width: 38px;
+    height: 38px;
+    font-size: 1.3rem;
+    border-radius: 8px;
+  }
+
   .game-title {
-    font-size: 2.6rem;
-  }
-  .btn-game-action {
-    padding: 16px 28px;
     font-size: 1.25rem;
+    letter-spacing: 0.8px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .game-desc {
+    font-size: 0.8rem;
+    line-height: 1.35;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-game-action {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    gap: 6px;
+  }
+
+  .hub-footer {
+    padding: 4px 0;
+    font-size: 0.78rem;
+    flex-shrink: 0;
   }
 }
 
