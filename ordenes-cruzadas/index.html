@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0a0f1d">
-  <meta name="description" content="Órdenes Cruzadas - Juego de estrategia y programación simultánea de robots para TV y celulares.">
-  <title>🤖 Órdenes Cruzadas | Sala de Juegos</title>
+  <meta name="theme-color" content="#070a14">
+  <meta name="description" content="Órdenes Cruzadas - Batalla táctica y programación simultánea de robots para TV y celulares.">
+  <title>🤖 Órdenes Cruzadas | HubGames</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,7 +28,7 @@
       <span class="brand-icon">🤖</span>
       <div>
         <h1 class="brand-title">ÓRDENES CRUZADAS</h1>
-        <span class="brand-sub">Programa &bull; Maniobra &bull; Sobreviví</span>
+        <span class="brand-sub">Programa • Maniobra • Sobreviví</span>
       </div>
     </div>
 
@@ -37,6 +37,12 @@
       <div id="roomBadgeWrap" class="d-none">
         <span class="badge-room">SALA: <strong id="headerRoomCode">----</strong></span>
       </div>
+
+      <!-- Botón Reglas Rápido -->
+      <button type="button" class="btn-top-action" id="btnToggleRules" title="Reglas del Juego">
+        <span>❓</span>
+        <span class="d-none d-md-inline">Reglas</span>
+      </button>
 
       <!-- Botón Sonido -->
       <button type="button" class="btn-top-action" id="btnToggleSound" title="Alternar Sonido">
@@ -63,7 +69,7 @@
          ==================================================================== -->
     <section id="screenLanding" class="screen-section">
       <div class="landing-hero text-center">
-        <div class="hero-badge">BATALLA TÁCTICA DE ROBOTS &bull; 2 A 6 PILOTOS</div>
+        <div class="hero-badge">BATALLA TÁCTICA DE ROBOTS • 2 A 6 PILOTOS</div>
         <h2 class="hero-title">ÓRDENES CRUZADAS</h2>
         <p class="hero-desc">
           Programá en secreto los 4 movimientos de tu robot desde tu celular y mirá el caos desatarse en tiempo real en la pantalla del televisor. ¡Empujes, cintas, abismos y láseres cruzados!
@@ -74,7 +80,7 @@
           <div class="role-card tv-card" id="btnSelectTvMode">
             <div class="role-icon">📺</div>
             <h3 class="role-name">Crear Sala en la TV</h3>
-            <p class="role-desc">Abrí esta pantalla en el televisor o pantalla compartida para proyectar la Arena de Combate y el tablero en tiempo real.</p>
+            <p class="role-desc">Abrí esta pantalla en el televisor o pantalla compartida para proyectar la Arena de Combate táctica a gran escala.</p>
             <button type="button" class="btn-role btn-tv-launch">
               <span>▶️ Iniciar como Pantalla TV</span>
             </button>
@@ -124,17 +130,21 @@
             <!-- Resumen de Configuración en la TV -->
             <div class="tv-config-summary-bar my-3 p-3 rounded">
               <div class="row g-2 text-center text-md-start">
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <span class="small d-block config-label">Arena Táctica:</span>
                   <span class="badge config-badge-cyan" id="tvConfigArenaName">🏭 Fábrica Central</span>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <span class="small d-block config-label">Regla de Daño:</span>
                   <span class="badge config-badge-amber" id="tvConfigDamageRule">🛡️ Daño Táctico</span>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <span class="small d-block config-label">Reloj Programación:</span>
-                  <span class="badge config-badge-purple" id="tvConfigRoundTimer">⏱️ 45 Segundos</span>
+                  <span class="badge config-badge-purple" id="tvConfigRoundTimer">⏱️ 45s</span>
+                </div>
+                <div class="col-md-3">
+                  <span class="small d-block config-label">Velocidad:</span>
+                  <span class="badge config-badge-cyan" id="tvConfigSpeed">⚡ Normal</span>
                 </div>
               </div>
             </div>
@@ -163,61 +173,138 @@
         </div>
       </div>
 
-      <!-- TV: ARENA DE COMBATE (EN JUEGO) -->
+      <!-- TV: ARENA DE COMBATE (LAYOUT PANORÁMICO 2 COLUMNAS PARA 1920x936) -->
       <div id="tvViewArena" class="tv-view d-none">
-        
-        <!-- Barra de Estado de la Partida -->
-        <div class="arena-top-hud">
-          <div class="hud-item-left">
-            <span class="badge-hud-round" id="tvHudRound">RONDA 1</span>
-            <span class="badge-hud-map" id="tvHudArenaName">🏭 Fábrica Central</span>
-          </div>
+        <div class="arena-panoramic-layout">
+          
+          <!-- COLUMNA IZQUIERDA: ESCENARIO PRINCIPAL DEL TABLERO (~68%) -->
+          <div class="arena-stage-col">
+            <!-- Coordenadas Superiores A-J -->
+            <div class="board-col-headers" id="tvBoardColHeaders">
+              <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span>
+              <span>F</span><span>G</span><span>H</span><span>I</span><span>J</span>
+            </div>
 
-          <!-- Banner central de Fase / Paso -->
-          <div class="hud-center-banner" id="tvHudStepBanner">
-            <span class="banner-title" id="tvHudBannerTitle">⚡ FASE DE PROGRAMACIÓN</span>
-            <span class="banner-sub" id="tvHudBannerSub">Los pilotos están eligiendo sus 4 órdenes secretas...</span>
-          </div>
+            <div class="board-with-row-headers">
+              <!-- Coordenadas Laterales 1-8 -->
+              <div class="board-row-headers" id="tvBoardRowHeaders">
+                <span>1</span><span>2</span><span>3</span><span>4</span>
+                <span>5</span><span>6</span><span>7</span><span>8</span>
+              </div>
 
-          <!-- Temporizador central -->
-          <div class="hud-item-right">
-            <div class="hud-timer-wrap" id="tvHudTimerWrap">
-              <span class="timer-icon">⏱️</span>
-              <span class="timer-seconds" id="tvHudTimerSecs">45</span>
+              <!-- CONTENEDOR EXACTO DEL TABLERO (10x8 aspect ratio) -->
+              <div class="arena-board-wrap" id="tvBoardWrap">
+                <!-- Capa 1: Grilla de Celdas con SVGs Nítidos -->
+                <div class="arena-grid" id="tvBoardGrid"></div>
+
+                <!-- Capa 2: Líneas de Mira Láser Punteadas (Guías tácticas estáticas) -->
+                <svg class="arena-turret-sights-layer" id="tvTurretSightsSvg" viewBox="0 0 1000 800" preserveAspectRatio="none"></svg>
+
+                <!-- Capa 3: Rayos Láser Activos (Disparos en vivo) -->
+                <svg class="arena-laser-overlay" id="tvLaserSvg" viewBox="0 0 1000 800" preserveAspectRatio="none"></svg>
+
+                <!-- Capa 4: Nodos DOM de Robots (Persistentes con transición suave) -->
+                <div class="arena-robots-layer" id="tvRobotsLayer"></div>
+
+                <!-- Capa 5: Textos Pop-up Flotantes (-1 HP, BOOM, BLOQUEADO, etc.) -->
+                <div class="arena-fx-layer" id="tvFxLayer"></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Chips de Estado de los Pilotos -->
-        <div class="arena-pilots-strip" id="tvPilotsStrip">
-          <!-- Se inyectan las tarjetas compactas de cada robot -->
-        </div>
+          <!-- COLUMNA DERECHA: PANEL TÁCTICO DE COMANDO (480px) -->
+          <div class="arena-command-col">
+            
+            <!-- BLOQUE 1: Cabecera de Ronda + Temporizador / Pasos -->
+            <div class="cmd-block cmd-header-block">
+              <div class="cmd-header-top">
+                <span class="cmd-round-badge" id="tvCmdRoundBadge">RONDA 1</span>
+                <span class="cmd-map-name" id="tvCmdMapName">🏭 Fábrica Central</span>
+              </div>
+              <div class="cmd-header-status">
+                <!-- En programación: Reloj gigante -->
+                <div class="cmd-timer-wrap" id="tvCmdTimerWrap">
+                  <span class="cmd-timer-label">TIEMPO PARA PROGRAMAR:</span>
+                  <span class="cmd-timer-number" id="tvCmdTimerSecs">45s</span>
+                </div>
+                <!-- En ejecución: Barra de los 4 pasos -->
+                <div class="cmd-steps-progress d-none" id="tvCmdStepsProgress">
+                  <div class="cmd-step-node" data-step="0"><span class="step-num">P1</span></div>
+                  <div class="cmd-step-line"></div>
+                  <div class="cmd-step-node" data-step="1"><span class="step-num">P2</span></div>
+                  <div class="cmd-step-line"></div>
+                  <div class="cmd-step-node" data-step="2"><span class="step-num">P3</span></div>
+                  <div class="cmd-step-line"></div>
+                  <div class="cmd-step-node" data-step="3"><span class="step-num">P4</span></div>
+                </div>
+              </div>
+            </div>
 
-        <!-- Fila de Cartas en Ejecución (Durante Fase 2) -->
-        <div class="arena-execution-bar d-none" id="tvExecutionCardsBar">
-          <div class="exec-bar-title" id="tvExecStepTitle">PASO 1 &bull; ÓRDENES REVELADAS:</div>
-          <div class="exec-cards-row" id="tvExecCardsRow">
-            <!-- Tarjetas ordenadas por prioridad -->
+            <!-- BLOQUE 2: Tracker de Sub-Fases (Visible en Ejecución) -->
+            <div class="cmd-block cmd-subphase-tracker d-none" id="tvCmdSubphaseTracker">
+              <div class="subphase-pill" data-phase="cards">
+                <span class="sp-num">1</span>
+                <span class="sp-name">Cartas</span>
+              </div>
+              <div class="subphase-pill" data-phase="conveyors">
+                <span class="sp-num">2</span>
+                <span class="sp-name">Cintas</span>
+              </div>
+              <div class="subphase-pill" data-phase="gears">
+                <span class="sp-num">3</span>
+                <span class="sp-name">Giro</span>
+              </div>
+              <div class="subphase-pill" data-phase="lasers">
+                <span class="sp-num">4</span>
+                <span class="sp-name">Láser</span>
+              </div>
+              <div class="subphase-pill" data-phase="objectives">
+                <span class="sp-num">5</span>
+                <span class="sp-name">Metas</span>
+              </div>
+            </div>
+
+            <!-- BLOQUE 3: Visor "EN VIVO" (Spotlight de Acción Actual) -->
+            <div class="cmd-block cmd-spotlight-box" id="tvCmdSpotlightBox">
+              <div class="spotlight-top">
+                <span class="spotlight-badge" id="tvSpotlightBadge">EN VIVO</span>
+                <span class="spotlight-subtext" id="tvSpotlightSubtext">Mirá las órdenes</span>
+              </div>
+              <div class="spotlight-action-text" id="tvSpotlightText">
+                Esperando que los pilotos confirmen sus programas...
+              </div>
+            </div>
+
+            <!-- BLOQUE 4: Cola de Cartas / Roster de Pilotos -->
+            <div class="cmd-block cmd-dynamic-roster">
+              <!-- En Ejecución: Cola de Cartas del Paso Activo -->
+              <div class="cmd-step-cards-queue d-none" id="tvCmdStepCardsQueue">
+                <div class="queue-title">COLA DE PRIORIDAD (PASO ACTUAL)</div>
+                <div class="queue-cards-list" id="tvCmdQueueCardsList"></div>
+              </div>
+
+              <!-- Lista de Pilotos (Programación & Ejecución) -->
+              <div class="cmd-pilots-list-wrap">
+                <div class="pilots-list-title" id="tvCmdPilotsTitle">PILOTOS EN COMBATE</div>
+                <div class="cmd-pilots-grid" id="tvCmdPilotsGrid">
+                  <!-- Se inyectan tarjetas de pilotos -->
+                </div>
+              </div>
+            </div>
+
+            <!-- BLOQUE 5: Leyenda Mini de Íconos -->
+            <div class="cmd-block cmd-legend-bar">
+              <div class="legend-item"><span class="leg-icon leg-wall"></span> Muro</div>
+              <div class="legend-item"><span class="leg-icon leg-pit"></span> Abismo</div>
+              <div class="legend-item"><span class="leg-icon leg-conveyor"></span> Cinta</div>
+              <div class="legend-item"><span class="leg-icon leg-gear"></span> Giro</div>
+              <div class="legend-item"><span class="leg-icon leg-turret"></span> Torreta</div>
+              <div class="legend-item"><span class="leg-icon leg-repair"></span> Taller</div>
+              <div class="legend-item"><span class="leg-icon leg-checkpoint"></span> Meta</div>
+            </div>
+
           </div>
         </div>
-
-        <!-- TABLERO TÁCTICO 10 x 8 -->
-        <div class="arena-board-outer">
-          <div class="arena-board-wrap">
-            <div class="arena-grid" id="tvBoardGrid">
-              <!-- Celdas 10x8 inyectadas dinámicamente -->
-            </div>
-            <!-- Capa SVG superpuesta para trazos de láseres brillantes -->
-            <svg class="arena-laser-overlay" id="tvLaserSvg" viewBox="0 0 1000 800" preserveAspectRatio="none">
-              <!-- Rayos láser inyectados dinámicamente -->
-            </svg>
-            <!-- Contenedor dinámico de fichas de robots -->
-            <div class="arena-robots-layer" id="tvRobotsLayer">
-              <!-- Robots posicionados con CSS -->
-            </div>
-          </div>
-        </div>
-
       </div>
 
       <!-- TV: PODIO DE CAMPEONES (VICTORIA) -->
@@ -332,6 +419,14 @@
               </select>
             </div>
 
+            <div class="vip-config-group mb-3">
+              <label class="form-label small">Velocidad de Animación:</label>
+              <select class="form-select form-select-sm" id="selectExecutionSpeed">
+                <option value="normal" selected>⚡ Normal (Fluido)</option>
+                <option value="slow">🐢 Didáctico (Ideal 1.ª partida)</option>
+              </select>
+            </div>
+
             <button type="button" class="btn-action-primary w-100" id="btnPhoneVipStart">
               <span>🚀 ¡INICIAR PARTIDA!</span>
             </button>
@@ -349,18 +444,22 @@
       <!-- CELULAR: FASE 1 - PROGRAMACIÓN DE LAS 4 ÓRDENES -->
       <div id="phoneViewProgramming" class="phone-view d-none">
         
-        <!-- HUD Superior de Mi Robot -->
+        <!-- HUD Superior de Mi Robot con Orientación Humana -->
         <div class="phone-robot-hud">
           <div class="hud-top-row">
             <div class="d-flex align-items-center gap-2">
-              <span class="hud-avatar-circle" id="phoneHudAvatar">🤖</span>
+              <div class="hud-avatar-frame" id="phoneHudAvatarFrame">
+                <span class="hud-avatar-circle" id="phoneHudAvatar">🤖</span>
+              </div>
               <div>
                 <strong class="hud-pilot-name" id="phoneHudName">Mecha</strong>
-                <div class="hud-facing" id="phoneHudFacing">Mirando: Norte ▲</div>
+                <div class="hud-facing" id="phoneHudFacing">▲ Mirando ARRIBA</div>
               </div>
             </div>
             <div class="text-end">
-              <div class="hud-hp" id="phoneHudHp">❤️❤️❤️❤️❤️</div>
+              <div class="hud-hp" id="phoneHudHp">
+                <!-- 5 barras de vida -->
+              </div>
               <div class="hud-target" id="phoneHudObjective">Objetivo: Checkpoint 1 🚩</div>
             </div>
           </div>
@@ -402,11 +501,11 @@
           </button>
         </div>
 
-        <!-- MANO DE 7 CARTAS -->
+        <!-- MANO DE 7 CARTAS (Categorizadas visualmente) -->
         <div class="player-hand-container">
           <div class="hand-header">
             <span>TU MANO (7 CARTAS):</span>
-            <span class="small text-muted">Tocá para colocar en el siguiente slot libre</span>
+            <span class="small text-muted">Tocá para colocar en el slot libre</span>
           </div>
           <div class="cards-hand-list" id="phoneHandList">
             <!-- Cartas táctiles inyectadas -->
@@ -417,21 +516,21 @@
 
       <!-- CELULAR: FASE 2 - MIRAR LA TV (EJECUCIÓN) -->
       <div id="phoneViewExecuting" class="phone-view d-none">
-        <div class="phone-card-wrap text-center py-4">
+        <div class="phone-card-wrap text-center py-3">
           <div class="exec-tv-icon">📺</div>
           <h3 class="exec-screen-title">¡MIRÁ LA PANTALLA DE LA TV!</h3>
           <p class="exec-screen-sub" id="phoneExecStatusText">Los robots están ejecutando sus órdenes en la Arena...</p>
 
-          <div class="phone-live-step-card mt-3" id="phoneLiveStepCard">
-            <div class="live-step-badge" id="phoneLiveStepBadge">Paso 1 de 4</div>
-            <div class="live-card-info" id="phoneLiveCardInfo">
-              <span class="live-card-icon">⚡</span>
-              <strong class="live-card-name">Avanzar 1</strong>
+          <!-- Mis 4 cartas programadas con indicación del paso en curso -->
+          <div class="phone-my-program-summary my-3">
+            <div class="small text-uppercase fw-bold text-muted mb-2">Tu Programa en Ejecución:</div>
+            <div class="phone-program-steps-row" id="phoneExecStepsRow">
+              <!-- 4 pastillas de cartas con borde activo en el paso actual -->
             </div>
           </div>
 
           <div class="phone-live-stats mt-3">
-            <div class="live-hp-display">Integridad: <span id="phoneLiveHpText">❤️❤️❤️❤️❤️</span></div>
+            <div class="live-hp-display">Integridad: <span id="phoneLiveHpText">5/5</span></div>
             <div class="live-target-display">Siguiente Checkpoint: <strong id="phoneLiveTargetText">1 🚩</strong></div>
           </div>
         </div>
@@ -440,6 +539,54 @@
     </section>
 
   </main>
+
+  <!-- ====================================================================
+       MODAL DE REGLAS RÁPIDAS
+       ==================================================================== -->
+  <div class="rules-modal-backdrop d-none" id="rulesModal">
+    <div class="rules-modal-dialog">
+      <div class="rules-modal-content">
+        <div class="rules-modal-header">
+          <h3 class="rules-modal-title">🤖 Manual Rápido de Órdenes Cruzadas</h3>
+          <button type="button" class="btn-rules-close" id="btnCloseRules" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="rules-modal-body">
+          <div class="rules-sections-grid">
+            <div class="rule-box">
+              <span class="rule-badge">1. OBJETIVO</span>
+              <h4>Checkpoints 1 → 2 → 3</h4>
+              <p>Sé el primer piloto en alcanzar los <strong>3 Checkpoints</strong> en orden secuencial estricto. ¡Quien pise la bandera 3 gana la partida al instante!</p>
+            </div>
+            <div class="rule-box">
+              <span class="rule-badge">2. PROGRAMACIÓN</span>
+              <h4>4 Pasos en Secreto</h4>
+              <p>Cada ronda recibís 7 cartas en tu celular. Elegí y ordená <strong>4 cartas</strong> en tus slots antes de que el reloj llegue a 0.</p>
+            </div>
+            <div class="rule-box">
+              <span class="rule-badge">3. RESOLUCIÓN</span>
+              <h4>5 Fases de Cada Paso</h4>
+              <p>Cada paso se resuelve en la TV en 5 fases automáticas:</p>
+              <ul class="rule-steps-list">
+                <li><strong>1. Cartas:</strong> Se ejecutan por orden de Prioridad (número más alto primero).</li>
+                <li><strong>2. Cintas:</strong> Desplazan 1 casilla a los robots parados sobre ellas.</li>
+                <li><strong>3. Engranajes:</strong> Rotan 90° (Horario ↻ o Antihorario ↺).</li>
+                <li><strong>4. Láseres:</strong> Disparan torretas del mapa y cañones frontales (-1 HP).</li>
+                <li><strong>5. Objetivos:</strong> Se registran Checkpoints y Talleres de Reparación (+1 HP).</li>
+              </ul>
+            </div>
+            <div class="rule-box">
+              <span class="rule-badge">4. DAÑO Y MUERTE</span>
+              <h4>Empujes y Abismos</h4>
+              <p>Empezás con <strong>5 HP</strong>. Si caés al abismo o tu vida llega a 0, tu robot es destruido y reaparece en tu último checkpoint al inicio de la siguiente ronda. Si jugás con <em>Daño Táctico</em>, perder vida bloqueará tus últimos slots con cartas fijas.</p>
+            </div>
+          </div>
+        </div>
+        <div class="rules-modal-footer">
+          <button type="button" class="btn-action-primary w-100" id="btnConfirmRules">¡Entendido, al Combate!</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ====================================================================
        SCRIPTS

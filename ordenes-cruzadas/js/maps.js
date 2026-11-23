@@ -45,6 +45,13 @@
     SPAWN_6: 'spawn_6'
   };
 
+  function isSolidObstacle(tile) {
+    if (!tile) return true;
+    if (tile === 'wall' || tile === TILE_TYPES.WALL) return true;
+    if (typeof tile === 'string' && tile.startsWith('laser_turret_')) return true;
+    return false;
+  }
+
   /**
    * 1. FÁBRICA CENTRAL (Equilibrado - Por Defecto)
    * Cintas transportadoras moderadas, 2 abismos centrales, muros tácticos de cobertura,
@@ -72,14 +79,15 @@
   /**
    * 2. PUENTE SOBRE EL ABISMO (Caótico / Empujes)
    * Pasarelas estrechas rodeadas de lava/abismos donde empujar rivales es letal.
+   * Modificado para garantizar fluidez desde CP1 hacia CP2 sin cintas en contramano.
    */
   const ABISMO_GRID = [
     // y=0: Plataforma norte con Checkpoint 3
     ['pit',   'pit',   'floor',      'conveyor_E', 'cp_3',       'repair',     'conveyor_W', 'floor',      'pit',   'pit'],
     // y=1: Conectores a la plataforma norte
     ['pit',   'pit',   'laser_turret_S','pit',     'floor',      'floor',      'pit',        'laser_turret_S','pit', 'pit'],
-    // y=2: Puente medio norte con Checkpoint 2
-    ['floor', 'cp_2',  'conveyor_E', 'conveyor_E', 'gear_cw',    'gear_ccw',   'conveyor_W', 'conveyor_W', 'floor', 'floor'],
+    // y=2: Puente medio norte con Checkpoint 2 (cinta OESTE hacia cp_2 en x=3)
+    ['floor', 'cp_2',  'floor',      'conveyor_W', 'gear_cw',    'gear_ccw',   'conveyor_E', 'floor',      'floor', 'floor'],
     // y=3: Pasarela central estrecha sobre el abismo
     ['pit',   'pit',   'pit',        'wall',       'floor',      'floor',      'wall',       'pit',        'pit',   'pit'],
     // y=4: Pasarela central con Checkpoint 1
@@ -143,7 +151,7 @@
       id: 'abismo',
       name: '🌋 Puente sobre el Abismo',
       subtitle: 'Caótico & Empujes Letales',
-      description: 'Pasarelas estrechas rodeadas de lava donde empujar a los rivales es fulminante.',
+      description: 'Pasarelas estrechas sobre lava donde empujar rivales es letal. Camino fluido entre checkpoints.',
       width: 10,
       height: 8,
       grid: ABISMO_GRID,
@@ -187,6 +195,7 @@
 
   return {
     TILE_TYPES,
+    isSolidObstacle,
     ARENAS,
     DEFAULT_ARENA_ID: 'fabrica'
   };

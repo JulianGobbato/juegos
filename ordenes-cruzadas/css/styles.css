@@ -1,6 +1,7 @@
 /**
  * Órdenes Cruzadas - Hoja de Estilos Principal
  * Estética Táctica Sci-Fi / Cyberpunk Mecha
+ * Diseñado específicamente para TV panorámica 1920x936 y móviles
  */
 
 :root {
@@ -62,35 +63,36 @@ body {
    BARRA SUPERIOR UNIVERSAL
    ========================================================================== */
 .game-header {
-  height: 64px;
+  height: 52px;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
-  padding: 0 20px;
+  padding: 0 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 1000;
+  flex-shrink: 0;
 }
 
 .brand-wrap {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .brand-icon {
-  font-size: 1.8rem;
-  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5));
+  font-size: 1.6rem;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5));
 }
 
 .brand-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   letter-spacing: 1.5px;
   background: linear-gradient(135deg, #38bdf8, #818cf8);
   -webkit-background-clip: text;
@@ -99,7 +101,7 @@ body {
 }
 
 .brand-sub {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   font-family: var(--font-hud);
   letter-spacing: 1px;
@@ -108,18 +110,18 @@ body {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .badge-room {
   background: rgba(56, 189, 248, 0.15);
   border: 1px solid rgba(56, 189, 248, 0.4);
   color: var(--accent-cyan);
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
   font-family: var(--font-hud);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   letter-spacing: 1px;
 }
 
@@ -127,9 +129,9 @@ body {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--border-color);
   color: var(--text-main);
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -163,10 +165,11 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  max-width: 1440px;
+  padding: 8px 12px;
+  max-width: 1920px;
   margin: 0 auto;
   width: 100%;
+  min-height: 0;
 }
 
 .screen-section {
@@ -174,6 +177,7 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-height: 0;
 }
 
 /* ==========================================================================
@@ -247,21 +251,8 @@ body {
   background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.12) 0%, var(--bg-surface) 75%);
 }
 
-.tv-card:hover {
-  border-color: var(--accent-cyan);
-}
-
-.phone-card {
-  border-color: rgba(168, 85, 247, 0.35);
-  background: radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.12) 0%, var(--bg-surface) 75%);
-}
-
-.phone-card:hover {
-  border-color: var(--accent-purple);
-}
-
 .role-icon {
-  font-size: 3.2rem;
+  font-size: 3.5rem;
   margin-bottom: 12px;
 }
 
@@ -275,17 +266,17 @@ body {
 .role-desc {
   font-size: 0.95rem;
   color: var(--text-secondary);
-  line-height: 1.5;
   margin-bottom: 24px;
+  line-height: 1.5;
 }
 
 .btn-role {
   width: 100%;
-  padding: 14px 20px;
+  padding: 14px;
   border-radius: var(--radius-md);
+  border: none;
   font-weight: 700;
   font-size: 1.05rem;
-  border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -295,211 +286,187 @@ body {
 }
 
 .btn-tv-launch {
-  background: linear-gradient(135deg, #0284c7, #38bdf8);
-  color: #04101e;
-  font-weight: 800;
-}
-
-.btn-tv-launch:hover {
-  background: linear-gradient(135deg, #38bdf8, #7dd3fc);
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  color: #fff;
   box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
 }
 
-/* FIX FLEXBOX OBLIGATORIO EN FORMULARIO DE INGRESO */
+.btn-phone-launch {
+  background: linear-gradient(135deg, var(--accent-emerald), #059669);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+}
+
 .join-code-row {
   display: flex;
-  width: 100%;
-  max-width: 100%;
-  gap: 10px;
-  align-items: stretch;
-  box-sizing: border-box;
+  gap: 8px;
 }
 
 .input-room-code {
-  flex: 1 1 auto;
-  min-width: 120px; /* Evita colapso a un palito fino */
-  width: 100%;
-  height: 50px;
-  padding: 0 14px;
+  flex: 1;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  color: #fff;
+  font-family: var(--font-hud);
   font-size: 1.3rem;
   font-weight: 700;
-  letter-spacing: 3px;
   text-align: center;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.45);
-  border: 2px solid var(--border-color);
-  color: #fff;
-  border-radius: var(--radius-md);
-  font-family: var(--font-display);
-}
-
-.input-room-code:focus {
-  outline: none;
-  border-color: var(--accent-purple);
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
-}
-
-.btn-phone-launch {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  height: 50px;
-  padding: 0 18px;
-  box-sizing: border-box;
-  background: linear-gradient(135deg, #a855f7, #7c3aed);
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
 }
 
 /* ==========================================================================
-   2. MODO TV: PANTALLA PRINCIPAL
+   2. MODO TV: LOBBY
    ========================================================================== */
 .tv-view {
-  width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-height: 0;
 }
 
 .tv-lobby-header {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .tv-lobby-title {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: clamp(2rem, 3.5vw, 3rem);
   letter-spacing: 2px;
-  margin-bottom: 6px;
-  color: #fff;
+  margin: 0;
+  background: linear-gradient(135deg, #ffffff 40%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .tv-lobby-subtitle {
-  font-size: 1.1rem;
   color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-top: 4px;
 }
 
 .tv-lobby-center-grid {
   display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 28px;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-@media (max-width: 900px) {
-  .tv-lobby-center-grid {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: 340px 1fr;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
 }
 
 .tv-qr-box, .tv-players-box {
   background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
 .room-code-display {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .room-code-label {
   font-family: var(--font-hud);
-  font-size: 0.85rem;
-  letter-spacing: 2px;
+  font-size: 0.8rem;
   color: var(--accent-cyan);
+  letter-spacing: 1.5px;
 }
 
 .room-code-value {
   font-family: var(--font-display);
-  font-size: 4rem;
-  letter-spacing: 6px;
-  line-height: 1;
+  font-size: 3.2rem;
+  letter-spacing: 4px;
   color: #fff;
+  line-height: 1;
   text-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
 }
 
 .qr-frame {
   background: #fff;
-  padding: 16px;
+  padding: 10px;
   border-radius: var(--radius-md);
   display: inline-block;
-  margin: 0 auto 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  margin: 0 auto 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
 }
 
-.qr-frame #tvLobbyQr {
-  display: flex;
-  justify-content: center;
+.qr-frame #tvLobbyQr canvas, .qr-frame #tvLobbyQr img {
+  width: 140px;
+  height: 140px;
+  display: block;
 }
 
 .tv-qr-help {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
   text-align: center;
-  font-family: var(--font-hud);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
-/* Resumen de Configuración en TV (Alto Contraste Obligatorio) */
 .tv-config-summary-bar {
-  background: rgba(15, 23, 42, 0.92) !important;
+  background: rgba(15, 23, 42, 0.88) !important;
   border: 1px solid rgba(148, 163, 184, 0.35) !important;
   color: #f8fafc !important;
+  padding: 6px 10px !important;
+  margin-top: 6px !important;
+  margin-bottom: 6px !important;
 }
 
 .config-label {
   color: #cbd5e1 !important;
-  font-size: 0.85rem;
-  margin-bottom: 4px;
+  font-size: 0.78rem;
 }
 
 .config-badge-cyan {
   background: rgba(56, 189, 248, 0.25) !important;
   color: #38bdf8 !important;
   border: 1px solid rgba(56, 189, 248, 0.4);
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  padding: 6px 10px;
+  padding: 4px 8px;
 }
 
 .config-badge-amber {
   background: rgba(245, 158, 11, 0.25) !important;
   color: #fbbf24 !important;
   border: 1px solid rgba(245, 158, 11, 0.4);
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  padding: 6px 10px;
+  padding: 4px 8px;
 }
 
 .config-badge-purple {
   background: rgba(168, 85, 247, 0.25) !important;
   color: #e9d5ff !important;
   border: 1px solid rgba(168, 85, 247, 0.4);
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  padding: 6px 10px;
+  padding: 4px 8px;
 }
 
 .lobby-status-msg {
   color: #cbd5e1;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .players-box-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .players-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   letter-spacing: 1px;
 }
 
@@ -511,18 +478,20 @@ body {
 
 .tv-players-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .tv-player-card {
   background: var(--bg-surface-elevated);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   transition: all 0.2s ease;
 }
 
@@ -532,13 +501,13 @@ body {
 }
 
 .tv-player-avatar-circle {
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   border: 3px solid #fff;
   flex-shrink: 0;
 }
@@ -550,196 +519,95 @@ body {
 
 .tv-player-name {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .tv-player-status {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   font-family: var(--font-hud);
 }
 
 /* ==========================================================================
-   ARENA DE COMBATE: TABLERO 10 x 8 Y HUD
+   3. MODO TV: ARENA DE COMBATE (ARQUITECTURA PANORÁMICA 2 COLUMNAS)
+   Garantiza 1920x936 exacto sin scroll vertical
    ========================================================================== */
-.arena-top-hud {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 10px 20px;
-  margin-bottom: 12px;
-}
-
-.badge-hud-round {
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  letter-spacing: 1px;
-  color: var(--accent-cyan);
-  margin-right: 12px;
-}
-
-.badge-hud-map {
-  font-family: var(--font-hud);
-  font-size: 0.9rem;
-  color: #f8fafc;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-}
-
-.hud-center-banner {
-  text-align: center;
-}
-
-.banner-title {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  letter-spacing: 1.5px;
-  color: #fff;
-  line-height: 1.1;
-}
-
-.banner-sub {
-  font-size: 0.85rem;
-  color: var(--accent-cyan);
-  font-family: var(--font-hud);
-}
-
-.hud-timer-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  padding: 4px 14px;
-  border-radius: var(--radius-md);
-}
-
-.timer-seconds {
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  color: #fca5a5;
-  min-width: 40px;
-  text-align: right;
-}
-
-/* Fila de Pilotos (Chips compactos) */
-.arena-pilots-strip {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  margin-bottom: 12px;
-  padding-bottom: 4px;
-}
-
-.pilot-chip {
-  background: var(--bg-surface);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 8px 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.pilot-chip.is-ready {
-  border-color: rgba(16, 185, 129, 0.6);
-  background: rgba(16, 185, 129, 0.1);
-}
-
-.pilot-chip.is-dead {
-  opacity: 0.5;
-  filter: grayscale(1);
-}
-
-.chip-avatar {
-  font-size: 1.4rem;
-}
-
-.chip-name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  line-height: 1.2;
-}
-
-.chip-hp {
-  font-size: 0.85rem;
-}
-
-.chip-status {
-  font-size: 0.75rem;
-  font-family: var(--font-hud);
-  color: var(--text-secondary);
-}
-
-/* Barra de Ejecución de Cartas */
-.arena-execution-bar {
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(245, 158, 11, 0.5);
-  border-radius: var(--radius-md);
-  padding: 10px 16px;
-  margin-bottom: 12px;
-}
-
-.exec-bar-title {
-  font-family: var(--font-hud);
-  font-size: 0.85rem;
-  color: var(--accent-amber);
-  margin-bottom: 8px;
-  letter-spacing: 1px;
-}
-
-.exec-cards-row {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-}
-
-.exec-card-item {
-  background: var(--bg-surface-elevated);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.exec-card-item.is-current {
-  border-color: var(--accent-cyan);
-  background: rgba(56, 189, 248, 0.2);
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
-  transform: scale(1.05);
-}
-
-/* TABLERO 10 x 8 */
-.arena-board-outer {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.arena-panoramic-layout {
+  display: grid;
+  grid-template-columns: 1fr 480px;
+  gap: 16px;
+  height: calc(100dvh - 68px);
+  max-height: calc(100dvh - 68px);
   width: 100%;
+  overflow: hidden;
+  align-items: stretch;
 }
 
+/* COLUMNA IZQUIERDA: ESCENARIO PRINCIPAL */
+.arena-stage-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-width: 0;
+  position: relative;
+}
+
+.board-col-headers {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  width: 100%;
+  max-width: calc((100dvh - 100px) * 1.25);
+  margin-left: 24px;
+  margin-bottom: 2px;
+  text-align: center;
+  color: rgba(56, 189, 248, 0.7);
+  font-family: var(--font-hud);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.board-with-row-headers {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.board-row-headers {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 100%;
+  max-height: calc(100dvh - 100px);
+  width: 24px;
+  text-align: right;
+  padding-right: 6px;
+  color: rgba(56, 189, 248, 0.7);
+  font-family: var(--font-hud);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* CONTENEDOR TÁCTICO 10 x 8 */
 .arena-board-wrap {
   position: relative;
-  width: 100%;
-  max-width: 1000px;
   aspect-ratio: 10 / 8;
+  height: 100%;
+  max-height: calc(100dvh - 100px);
+  width: auto;
+  max-width: 100%;
   background: #040711;
-  border: 3px solid rgba(56, 189, 248, 0.35);
+  border: 3px solid rgba(56, 189, 248, 0.45);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.2);
   overflow: hidden;
 }
 
@@ -751,390 +619,838 @@ body {
   height: 100%;
 }
 
+/* CAPAS SUPERPUESTAS EN EL TABLERO */
+.arena-turret-sights-layer,
+.arena-laser-overlay,
+.arena-robots-layer,
+.arena-fx-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.arena-robots-layer {
+  z-index: 20;
+}
+
+.arena-laser-overlay {
+  z-index: 30;
+}
+
+.arena-fx-layer {
+  z-index: 40;
+}
+
+/* ==========================================================================
+   CELDAS DEL TABLERO (DISEÑO TÁCTICO VECTORIAL SVG)
+   ========================================================================== */
 .board-cell {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: #080d1a;
   overflow: hidden;
-  font-family: var(--font-hud);
 }
 
-/* Tipos de Celda */
+/* 1. Suelo Técnico */
 .cell-floor {
-  background: #0b1120;
+  background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.4) 0%, #080d1a 80%);
 }
 
 .cell-floor::after {
   content: '';
   position: absolute;
-  inset: 2px;
-  border: 1px dashed rgba(255, 255, 255, 0.04);
+  width: 4px;
+  height: 4px;
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 50%;
 }
 
+/* 2. Muro Metálico */
 .cell-wall {
-  background: repeating-linear-gradient(
-    45deg,
-    #1e293b,
-    #1e293b 8px,
-    #0f172a 8px,
-    #0f172a 16px
-  );
-  border-color: rgba(148, 163, 184, 0.4);
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 2px solid #334155;
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.15), inset 0 -3px 8px rgba(0, 0, 0, 0.8);
 }
 
+.cell-wall::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed rgba(245, 158, 11, 0.4);
+}
+
+/* 3. Abismo Incandescente */
 .cell-pit {
-  background: radial-gradient(circle at 50% 50%, #450a0a 0%, #000000 80%);
-  border-color: rgba(239, 68, 68, 0.5);
-  box-shadow: inset 0 0 15px #000;
+  background: #000000;
+  box-shadow: inset 0 0 16px rgba(239, 68, 68, 0.7);
+  border: 1px solid rgba(239, 68, 68, 0.5);
 }
 
 .cell-pit::before {
-  content: '⚠️';
-  font-size: 1.2rem;
-  opacity: 0.6;
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px dashed rgba(239, 68, 68, 0.35);
+  border-radius: 4px;
 }
 
-/* Cintas Transportadoras */
+/* 4. Cintas Transportadoras Animadas */
 .cell-conveyor {
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(14, 165, 233, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.4);
 }
 
-.conveyor-arrow {
-  font-size: 1.6rem;
-  color: var(--accent-cyan);
-  animation: pulseConveyor 1s infinite alternate;
+.conveyor-track {
+  width: 80%;
+  height: 80%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-@keyframes pulseConveyor {
-  0% { transform: scale(0.9); opacity: 0.7; }
-  100% { transform: scale(1.1); opacity: 1; }
+.conveyor-chevrons-svg {
+  width: 100%;
+  height: 100%;
 }
 
-/* Engranajes */
+@keyframes conveyorPulseN {
+  0% { transform: translateY(6px); opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { transform: translateY(-6px); opacity: 0.3; }
+}
+
+@keyframes conveyorPulseE {
+  0% { transform: translateX(-6px); opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { transform: translateX(6px); opacity: 0.3; }
+}
+
+@keyframes conveyorPulseS {
+  0% { transform: translateY(-6px); opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { transform: translateY(6px); opacity: 0.3; }
+}
+
+@keyframes conveyorPulseW {
+  0% { transform: translateX(6px); opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { transform: translateX(-6px); opacity: 0.3; }
+}
+
+.conveyor-n .chev-anim { animation: conveyorPulseN 1.2s infinite ease-in-out; }
+.conveyor-e .chev-anim { animation: conveyorPulseE 1.2s infinite ease-in-out; }
+.conveyor-s .chev-anim { animation: conveyorPulseS 1.2s infinite ease-in-out; }
+.conveyor-w .chev-anim { animation: conveyorPulseW 1.2s infinite ease-in-out; }
+
+/* 5. Engranajes Giratorios */
 .cell-gear {
-  background: #0f172a;
+  background: rgba(15, 23, 42, 0.9);
 }
 
-.gear-icon {
-  font-size: 1.8rem;
-  animation: spinGear 4s linear infinite;
+.gear-cw {
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, rgba(15, 23, 42, 0.9) 70%);
 }
 
-.gear-icon.ccw {
-  animation: spinGearCCW 4s linear infinite;
+.gear-ccw {
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, rgba(15, 23, 42, 0.9) 70%);
 }
 
-@keyframes spinGear {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.gear-icon-svg {
+  width: 76%;
+  height: 76%;
 }
 
-@keyframes spinGearCCW {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(-360deg); }
-}
-
-/* Torretas */
+/* 6. Torretas Láser Fijas */
 .cell-turret {
-  background: #1e1b4b;
-  position: relative;
+  background: linear-gradient(135deg, #1e293b, #090e1a);
+  border: 2px solid #ef4444;
+  box-shadow: inset 0 0 12px rgba(239, 68, 68, 0.5);
 }
 
-.turret-icon {
-  font-size: 1.5rem;
-  color: #ef4444;
+.turret-svg {
+  width: 85%;
+  height: 85%;
 }
 
-/* Reparación */
+.turret-beacon {
+  animation: turretPulse 1s infinite alternate;
+}
+
+@keyframes turretPulse {
+  from { opacity: 0.4; filter: drop-shadow(0 0 2px #ef4444); }
+  to { opacity: 1; filter: drop-shadow(0 0 10px #ef4444); }
+}
+
+/* 7. Estación de Reparación */
 .cell-repair {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.4);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, rgba(6, 78, 59, 0.2) 75%);
+  border: 1px solid #10b981;
+  box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.4);
 }
 
-.repair-icon {
-  font-size: 1.4rem;
+.repair-svg {
+  width: 65%;
+  height: 65%;
 }
 
-/* Checkpoints */
+/* 8. Checkpoints */
 .cell-checkpoint {
-  background: rgba(245, 158, 11, 0.2);
-  border: 2px solid rgba(245, 158, 11, 0.7);
-  box-shadow: inset 0 0 12px rgba(245, 158, 11, 0.3);
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, rgba(120, 53, 15, 0.2) 80%);
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), inset 0 0 10px rgba(245, 158, 11, 0.3);
 }
 
-.cp-badge {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  color: #fbbf24;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
+.cp-badge-svg {
+  width: 82%;
+  height: 82%;
 }
 
-/* Spawns */
+/* 9. Spawns */
 .cell-spawn {
-  background: rgba(56, 189, 248, 0.08);
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px dashed rgba(148, 163, 184, 0.35);
 }
 
 .spawn-num {
-  font-size: 0.75rem;
-  color: rgba(56, 189, 248, 0.6);
-  position: absolute;
-  bottom: 2px;
-  right: 4px;
-}
-
-/* Capa de Láseres (SVG) */
-.arena-laser-overlay {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 50;
-}
-
-.laser-beam {
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 6px #ef4444);
-  animation: laserFlash 0.35s ease-out;
-}
-
-@keyframes laserFlash {
-  0% { stroke-width: 8px; opacity: 1; }
-  50% { stroke-width: 14px; opacity: 0.9; }
-  100% { stroke-width: 6px; opacity: 0.8; }
-}
-
-/* Capa de Robots */
-.arena-robots-layer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 40;
-}
-
-.robot-token {
-  position: absolute;
-  width: 10%;
-  height: 12.5%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: left 0.4s ease-out, top 0.4s ease-out, transform 0.3s ease;
-  pointer-events: auto;
-}
-
-.robot-token.is-dead {
-  opacity: 0.3;
-  filter: grayscale(1);
-}
-
-.robot-body {
-  width: 78%;
-  height: 78%;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-  border: 2px solid #fff;
-}
-
-.robot-avatar-img {
-  font-size: 1.4rem;
-}
-
-/* Visor / Flecha de Dirección Frontal */
-.robot-visor-arrow {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-bottom: 12px solid #fff;
-  filter: drop-shadow(0 0 5px #fff);
-  z-index: 10;
-}
-
-.robot-initials-badge {
-  position: absolute;
-  bottom: -4px;
-  right: -4px;
-  background: #0f172a;
-  color: #fff;
-  border-radius: 4px;
-  padding: 1px 4px;
-  font-size: 0.65rem;
-  font-weight: 800;
   font-family: var(--font-hud);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(148, 163, 184, 0.6);
 }
 
 /* ==========================================================================
-   PODIO DE CAMPEONES (VICTORIA)
+   FICHAS DE ROBOTS (CHASIS DIRECCIONAL SVG PERSISTENTE)
    ========================================================================== */
-.podium-screen {
-  max-width: 800px;
-  margin: 30px auto 0;
+.robot-token {
+  width: 10%;
+  height: 12.5%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: left 0.36s cubic-bezier(0.25, 1, 0.5, 1), top 0.36s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: left, top;
+}
+
+.robot-token.is-dead {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.robot-token.is-falling {
+  animation: pitFall 0.45s forwards ease-in;
+}
+
+@keyframes pitFall {
+  0% { transform: scale(1) rotate(0deg); opacity: 1; }
+  100% { transform: scale(0.1) rotate(270deg); opacity: 0; }
+}
+
+.robot-token.bump-north { animation: bumpN 0.25s ease-in-out; }
+.robot-token.bump-east  { animation: bumpE 0.25s ease-in-out; }
+.robot-token.bump-south { animation: bumpS 0.25s ease-in-out; }
+.robot-token.bump-west  { animation: bumpW 0.25s ease-in-out; }
+
+@keyframes bumpN { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } }
+@keyframes bumpE { 0%, 100% { transform: translateX(0); } 40% { transform: translateX(10px); } }
+@keyframes bumpS { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(10px); } }
+@keyframes bumpW { 0%, 100% { transform: translateX(0); } 40% { transform: translateX(-10px); } }
+
+/* Chasis Giratorio */
+.robot-chassis {
+  width: 72%;
+  height: 72%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.32s cubic-bezier(0.25, 1, 0.5, 1);
+  transform-origin: center center;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
+}
+
+.robot-chassis-svg {
   width: 100%;
+  height: 100%;
 }
 
-.podium-trophy {
-  font-size: 5rem;
-  animation: floatTrophy 2s ease-in-out infinite alternate;
+/* Etiqueta Fija de Piloto (No rota) */
+.robot-status-tag {
+  position: absolute;
+  bottom: 1px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  padding: 1px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
 }
 
-@keyframes floatTrophy {
-  from { transform: translateY(0); }
-  to { transform: translateY(-10px); }
+.robot-mini-name {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  white-space: nowrap;
 }
 
-.podium-headline {
-  font-family: var(--font-display);
-  font-size: 3.5rem;
-  letter-spacing: 2px;
-  color: #fbbf24;
+.robot-mini-hp-bar {
+  display: flex;
+  gap: 2px;
+  margin-top: 1px;
 }
 
-.podium-winner-card {
+.hp-pip {
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hp-pip.active {
+  background: #10b981;
+  box-shadow: 0 0 3px #10b981;
+}
+
+.hp-pip.active.low {
+  background: #ef4444;
+  box-shadow: 0 0 3px #ef4444;
+}
+
+/* RAYOS LÁSER ACTIVOS EN SVG */
+.laser-beam-line {
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px currentColor);
+  animation: laserFlash 0.4s forwards;
+}
+
+@keyframes laserFlash {
+  0% { stroke-width: 6; opacity: 1; }
+  70% { stroke-width: 5; opacity: 0.9; }
+  100% { stroke-width: 2; opacity: 0; }
+}
+
+/* TEXTOS POP-UP FLOTANTES */
+.floating-fx {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-hud);
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  animation: floatUpFade 1.1s forwards cubic-bezier(0.1, 0.8, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+}
+
+.fx-damage {
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  border: 1px solid #fca5a5;
+}
+
+.fx-heal {
+  background: rgba(16, 185, 129, 0.9);
+  color: #fff;
+  border: 1px solid #6ee7b7;
+}
+
+.fx-blocked {
+  background: rgba(56, 189, 248, 0.9);
+  color: #fff;
+  border: 1px solid #bae6fd;
+}
+
+.fx-checkpoint {
+  background: rgba(245, 158, 11, 0.9);
+  color: #fff;
+  border: 1px solid #fef08a;
+  font-size: 1.25rem;
+}
+
+.fx-boom {
+  background: rgba(220, 38, 38, 0.95);
+  color: #fff;
+  border: 2px solid #f87171;
+  font-size: 1.3rem;
+}
+
+@keyframes floatUpFade {
+  0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+  20% { transform: translate(-50%, -12px) scale(1.15); opacity: 1; }
+  80% { transform: translate(-50%, -30px) scale(1); opacity: 0.9; }
+  100% { transform: translate(-50%, -46px) scale(0.85); opacity: 0; }
+}
+
+/* ==========================================================================
+   COLUMNA DERECHA: PANEL TÁCTICO DE COMANDO (480px FIJO EN TV)
+   ========================================================================== */
+.arena-command-col {
+  width: 480px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cmd-block {
   background: var(--bg-surface);
-  border: 2px solid #fbbf24;
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  margin-top: 20px;
-  box-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
-}
-
-.podium-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-top: 24px;
-}
-
-.stat-card {
-  background: var(--bg-surface-elevated);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 10px 14px;
+}
+
+/* BLOQUE 1: CABECERA & RELOJ */
+.cmd-header-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cmd-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cmd-round-badge {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  letter-spacing: 1px;
+  color: var(--accent-cyan);
+}
+
+.cmd-map-name {
+  font-family: var(--font-hud);
+  font-size: 0.9rem;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.cmd-timer-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.cmd-timer-label {
+  font-family: var(--font-hud);
+  font-size: 0.82rem;
+  color: #fca5a5;
+  letter-spacing: 1px;
+}
+
+.cmd-timer-number {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  color: #fca5a5;
+  line-height: 1;
+}
+
+/* Barra de los 4 pasos en ejecución */
+.cmd-steps-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.cmd-step-node {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-hud);
+  font-weight: 800;
+  font-size: 1rem;
+  color: #cbd5e1;
+  transition: all 0.3s ease;
+}
+
+.cmd-step-node.active {
+  background: var(--accent-cyan);
+  color: #040711;
+  border-color: #fff;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.7);
+  transform: scale(1.15);
+}
+
+.cmd-step-node.completed {
+  background: rgba(16, 185, 129, 0.3);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.cmd-step-line {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 4px;
+}
+
+/* BLOQUE 2: TRACKER DE SUB-FASES */
+.cmd-subphase-tracker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.subphase-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 4px 2px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.25s ease;
 }
 
-.stat-icon {
-  font-size: 2rem;
-  margin-bottom: 6px;
+.subphase-pill .sp-num {
+  font-size: 0.7rem;
+  font-family: var(--font-hud);
+  color: var(--text-secondary);
 }
 
-.stat-title {
-  font-size: 0.85rem;
+.subphase-pill .sp-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.subphase-pill.active {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: var(--accent-cyan);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+  transform: translateY(-2px);
+}
+
+/* BLOQUE 3: VISOR "EN VIVO" */
+.cmd-spotlight-box {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  border: 2px solid var(--accent-amber);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+  flex-shrink: 0;
+}
+
+.spotlight-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.spotlight-badge {
+  background: #f59e0b;
+  color: #000;
+  font-family: var(--font-hud);
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.spotlight-subtext {
+  font-size: 0.75rem;
   color: var(--text-secondary);
   font-family: var(--font-hud);
 }
 
-.stat-value {
-  font-family: var(--font-display);
-  font-size: 1.6rem;
+.spotlight-action-text {
+  font-family: var(--font-hud);
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #fff;
+  line-height: 1.3;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
 }
 
+/* BLOQUE 4: ROSTER & COLA DE CARTAS */
+.cmd-dynamic-roster {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.cmd-step-cards-queue {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.queue-title {
+  font-family: var(--font-hud);
+  font-size: 0.75rem;
+  color: var(--accent-cyan);
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.queue-cards-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.queue-card-pill {
+  background: var(--bg-surface-elevated);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.queue-card-pill.is-current {
+  border-color: var(--accent-cyan) !important;
+  background: rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
+  transform: scale(1.05);
+}
+
+.queue-card-pill.is-done {
+  opacity: 0.45;
+  filter: grayscale(0.5);
+}
+
+.cmd-pilots-list-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pilots-list-title {
+  font-family: var(--font-hud);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.cmd-pilots-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.cmd-pilot-card {
+  background: var(--bg-surface-elevated);
+  border-left: 4px solid var(--accent-cyan);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cmd-pilot-card.is-dead {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.cmd-pilot-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cmd-pilot-avatar {
+  font-size: 1.3rem;
+}
+
+.cmd-pilot-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cmd-pilot-hp-meter {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.meter-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.meter-pip.active {
+  background: #10b981;
+}
+
+.meter-pip.active.low {
+  background: #ef4444;
+}
+
+.cmd-pilot-cps {
+  display: flex;
+  gap: 4px;
+}
+
+.cp-flag-tag {
+  font-size: 0.7rem;
+  font-family: var(--font-hud);
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.cp-flag-tag.reached {
+  background: #f59e0b;
+  color: #000;
+}
+
+.cmd-pilot-status-pill {
+  font-size: 0.72rem;
+  font-family: var(--font-hud);
+  color: var(--accent-cyan);
+}
+
+/* BLOQUE 5: LEYENDA MINI */
+.cmd-legend-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-family: var(--font-hud);
+  flex-shrink: 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.leg-icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.leg-wall { background: #334155; border: 1px solid #64748b; }
+.leg-pit { background: #000; border: 1px solid #ef4444; }
+.leg-conveyor { background: #38bdf8; }
+.leg-gear { background: #10b981; }
+.leg-turret { background: #ef4444; }
+.leg-repair { background: #059669; }
+.leg-checkpoint { background: #fbbf24; }
+
 /* ==========================================================================
-   3. MODO CELULAR: CONTROL REMOTO
+   4. MODO CELULAR: CONTROL Y PROGRAMACIÓN
    ========================================================================== */
 .phone-view {
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
   flex: 1;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
 }
 
 .phone-card-wrap {
   background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 24px;
-}
-
-.phone-header-icon {
-  font-size: 3rem;
-  display: inline-block;
-  margin-bottom: 8px;
+  padding: 20px;
+  margin-top: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .phone-screen-title {
   font-family: var(--font-display);
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   letter-spacing: 1px;
-  margin-bottom: 4px;
-}
-
-.phone-screen-desc {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
 }
 
 .color-palette-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
+  gap: 10px;
 }
 
-.btn-color-choice {
-  aspect-ratio: 1;
+.btn-palette-color {
+  height: 44px;
   border-radius: 50%;
   border: 3px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
+  transition: transform 0.2s ease;
 }
 
-.btn-color-choice.is-selected {
-  border-color: #fff;
+.btn-palette-color.active {
   transform: scale(1.15);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+  border-color: #fff;
+  box-shadow: 0 0 12px currentColor;
 }
 
-.btn-action-primary {
-  background: linear-gradient(135deg, #0284c7, #38bdf8);
-  border: none;
-  border-radius: var(--radius-md);
-  color: #04101e;
-  font-weight: 800;
-  font-size: 1.1rem;
-  padding: 14px 24px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.btn-action-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #38bdf8, #7dd3fc);
-  box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
-}
-
-.btn-action-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* HUD Superior en Celular */
+/* HUD CELULAR */
 .phone-robot-hud {
   background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 12px 16px;
+  padding: 12px;
   margin-bottom: 12px;
 }
 
@@ -1142,52 +1458,61 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
 }
 
-.hud-avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+.hud-avatar-frame {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
   border: 2px solid #fff;
+  overflow: hidden;
 }
 
 .hud-pilot-name {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   display: block;
+  line-height: 1.2;
 }
 
 .hud-facing {
-  font-size: 0.8rem;
-  color: var(--accent-cyan);
   font-family: var(--font-hud);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
 }
 
 .hud-hp {
-  font-size: 1.1rem;
-  letter-spacing: 2px;
+  display: flex;
+  gap: 3px;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+
+.phone-hp-heart {
+  font-size: 1rem;
 }
 
 .hud-target {
-  font-size: 0.8rem;
   font-family: var(--font-hud);
-  color: #fbbf24;
+  font-size: 0.8rem;
+  color: var(--accent-amber);
 }
 
 .hud-timer-bar {
-  border-top: 1px solid var(--border-color);
+  margin-top: 8px;
   padding-top: 6px;
-  text-align: center;
+  border-top: 1px solid var(--border-color);
   font-family: var(--font-hud);
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
 }
 
-/* Slots de Programación */
+/* SLOTS DE PROGRAMA */
 .program-slots-container {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
@@ -1196,14 +1521,13 @@ body {
   margin-bottom: 10px;
 }
 
-.program-slots-header, .hand-header {
+.program-slots-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
   font-family: var(--font-hud);
   font-size: 0.8rem;
-  color: var(--accent-cyan);
+  color: var(--text-secondary);
+  margin-bottom: 8px;
 }
 
 .program-slots-grid {
@@ -1215,57 +1539,64 @@ body {
 .program-slot {
   background: var(--bg-surface-elevated);
   border: 2px dashed rgba(148, 163, 184, 0.4);
-  border-radius: var(--radius-sm);
-  padding: 8px 4px;
-  text-align: center;
-  min-height: 90px;
+  border-radius: var(--radius-md);
+  min-height: 85px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  transition: all 0.2s ease;
   position: relative;
+  transition: all 0.2s ease;
 }
 
-.program-slot.is-filled {
+.program-slot.has-card {
   border-style: solid;
   border-color: var(--accent-cyan);
   background: rgba(56, 189, 248, 0.1);
 }
 
-.program-slot.is-locked {
-  border-style: solid;
+.program-slot.locked {
   border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.15);
-  cursor: not-allowed;
+  background: rgba(239, 68, 68, 0.12);
 }
 
 .slot-num {
   font-family: var(--font-hud);
+  font-weight: 800;
   font-size: 0.75rem;
-  color: var(--text-secondary);
+  color: var(--accent-cyan);
+  position: absolute;
+  top: 4px;
+  left: 6px;
 }
 
-.slot-card-icon {
-  font-size: 1.6rem;
+.slot-content {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-.slot-card-name {
-  font-size: 0.75rem;
-  font-weight: 700;
+.slot-content .card-icon {
+  font-size: 1.5rem;
+  display: block;
+}
+
+.slot-content .card-name {
+  font-size: 0.72rem;
   line-height: 1.1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: block;
 }
 
-.slot-card-prio {
+.slot-content .card-prio {
   font-family: var(--font-hud);
+  color: var(--accent-amber);
   font-size: 0.7rem;
-  color: #fbbf24;
 }
 
-/* Mano de Cartas */
+/* MANO DE CARTAS */
 .player-hand-container {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
@@ -1274,330 +1605,315 @@ body {
   flex: 1;
 }
 
+.hand-header {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-hud);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
 .cards-hand-list {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
   gap: 8px;
-  max-height: 320px;
-  overflow-y: auto;
 }
 
 .hand-card-item {
   background: var(--bg-surface-elevated);
   border: 2px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  padding: 8px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 78px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
-.hand-card-item:hover {
-  border-color: var(--accent-cyan);
-  background: rgba(56, 189, 248, 0.1);
-  transform: translateX(4px);
+.hand-card-item:active {
+  transform: scale(0.96);
 }
 
-.hand-card-item.is-used {
-  opacity: 0.35;
-  pointer-events: none;
-  filter: grayscale(1);
+/* Categorías de Cartas */
+.hand-card-item.cat-move {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), var(--bg-surface-elevated));
+}
+
+.hand-card-item.cat-turn {
+  border-color: rgba(168, 85, 247, 0.5);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), var(--bg-surface-elevated));
+}
+
+.hand-card-item.cat-attack {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), var(--bg-surface-elevated));
+}
+
+.hand-card-item.cat-defense {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), var(--bg-surface-elevated));
+}
+
+.hand-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .hand-card-icon {
-  font-size: 1.8rem;
-  flex-shrink: 0;
+  font-size: 1.4rem;
 }
 
-.hand-card-details {
-  flex: 1;
-  min-width: 0;
+.hand-card-prio {
+  font-family: var(--font-hud);
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--accent-amber);
 }
 
 .hand-card-name {
   font-weight: 700;
-  font-size: 0.95rem;
-  margin-bottom: 2px;
+  font-size: 0.82rem;
+  margin-top: 4px;
+  line-height: 1.1;
 }
 
-.hand-card-desc {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  line-height: 1.2;
-}
-
-.hand-card-prio-badge {
-  font-family: var(--font-hud);
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #fbbf24;
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  padding: 4px 8px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-/* Pantalla de Ejecución en Celular */
-.exec-tv-icon {
-  font-size: 4rem;
-  margin-bottom: 12px;
-  animation: pulseConveyor 1.5s infinite alternate;
-}
-
-.exec-screen-title {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  letter-spacing: 1px;
-}
-
-.exec-screen-sub {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-}
-
-.phone-live-step-card {
-  background: var(--bg-surface-elevated);
-  border: 2px solid var(--accent-cyan);
+/* FASE DE EJECUCIÓN EN CELULAR */
+.phone-my-program-summary {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 12px;
 }
 
-.live-step-badge {
-  font-family: var(--font-hud);
-  font-size: 0.85rem;
-  color: var(--accent-cyan);
-  margin-bottom: 6px;
+.phone-program-steps-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
 }
 
-.live-card-icon {
-  font-size: 2rem;
-  margin-right: 8px;
+.phone-step-chip {
+  background: var(--bg-surface-elevated);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 6px 4px;
+  text-align: center;
+  transition: all 0.25s ease;
 }
 
-.live-card-name {
-  font-size: 1.2rem;
+.phone-step-chip.is-active-step {
+  border-color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+  transform: scale(1.05);
 }
 
 /* ==========================================================================
-   ADAPTACIONES PARA TV Y DISPOSITIVOS GRANDES (1920x936 / 1920x1080)
+   MODAL DE REGLAS RÁPIDAS
    ========================================================================== */
-@media (min-width: 900px) and (min-aspect-ratio: 16/10) {
-  html, body {
-    height: 100dvh;
-    max-height: 100dvh;
-    overflow: hidden;
-  }
+.rules-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
 
-  body {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
+.rules-modal-dialog {
+  width: 100%;
+  max-width: 760px;
+}
 
-  .game-header {
-    height: 48px;
-    padding: 4px 18px;
-    flex-shrink: 0;
-  }
+.rules-modal-content {
+  background: #0f172a;
+  border: 2px solid var(--accent-cyan);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.3);
+  padding: 24px;
+  color: #fff;
+}
 
-  .brand-title {
-    font-size: 1.5rem;
-  }
+.rules-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
 
-  .brand-sub {
-    font-size: 0.72rem;
-  }
+.rules-modal-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+  margin: 0;
+  color: #fff;
+}
 
-  .main-container {
-    padding: 6px 20px;
-    height: calc(100dvh - 48px);
-    max-height: calc(100dvh - 48px);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
+.btn-rules-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
 
-  .tv-view {
-    height: 100%;
-    max-height: 100%;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
+.rules-sections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
 
-  /* LOBBY TV */
-  .tv-lobby-header {
-    margin-bottom: 8px;
-    flex-shrink: 0;
-  }
+.rule-box {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
 
-  .tv-lobby-title {
-    font-size: 1.8rem;
-    margin-bottom: 2px;
-  }
+.rule-badge {
+  font-family: var(--font-hud);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  letter-spacing: 1px;
+}
 
-  .tv-lobby-subtitle {
-    font-size: 0.95rem;
-  }
+.rule-box h4 {
+  margin: 6px 0;
+  font-size: 1.15rem;
+  color: #fff;
+}
 
-  .tv-lobby-center-grid {
-    gap: 16px;
-    flex: 1;
-    min-height: 0;
-    grid-template-columns: 320px 1fr;
-  }
+.rule-box p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 0;
+}
 
-  .tv-qr-box, .tv-players-box {
-    padding: 16px;
-  }
+.rule-steps-list {
+  padding-left: 18px;
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
 
-  .room-code-value {
-    font-size: 3rem;
-  }
+.rule-steps-list li {
+  margin-bottom: 3px;
+}
 
-  .qr-frame {
-    padding: 10px;
-    margin-bottom: 8px;
-  }
+/* ==========================================================================
+   BOTÓN ACCIÓN PRINCIPAL REUTILIZABLE
+   ========================================================================== */
+.btn-action-primary {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 800;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.35);
+}
 
-  .qr-frame #tvLobbyQr canvas, .qr-frame #tvLobbyQr img {
-    width: 140px;
-    height: 140px;
-  }
+.btn-action-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7dd3fc, var(--accent-cyan));
+  color: #040711;
+  box-shadow: 0 6px 22px rgba(56, 189, 248, 0.55);
+}
 
-  .tv-config-summary-bar {
-    padding: 6px 12px !important;
-    margin-top: 6px !important;
-    margin-bottom: 6px !important;
-  }
+.btn-action-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
-  .tv-players-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 8px;
-    max-height: 280px;
+/* ==========================================================================
+   PODIO DE LA VICTORIA
+   ========================================================================== */
+.podium-screen {
+  max-width: 800px;
+  margin: 20px auto 0;
+}
+
+.podium-trophy {
+  font-size: 4rem;
+  animation: bounceTrophy 1s infinite alternate;
+}
+
+@keyframes bounceTrophy {
+  from { transform: translateY(0); }
+  to { transform: translateY(-12px); }
+}
+
+.podium-headline {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  letter-spacing: 2px;
+  color: #facc15;
+}
+
+.podium-winner-card {
+  background: var(--bg-surface);
+  border: 3px solid var(--accent-amber);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.4);
+}
+
+.podium-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.stat-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+/* ==========================================================================
+   RESPONSIVIDAD Y AJUSTES MÓVILES
+   ========================================================================== */
+@media (max-width: 1200px) {
+  .arena-panoramic-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
     overflow-y: auto;
   }
-
-  /* ARENA DE COMBATE: TABLERO 10 x 8 Y HUD */
-  .arena-top-hud {
-    padding: 6px 16px;
-    margin-bottom: 6px;
-    flex-shrink: 0;
-  }
-
-  .badge-hud-round {
-    font-size: 1.35rem;
-    margin-right: 8px;
-  }
-
-  .badge-hud-map {
-    font-size: 0.82rem;
-    padding: 3px 8px;
-  }
-
-  .banner-title {
-    font-size: 1.35rem;
-  }
-
-  .banner-sub {
-    font-size: 0.78rem;
-  }
-
-  .timer-seconds {
-    font-size: 1.45rem;
-  }
-
-  .arena-pilots-strip {
-    margin-bottom: 6px;
-    gap: 8px;
-    padding-bottom: 2px;
-    flex-shrink: 0;
-  }
-
-  .pilot-chip {
-    padding: 4px 10px;
-    gap: 6px;
-  }
-
-  .chip-avatar {
-    font-size: 1.15rem;
-  }
-
-  .chip-name {
-    font-size: 0.85rem;
-  }
-
-  .chip-hp {
-    font-size: 0.78rem;
-  }
-
-  .chip-status {
-    font-size: 0.7rem;
-  }
-
-  .arena-execution-bar {
-    padding: 6px 12px;
-    margin-bottom: 6px;
-    flex-shrink: 0;
-  }
-
-  .exec-bar-title {
-    font-size: 0.78rem;
-    margin-bottom: 4px;
-  }
-
-  .exec-card-item {
-    padding: 4px 8px;
-    font-size: 0.85rem;
-  }
-
-  /* TABLERO DETERMINISTA 10x8: ALTO EXACTO */
-  .arena-board-outer {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 2px 0;
-  }
-
-  .arena-board-wrap {
-    max-height: min(62dvh, 580px);
-    max-width: min(77.5dvh, 725px);
+  .arena-command-col {
     width: 100%;
-    aspect-ratio: 10 / 8;
-    margin: 0 auto;
+    height: auto;
   }
-
-  /* PODIO DE CAMPEONES */
-  .podium-screen {
-    margin: 10px auto 0;
+  .board-col-headers {
+    margin-left: 18px;
   }
+}
 
-  .podium-trophy {
-    font-size: 3.5rem;
+@media (max-width: 768px) {
+  .tv-lobby-center-grid {
+    grid-template-columns: 1fr;
   }
-
-  .podium-headline {
-    font-size: 2.5rem;
+  .game-header {
+    padding: 0 12px;
   }
-
-  .podium-winner-card {
-    padding: 16px;
-    margin-top: 10px;
-  }
-
-  .podium-stats-grid {
-    gap: 10px;
-    margin-top: 14px;
-  }
-
-  .stat-card {
-    padding: 10px;
+  .brand-title {
+    font-size: 1.3rem;
   }
 }
