@@ -305,6 +305,9 @@
   // ============================================================================
   // CONTROLADOR DE PANTALLA TV (HOST)
   // ============================================================================
+  let peerResilienceHost = null;
+  let peerResilienceClient = null;
+
   const TvHost = {
     players: [], // { id, name, avatar, color, peerConn, score, roundDelta, strokesDone }
     roundIndex: 0,
@@ -350,6 +353,20 @@
       limpiarConexionPrevia();
       appState.roomCode = generarCodigoSala();
       const peerId = PEER_PREFIX + appState.roomCode;
+
+      if (!peerResilienceHost && typeof PeerResilience !== 'undefined') {
+        peerResilienceHost = PeerResilience.createHost({
+          onPlayerSleepChange: (playerId, isAsleep) => {
+            const p = TvHost.players.find(pl => pl.id === playerId);
+            if (p) {
+              p.isAsleep = isAsleep;
+              TvHost.renderLobbyRoster();
+            }
+          },
+          getPhaseKey: () => `${appState.currentPhase || 'lobby'}_round_${TvHost.roundIndex}`
+        });
+        peerResilienceHost.startSleepMonitor();
+      }
 
       document.getElementById('headerRoomCode').textContent = appState.roomCode;
       document.getElementById('roomBadgeWrap').classList.remove('d-none');
@@ -460,10 +477,20 @@
 
     handleIncomingConnection(conn) {
       conn.on('data', (data) => {
+        if (!data || !data.type) return;
+
+        const pId = (data.payload && data.payload.playerId) || conn._playerId;
+        if (pId && peerResilienceHost) {
+          if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
+          if (data.type !== 'JOIN_GAME' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+        }
+
         this.handleClientMessage(conn, data);
       });
 
       conn.on('close', () => {
+        const pId = conn._playerId;
+        if (pId && peerResilienceHost && !peerResilienceHost.isConnectionActive(pId, conn)) return;
         this.handlePlayerDisconnect(conn.peer);
       });
 
@@ -514,6 +541,23 @@
     },
 
     registerPlayer(conn, info) {
+      if (!info) info = {};
+
+      // Si el jugador ya existe (reconexión limpia por playerId)
+      if (info.playerId) {
+        const existing = this.players.find(p => p.id === info.playerId);
+        if (existing) {
+          existing.peerConn = conn;
+          existing.peerId = conn.peer;
+          existing.isAsleep = false;
+          conn._playerId = existing.id;
+          if (peerResilienceHost) peerResilienceHost.registerPlayerConnection(existing.id, conn);
+          this.sendFullStateSync(existing);
+          this.renderLobbyRoster();
+          return;
+        }
+      }
+
       if (this.players.length >= 10) {
         conn.send({ type: 'JOIN_REJECTED', payload: { reason: 'La sala está completa (máx. 10 jugadores)' } });
         return;
@@ -525,7 +569,7 @@
       const isVip = this.players.length === 0;
 
       const player = {
-        id: 'p_' + Math.random().toString(36).substring(2, 9),
+        id: info.playerId || ('p_' + Math.random().toString(36).substring(2, 9)),
         peerId: conn.peer,
         peerConn: conn,
         name: (info.name || 'Artista').trim().substring(0, 14),
@@ -534,8 +578,12 @@
         isVip: isVip,
         score: 0,
         roundDelta: 0,
-        strokesDone: 0
+        strokesDone: 0,
+        isAsleep: false
       };
+
+      conn._playerId = player.id;
+      if (peerResilienceHost) peerResilienceHost.registerPlayerConnection(player.id, conn);
 
       this.players.push(player);
       SoundEffects.playJoin();
@@ -560,22 +608,71 @@
       this.broadcastRoster();
     },
 
+    sendFullStateSync(player) {
+      if (!player || !player.peerConn || !player.peerConn.open) return;
+      const isFake = player.id === this.fakeArtistId;
+      const currentTurnPlayerId = this.turnOrder[this.currentTurnIndex];
+      const isMyTurn = currentTurnPlayerId === player.id;
+
+      const payload = {
+        type: 'FULL_STATE_SYNC',
+        phase: appState.currentPhase || 'tvViewLobby',
+        isVip: player.isVip,
+        playerId: player.id,
+        color: player.color,
+        name: player.name,
+        avatar: player.avatar,
+        category: this.currentCategory ? this.currentCategory.nombre : '',
+        secretWord: isFake ? '???' : this.secretWord,
+        isFake: isFake,
+        isMyTurn: isMyTurn,
+        currentLap: Math.floor(this.currentTurnIndex / (this.players.length || 1)) + 1,
+        totalLaps: this.vueltasDibujo,
+        turnPlayerName: this.players.find(p => p.id === currentTurnPlayerId)?.name || '',
+        turnPlayerColor: this.players.find(p => p.id === currentTurnPlayerId)?.color || '#fff',
+        votedCandidateId: this.votes[player.id] || null,
+        yaEnvioEnEstaFase: (appState.currentPhase === 'tvViewPhase2' ? !isMyTurn : (appState.currentPhase === 'tvViewPhase3' ? Boolean(this.votes[player.id]) : false)),
+        phaseKey: `${appState.currentPhase || 'lobby'}_round_${this.roundIndex}`
+      };
+
+      try {
+        player.peerConn.send(payload);
+        player.peerConn.send({
+          type: 'JOIN_ACCEPTED',
+          payload: {
+            playerId: player.id,
+            name: player.name,
+            avatar: player.avatar,
+            color: player.color,
+            isVip: player.isVip,
+            roomCode: appState.roomCode,
+            vueltasDibujo: this.vueltasDibujo,
+            totalRounds: this.totalRounds,
+            categories: appState.catalog ? appState.catalog.categorias : []
+          }
+        });
+      } catch (e) {}
+    },
+
     handlePlayerDisconnect(peerId) {
       const idx = this.players.findIndex(p => p.peerId === peerId);
       if (idx !== -1) {
-        const removed = this.players.splice(idx, 1)[0];
-        console.log('Jugador desconectado:', removed.name);
-        
-        // Si el que se fue era el VIP y quedan jugadores, asignar nuevo VIP
-        if (removed.isVip && this.players.length > 0) {
-          this.players[0].isVip = true;
-          try {
-            this.players[0].peerConn.send({ type: 'ASSIGNED_VIP' });
-          } catch (e) {}
+        const p = this.players[idx];
+        if (appState.currentPhase === 'tvViewLobby' || !appState.currentPhase) {
+          this.players.splice(idx, 1);
+          if (p.isVip && this.players.length > 0) {
+            this.players[0].isVip = true;
+            try {
+              this.players[0].peerConn.send({ type: 'ASSIGNED_VIP' });
+            } catch (e) {}
+          }
+          this.renderLobbyRoster();
+          this.broadcastRoster();
+        } else {
+          // Durante la partida NO expulsar, solo marcar reposo
+          p.isAsleep = true;
+          this.renderLobbyRoster();
         }
-
-        this.renderLobbyRoster();
-        this.broadcastRoster();
       }
     },
 
@@ -611,7 +708,7 @@
           <div class="player-avatar-badge">${p.avatar}</div>
           <div class="player-meta">
             <div class="player-name-text">
-              ${p.name} ${p.isVip ? '<span class="vip-crown-tag" title="Anfitrión VIP">👑</span>' : ''}
+              ${p.name} ${p.isVip ? '<span class="vip-crown-tag" title="Anfitrión VIP">👑</span>' : ''} ${p.isAsleep ? '<span class="sleep-tag" title="Celular en reposo" style="margin-left:4px;">💤</span>' : ''}
             </div>
             <div class="player-color-pill">
               <span class="color-dot" style="background-color: ${p.color.hex}; color: ${p.color.hex};"></span>
@@ -665,6 +762,7 @@
     },
 
     showView(viewId) {
+      appState.currentPhase = viewId;
       const views = ['tvViewLobby', 'tvViewPhase1', 'tvViewPhase2', 'tvViewPhase3', 'tvViewPhase4', 'tvViewPhase5'];
       views.forEach(v => {
         const el = document.getElementById(v);
@@ -1491,6 +1589,27 @@
       limpiarConexionPrevia();
       const alertBox = document.getElementById('phoneJoinAlert');
 
+      // Inicializar cliente de resiliencia WebRTC
+      if (!peerResilienceClient && typeof PeerResilience !== 'undefined') {
+        peerResilienceClient = PeerResilience.createClient({
+          getConn: () => this.conn,
+          getPeer: () => appState.peer,
+          getRoomCode: () => appState.roomCode,
+          onReconnect: () => {
+            this.connectToTv(appState.roomCode);
+          },
+          onStateSync: (payload) => {
+            this.applyFullStateSync(payload);
+          }
+        });
+      }
+      if (peerResilienceClient) {
+        peerResilienceClient.start();
+      }
+      if (typeof PeerResilience !== 'undefined') {
+        PeerResilience.enableWakeLock();
+      }
+
       const peer = new Peer({ debug: 1 });
       appState.peer = peer;
 
@@ -1500,18 +1619,17 @@
         this.conn = conn;
 
         conn.on('open', () => {
+          if (peerResilienceClient) peerResilienceClient.onConnected();
           console.log('Conectado a la TV:', roomCode);
+          const savedPlayerId = this.playerId || sessionStorage.getItem('falso_artista_player_id');
           this.send({
             type: 'JOIN_GAME',
-            payload: { name: this.name, avatar: this.avatar }
-          });
-
-          // Heartbeat cada 5 segundos
-          appState.heartbeatInterval = setInterval(() => {
-            if (this.conn && this.conn.open) {
-              this.conn.send({ type: 'PING' });
+            payload: {
+              playerId: savedPlayerId,
+              name: this.name,
+              avatar: this.avatar
             }
-          }, 5000);
+          });
         });
 
         conn.on('data', (data) => {
@@ -1519,11 +1637,19 @@
         });
 
         conn.on('close', () => {
-          this.handlePeerUnavailable(roomCode);
+          if (peerResilienceClient) {
+            peerResilienceClient.checkConnectionInstantly();
+          } else {
+            this.handlePeerUnavailable(roomCode);
+          }
         });
 
         conn.on('error', () => {
-          this.handlePeerUnavailable(roomCode);
+          if (peerResilienceClient) {
+            peerResilienceClient.checkConnectionInstantly();
+          } else {
+            this.handlePeerUnavailable(roomCode);
+          }
         });
       });
 
@@ -1571,6 +1697,13 @@
     },
 
     handleTvMessage(msg) {
+      if (!msg || !msg.type) return;
+      if (peerResilienceClient && peerResilienceClient.handleIncomingData(msg)) return;
+      if (msg.type === 'FULL_STATE_SYNC') {
+        this.applyFullStateSync(msg.payload || msg);
+        return;
+      }
+
       switch (msg.type) {
         case 'JOIN_ACCEPTED':
           this.onJoinAccepted(msg.payload);
@@ -1636,8 +1769,61 @@
       }
     },
 
+    applyFullStateSync(payload) {
+      if (!payload) return;
+      this.playerId = payload.playerId;
+      sessionStorage.setItem('falso_artista_player_id', this.playerId);
+      this.color = payload.color || this.color;
+      this.isVip = Boolean(payload.isVip);
+      this.vueltasDibujo = payload.totalLaps || this.vueltasDibujo;
+      this.currentCategoryName = payload.category || '';
+
+      if (payload.phase === 'tvViewLobby' || !payload.phase) {
+        this.showView('phoneViewLobby');
+        document.getElementById('phoneLobbyWait')?.classList.remove('d-none');
+        if (this.isVip) {
+          document.getElementById('phoneVipPanel')?.classList.remove('d-none');
+          document.getElementById('phoneWaitHostPanel')?.classList.add('d-none');
+        }
+      } else if (payload.phase === 'tvViewPhase1') {
+        this.showPhase1Role({
+          category: payload.category,
+          secretWord: payload.secretWord,
+          isFake: payload.isFake,
+          color: payload.color
+        });
+      } else if (payload.phase === 'tvViewPhase2') {
+        this.onTurnChange({
+          turnIndex: 0,
+          playerId: payload.turnPlayerId || '',
+          playerName: payload.turnPlayerName || '',
+          color: payload.turnPlayerColor || '#fff',
+          lap: payload.currentLap || 1,
+          totalLaps: payload.totalLaps || 2
+        });
+        if (payload.yaEnvioEnEstaFase) {
+          this.hasDrawnThisTurn = true;
+          document.getElementById('phoneDrawPanel')?.classList.add('d-none');
+          document.getElementById('phoneDrawWaitPanel')?.classList.remove('d-none');
+        }
+      } else if (payload.phase === 'tvViewPhase3') {
+        if (payload.votedCandidateId) {
+          this.showView('phonePhase3');
+          document.getElementById('phoneVoteSubmittedMsg')?.classList.remove('d-none');
+          document.getElementById('phoneCandidatesGrid')?.classList.add('d-none');
+        } else {
+          this.showView('phonePhase3');
+        }
+      } else if (payload.phase === 'tvViewPhase4') {
+        this.showView('phonePhase4');
+      } else if (payload.phase === 'tvViewPhase5') {
+        this.showView('phonePhase5');
+      }
+    },
+
     onJoinAccepted(data) {
       this.playerId = data.playerId;
+      sessionStorage.setItem('falso_artista_player_id', this.playerId);
       this.name = data.name;
       this.avatar = data.avatar;
       this.color = data.color;

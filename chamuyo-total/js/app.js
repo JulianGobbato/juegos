@@ -188,6 +188,9 @@
   // =========================================================================
   // 4. ESTADO GLOBAL DE LA APLICACIÓN
   // =========================================================================
+  let peerResilienceHost = null;
+  let peerResilienceClient = null;
+
   const appState = {
     mode: null, // 'tv' o 'phone'
     roomCode: null,
@@ -328,6 +331,22 @@
       const peer = new Peer(peerId, { debug: 1 });
       appState.peer = peer;
 
+      if (!peerResilienceHost && typeof PeerResilience !== 'undefined') {
+        peerResilienceHost = PeerResilience.createHost({
+          onPlayerSleepChange: (playerId, isAsleep) => {
+            const tv = appState.tv;
+            if (!tv || !tv.players) return;
+            const p = tv.players.get(playerId);
+            if (p) {
+              p.isAsleep = isAsleep;
+              this.updateLobbyPlayersUI();
+            }
+          },
+          getPhaseKey: () => `${appState.tv.currentPhase}_round_${appState.tv.currentRoundIndex}`
+        });
+        peerResilienceHost.startSleepMonitor();
+      }
+
       peer.on('open', (id) => {
         console.log('TV Host iniciado en Peer:', id);
       });
@@ -344,6 +363,12 @@
     handleIncomingConnection(conn) {
       conn.on('data', (data) => {
         if (!data || !data.type) return;
+
+        const pId = data.playerId || conn._playerId;
+        if (pId && peerResilienceHost) {
+          if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
+          if (data.type !== 'JOIN_OR_RECONNECT' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+        }
 
         switch (data.type) {
           case 'JOIN_OR_RECONNECT':
@@ -371,6 +396,8 @@
       });
 
       conn.on('close', () => {
+        const pId = conn._playerId;
+        if (pId && peerResilienceHost && !peerResilienceHost.isConnectionActive(pId, conn)) return;
         this.handlePlayerDisconnect(conn);
       });
     },
@@ -378,6 +405,11 @@
     handlePlayerJoinOrReconnect(conn, data) {
       const { playerId, name, avatar } = data;
       if (!playerId || !name) return;
+
+      conn._playerId = playerId;
+      if (peerResilienceHost) {
+        peerResilienceHost.registerPlayerConnection(playerId, conn);
+      }
 
       const tv = appState.tv;
       let player = tv.players.get(playerId);
@@ -388,6 +420,7 @@
         player.connected = true;
         player.name = name;
         player.avatar = avatar || player.avatar;
+        player.isAsleep = false;
       } else {
         // Nuevo jugador
         if (tv.players.size >= 10 && tv.currentPhase === 'lobby') {
@@ -407,7 +440,8 @@
           connected: true,
           conn: conn,
           submittedLie: '',
-          votedOptionId: null
+          votedOptionId: null,
+          isAsleep: false
         };
         tv.players.set(playerId, player);
         sound.playJoin();
@@ -459,6 +493,7 @@
           card.className = 'player-tv-card';
           card.innerHTML = `
             ${p.isVip ? '<span class="player-vip-badge">👑 VIP</span>' : ''}
+            ${p.isAsleep ? '<span class="player-sleep-badge" title="Celular en reposo" style="font-size:1.1rem;margin-left:4px;">💤</span>' : ''}
             <span class="player-tv-avatar">${p.avatar}</span>
             <span class="player-tv-name">${p.name}</span>
           `;
@@ -1155,7 +1190,7 @@
       const sorted = Array.from(tv.players.values()).sort((a, b) => b.score - a.score);
       const myRank = sorted.findIndex(p => p.id === player.id) + 1;
 
-      player.conn.send({
+      const syncPayload = {
         type: 'SYNC_PLAYER_STATE',
         phase: tv.currentPhase,
         isVip: player.isVip,
@@ -1172,8 +1207,13 @@
         myVotedId: player.votedOptionId,
         myScore: player.score,
         myDelta: player.roundScore,
-        myRank: myRank || 1
-      });
+        myRank: myRank || 1,
+        yaEnvioEnEstaFase: (tv.currentPhase === 'phase2' ? Boolean(player.submittedLie) : (tv.currentPhase === 'phase3' ? Boolean(player.votedOptionId) : false)),
+        phaseKey: `${tv.currentPhase}_round_${tv.currentRoundIndex}`
+      };
+
+      player.conn.send(syncPayload);
+      player.conn.send({ type: 'FULL_STATE_SYNC', payload: syncPayload });
     },
 
     broadcastPhaseState() {
@@ -1376,6 +1416,27 @@
       alertEl.textContent = 'Conectando con la TV...';
       alertEl.classList.remove('d-none');
 
+      // Inicializar cliente de resiliencia WebRTC
+      if (!peerResilienceClient && typeof PeerResilience !== 'undefined') {
+        peerResilienceClient = PeerResilience.createClient({
+          getConn: () => phone.conn,
+          getPeer: () => appState.peer,
+          getRoomCode: () => appState.roomCode,
+          onReconnect: () => {
+            this.connectToTv(appState.roomCode, phone.name, phone.avatar);
+          },
+          onStateSync: (payload) => {
+            this.handleStateSync(payload);
+          }
+        });
+      }
+      if (peerResilienceClient) {
+        peerResilienceClient.start();
+      }
+      if (typeof PeerResilience !== 'undefined') {
+        PeerResilience.enableWakeLock();
+      }
+
       // Crear Peer cliente
       const peer = new Peer({ debug: 1 });
       appState.peer = peer;
@@ -1386,6 +1447,7 @@
         phone.conn = conn;
 
         conn.on('open', () => {
+          if (peerResilienceClient) peerResilienceClient.onConnected();
           alertEl.classList.add('d-none');
           // Enviar JOIN o RECONNECT con identidad persistente
           conn.send({
@@ -1396,14 +1458,6 @@
           });
 
           this.showView('phoneViewLobby');
-
-          // Heartbeat para mantener activo el canal WebRTC en celular
-          if (appState.heartbeatInterval) clearInterval(appState.heartbeatInterval);
-          appState.heartbeatInterval = setInterval(() => {
-            if (conn && conn.open) {
-              conn.send({ type: 'PING' });
-            }
-          }, 5000);
         });
 
         conn.on('data', (data) => {
@@ -1412,6 +1466,9 @@
 
         conn.on('close', () => {
           console.warn('Conexión cerrada con la TV');
+          if (peerResilienceClient) {
+            peerResilienceClient.checkConnectionInstantly();
+          }
         });
 
         conn.on('error', (err) => {
@@ -1458,6 +1515,7 @@
 
     handleIncomingData(data) {
       if (!data || !data.type) return;
+      if (peerResilienceClient && peerResilienceClient.handleIncomingData(data)) return;
       const phone = appState.phone;
 
       switch (data.type) {

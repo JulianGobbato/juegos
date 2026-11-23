@@ -315,6 +315,8 @@
   let activeConn = null;
   let roomCode = null;
   let throttleTimer = null;
+  let peerResilienceHost = null;
+  let peerResilienceClient = null;
 
   // =========================================================================
   // FUNCIONES AUXILIARES DE EQUIPO Y TURNO
@@ -468,6 +470,24 @@
     showView('viewTv');
     initDefaultGameState();
 
+    // Inicializar Host de Resiliencia para TV
+    if (!peerResilienceHost && typeof PeerResilience !== 'undefined') {
+      peerResilienceHost = PeerResilience.createHost({
+        onPlayerSleepChange: (playerId, isAsleep) => {
+          const ticker = document.getElementById('tvStatusTicker');
+          if (ticker) {
+            if (isAsleep) {
+              ticker.innerHTML = '<span class="text-warning">💤 Celular en pausa (pantalla bloqueada)... La partida espera que se desbloquee.</span>';
+            } else {
+              ticker.innerHTML = '<span class="text-success">🟢 Celular Control Remoto activo.</span>';
+            }
+          }
+        },
+        getPhaseKey: () => `phase_${state.phase}_round_${state.currentRound}`
+      });
+      peerResilienceHost.startSleepMonitor();
+    }
+
     // Generar código de sala único
     roomCode = generateRoomCode();
     const peerId = PEER_PREFIX + roomCode;
@@ -485,6 +505,9 @@
 
       peer.on('connection', (conn) => {
         console.log('¡Celular Control Remoto conectado!');
+        if (peerResilienceHost) {
+          peerResilienceHost.registerPlayerConnection('remote', conn);
+        }
         activeConn = conn;
 
         // Ocultar modal de QR inmediatamente tras el primer escaneo
@@ -496,10 +519,13 @@
         });
 
         conn.on('data', (data) => {
+          if (peerResilienceHost && peerResilienceHost.handleIncomingHostData('remote', conn, data)) return;
+          if (peerResilienceHost && !peerResilienceHost.isConnectionActive('remote', conn)) return;
           handleRemoteMessage(data);
         });
 
         conn.on('close', () => {
+          if (peerResilienceHost && !peerResilienceHost.isConnectionActive('remote', conn)) return;
           console.warn('Conexión con el celular cerrada.');
           const ticker = document.getElementById('tvStatusTicker');
           if (ticker) ticker.textContent = '⚠️ Celular desconectado temporalmente. Esperando reconexión...';
@@ -560,7 +586,12 @@
 
   function broadcastStateToRemote() {
     if (activeConn && activeConn.open) {
-      const payload = { ...state, phoneSecretOpen: undefined };
+      const payload = {
+        ...state,
+        phoneSecretOpen: undefined,
+        phaseKey: `phase_${state.phase}_round_${state.currentRound}`
+      };
+      activeConn.send({ type: 'FULL_STATE_SYNC', payload });
       activeConn.send({ type: 'SYNC_STATE', payload });
     }
   }
@@ -575,6 +606,17 @@
     }
   }
 
+  function applySyncedState(payload) {
+    if (!payload) return;
+    const localSecret = state.phoneSecretOpen;
+    state = { ...payload, role: 'remote', phoneSecretOpen: localSecret };
+    if (state.mode) setupConfig.mode = state.mode;
+    if (state.targetScore) setupConfig.targetScore = state.targetScore;
+    if (state.totalRounds) setupConfig.totalRounds = state.totalRounds;
+    if (state.selectedCategories) setupConfig.selectedCategories = [...state.selectedCategories];
+    renderRemoteUI();
+  }
+
   function startRemoteRole(code) {
     state.role = 'remote';
     roomCode = code;
@@ -584,10 +626,31 @@
     showView('viewRemote');
     renderRemoteHeader();
 
-    initRemotePeerConnection();
+    // Inicializar Cliente de Resiliencia
+    if (!peerResilienceClient && typeof PeerResilience !== 'undefined') {
+      peerResilienceClient = PeerResilience.createClient({
+        getConn: () => activeConn,
+        getPeer: () => peer,
+        getRoomCode: () => roomCode,
+        onReconnect: () => {
+          initRemotePeerConnection(true);
+        },
+        onStateSync: (payload) => {
+          applySyncedState(payload);
+        }
+      });
+    }
+    if (peerResilienceClient) {
+      peerResilienceClient.start();
+    }
+    if (typeof PeerResilience !== 'undefined') {
+      PeerResilience.enableWakeLock();
+    }
+
+    initRemotePeerConnection(false);
   }
 
-  function initRemotePeerConnection() {
+  function initRemotePeerConnection(isReconnecting = false) {
     const peerIdTv = PEER_PREFIX + roomCode;
     const dot = document.getElementById('remoteConnDot');
     const label = document.getElementById('remoteConnLabel');
@@ -595,18 +658,32 @@
     if (dot) dot.className = 'connection-dot offline';
     if (label) label.textContent = 'Conectando a TV (' + roomCode + ')...';
 
+    if (activeConn) {
+      try { activeConn.close(); } catch (e) {}
+      activeConn = null;
+    }
+
+    if (isReconnecting && peer) {
+      try { peer.destroy(); } catch (e) {}
+      peer = null;
+    }
+
     try {
-      peer = new Peer();
+      if (!peer || peer.destroyed) {
+        peer = new Peer();
 
-      peer.on('open', () => {
+        peer.on('open', () => {
+          connectToTvHost(peerIdTv);
+        });
+
+        peer.on('error', (err) => {
+          console.warn('Error en PeerJS Celular:', err);
+          if (label) label.textContent = 'Error de conexión. Reintentando...';
+          setTimeout(() => connectToTvHost(peerIdTv), 2500);
+        });
+      } else {
         connectToTvHost(peerIdTv);
-      });
-
-      peer.on('error', (err) => {
-        console.warn('Error en PeerJS Celular:', err);
-        if (label) label.textContent = 'Error de conexión. Reintentando...';
-        setTimeout(() => connectToTvHost(peerIdTv), 2500);
-      });
+      }
     } catch (e) {
       console.error(e);
     }
@@ -617,30 +694,34 @@
     const dot = document.getElementById('remoteConnDot');
     const label = document.getElementById('remoteConnLabel');
 
+    if (activeConn) {
+      try { activeConn.close(); } catch (e) {}
+      activeConn = null;
+    }
+
     activeConn = peer.connect(targetId, { reliable: true });
 
     activeConn.on('open', () => {
+      if (peerResilienceClient) peerResilienceClient.onConnected();
       if (dot) dot.className = 'connection-dot';
       if (label) label.textContent = '🟢 TV Conectada (' + roomCode + ')';
     });
 
     activeConn.on('data', (data) => {
-      if (data && data.type === 'SYNC_STATE') {
-        const localSecret = state.phoneSecretOpen;
-        state = { ...data.payload, role: 'remote', phoneSecretOpen: localSecret };
-        // Sincronizar también setupConfig si la TV envía configuración
-        if (state.mode) setupConfig.mode = state.mode;
-        if (state.targetScore) setupConfig.targetScore = state.targetScore;
-        if (state.totalRounds) setupConfig.totalRounds = state.totalRounds;
-        if (state.selectedCategories) setupConfig.selectedCategories = [...state.selectedCategories];
-        renderRemoteUI();
+      if (peerResilienceClient && peerResilienceClient.handleIncomingData(data)) return;
+      if (data && (data.type === 'SYNC_STATE' || data.type === 'FULL_STATE_SYNC')) {
+        applySyncedState(data.payload || data);
       }
     });
 
     activeConn.on('close', () => {
       if (dot) dot.className = 'connection-dot offline';
       if (label) label.textContent = '⚠️ Reconectando con la TV...';
-      setTimeout(() => connectToTvHost(targetId), 2000);
+      if (peerResilienceClient) {
+        peerResilienceClient.checkConnectionInstantly();
+      } else {
+        setTimeout(() => connectToTvHost(targetId), 2000);
+      }
     });
   }
 

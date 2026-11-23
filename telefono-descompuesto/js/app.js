@@ -262,6 +262,9 @@
   // ============================================================================
   // CONTROLADOR DE PANTALLA TV (HOST)
   // ============================================================================
+  let peerResilienceHost = null;
+  let peerResilienceClient = null;
+
   const TvHost = {
     players: [], // { id, peerId, conn, name, avatar, color, isVip, isReady }
     
@@ -305,6 +308,21 @@
       limpiarConexionPrevia();
       appState.roomCode = generarCodigoSala();
       const peerId = PEER_PREFIX + appState.roomCode;
+
+      if (!peerResilienceHost && typeof PeerResilience !== 'undefined') {
+        peerResilienceHost = PeerResilience.createHost({
+          onPlayerSleepChange: (playerId, isAsleep) => {
+            const p = TvHost.players.find(pl => pl.id === playerId);
+            if (p) {
+              p.isAsleep = isAsleep;
+              TvHost.renderLobbyRoster();
+              TvHost.renderTvPlayersWorkGrid();
+            }
+          },
+          getPhaseKey: () => `${appState.currentPhase || 'lobby'}_step_${TvHost.stepIndex}`
+        });
+        peerResilienceHost.startSleepMonitor();
+      }
 
       document.getElementById('headerRoomCode').textContent = appState.roomCode;
       document.getElementById('roomBadgeWrap').classList.remove('d-none');
@@ -383,10 +401,20 @@
 
     handleIncomingConnection(conn) {
       conn.on('data', (data) => {
+        if (!data || !data.type) return;
+
+        const pId = (data.payload && data.payload.playerId) || conn._playerId;
+        if (pId && peerResilienceHost) {
+          if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
+          if (data.type !== 'JOIN_GAME' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+        }
+
         this.handleClientMessage(conn, data);
       });
 
       conn.on('close', () => {
+        const pId = conn._playerId;
+        if (pId && peerResilienceHost && !peerResilienceHost.isConnectionActive(pId, conn)) return;
         this.handlePlayerDisconnect(conn.peer);
       });
 
@@ -437,6 +465,9 @@
         console.log('Reconexión de jugador:', existing.name);
         existing.peerId = conn.peer;
         existing.conn = conn;
+        existing.isAsleep = false;
+        conn._playerId = existing.id;
+        if (peerResilienceHost) peerResilienceHost.registerPlayerConnection(existing.id, conn);
 
         conn.send({
           type: 'JOIN_ACCEPTED',
@@ -470,15 +501,19 @@
       const assignedColor = PLAYER_COLORS[this.players.length % PLAYER_COLORS.length];
 
       const player = {
-        id: 'p_' + Math.random().toString(36).substring(2, 9),
+        id: info.playerId || ('p_' + Math.random().toString(36).substring(2, 9)),
         peerId: conn.peer,
         conn: conn,
         name: (info.name || 'Jugador').trim().substring(0, 14),
         avatar: info.avatar || '🦊',
         color: assignedColor,
         isVip: isVip,
-        isReady: false
+        isReady: false,
+        isAsleep: false
       };
+
+      conn._playerId = player.id;
+      if (peerResilienceHost) peerResilienceHost.registerPlayerConnection(player.id, conn);
 
       this.players.push(player);
       SoundEffects.playJoin();
@@ -560,7 +595,7 @@
           <div class="player-avatar-badge">${p.avatar}</div>
           <div class="player-meta">
             <div class="player-name-text">
-              ${p.name} ${p.isVip ? '<span class="vip-crown-tag" title="Anfitrión VIP">👑</span>' : ''}
+              ${p.name} ${p.isVip ? '<span class="vip-crown-tag" title="Anfitrión VIP">👑</span>' : ''} ${p.isAsleep ? '<span class="sleep-tag" title="Celular en reposo" style="margin-left:4px;">💤</span>' : ''}
             </div>
             <div class="player-color-pill">
               <span class="color-dot" style="background-color: ${p.color};"></span>
@@ -723,9 +758,16 @@
         }
       }
 
+      payload.yaEnvioEnEstaFase = Boolean(player.isReady);
+      payload.phaseKey = `step_${s}`;
+
       try {
         player.conn.send({
           type: 'START_STEP_TASK',
+          payload: payload
+        });
+        player.conn.send({
+          type: 'FULL_STATE_SYNC',
           payload: payload
         });
       } catch (e) {
@@ -888,7 +930,7 @@
             <span class="work-card-name">${p.name}</span>
           </div>
           <span class="work-card-status-pill ${p.isReady ? 'status-ready' : 'status-working'}">
-            ${p.isReady ? '✅ ¡Listo!' : '🎨 Trabajando...'}
+            ${p.isReady ? '✅ ¡Listo!' : (p.isAsleep ? '💤 En reposo' : '🎨 Trabajando...')}
           </span>
         `;
         grid.appendChild(card);
@@ -1632,6 +1674,27 @@
       limpiarConexionPrevia();
       const alertBox = document.getElementById('phoneJoinAlert');
 
+      // Inicializar cliente de resiliencia WebRTC
+      if (!peerResilienceClient && typeof PeerResilience !== 'undefined') {
+        peerResilienceClient = PeerResilience.createClient({
+          getConn: () => this.conn,
+          getPeer: () => appState.peer,
+          getRoomCode: () => appState.roomCode,
+          onReconnect: () => {
+            this.connectToTv(appState.roomCode);
+          },
+          onStateSync: (payload) => {
+            this.setupStepTask(payload);
+          }
+        });
+      }
+      if (peerResilienceClient) {
+        peerResilienceClient.start();
+      }
+      if (typeof PeerResilience !== 'undefined') {
+        PeerResilience.enableWakeLock();
+      }
+
       const peer = new Peer({ debug: 1 });
       appState.peer = peer;
 
@@ -1641,6 +1704,7 @@
         this.conn = conn;
 
         conn.on('open', () => {
+          if (peerResilienceClient) peerResilienceClient.onConnected();
           console.log('Conectado a la TV:', roomCode);
           const savedId = sessionStorage.getItem('telefono_player_id');
           this.send({
@@ -1651,13 +1715,6 @@
               avatar: this.avatar
             }
           });
-
-          // Heartbeat 5s
-          appState.heartbeatInterval = setInterval(() => {
-            if (this.conn && this.conn.open) {
-              this.conn.send({ type: 'PING' });
-            }
-          }, 5000);
         });
 
         conn.on('data', (data) => {
@@ -1665,11 +1722,19 @@
         });
 
         conn.on('close', () => {
-          this.handlePeerUnavailable(roomCode);
+          if (peerResilienceClient) {
+            peerResilienceClient.checkConnectionInstantly();
+          } else {
+            this.handlePeerUnavailable(roomCode);
+          }
         });
 
         conn.on('error', () => {
-          this.handlePeerUnavailable(roomCode);
+          if (peerResilienceClient) {
+            peerResilienceClient.checkConnectionInstantly();
+          } else {
+            this.handlePeerUnavailable(roomCode);
+          }
         });
       });
 
@@ -1717,6 +1782,13 @@
     },
 
     handleTvMessage(msg) {
+      if (!msg || !msg.type) return;
+      if (peerResilienceClient && peerResilienceClient.handleIncomingData(msg)) return;
+      if (msg.type === 'FULL_STATE_SYNC') {
+        this.setupStepTask(msg.payload || msg);
+        return;
+      }
+
       switch (msg.type) {
         case 'JOIN_ACCEPTED':
           this.onJoinAccepted(msg.payload);
@@ -1832,8 +1904,14 @@
     },
 
     setupStepTask(data) {
+      if (!data) return;
       this.currentStepIndex = data.stepIndex;
       this.currentPhaseType = data.phaseType;
+
+      if (data.yaEnvioEnEstaFase) {
+        this.showView('phonePhaseWait');
+        return;
+      }
 
       if (data.phaseType === 'ESCRIBIR') {
         this.showView('phonePhaseWrite');

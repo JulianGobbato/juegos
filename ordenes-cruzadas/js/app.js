@@ -141,6 +141,8 @@
   let isTvMode = false;
   let isPhoneMode = false;
   let currentRoomCode = '';
+  let peerResilienceHost = null;
+  let peerResilienceClient = null;
 
   // Host state
   let hostConnections = new Map(); // playerId -> dataConnection
@@ -472,6 +474,21 @@
     switchToScreen('tv');
     limpiarConexionPrevia();
 
+    if (!peerResilienceHost && typeof PeerResilience !== 'undefined') {
+      peerResilienceHost = PeerResilience.createHost({
+        onPlayerSleepChange: (playerId, isAsleep) => {
+          const p = gameState && gameState.players.find(pl => pl.id === playerId);
+          if (p) {
+            p.isAsleep = isAsleep;
+            renderTvPlayersList();
+            renderTvPilotsStrip();
+          }
+        },
+        getPhaseKey: () => `${gameState ? gameState.phase : 'lobby'}_round_${gameState ? gameState.round : 0}`
+      });
+      peerResilienceHost.startSleepMonitor();
+    }
+
     const room = generateRoomCode();
     updateRoomHeader(room);
     dom.tvRoomCodeText.textContent = room;
@@ -522,15 +539,26 @@
 
   function setupHostConnection(conn) {
     conn.on('data', (data) => {
+      if (!data || !data.type) return;
+
+      const pId = data.playerId || conn._playerId;
+      if (pId && peerResilienceHost) {
+        if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
+        if (data.type !== 'PLAYER_JOIN' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+      }
+
       handleHostDataReceived(conn, data);
     });
 
     conn.on('close', () => {
-      // Manejar desconexión
-      for (const [pId, c] of hostConnections.entries()) {
-        if (c === conn) {
-          console.log(`Jugador ${pId} desconectado.`);
-          break;
+      const pId = conn._playerId;
+      if (pId && peerResilienceHost && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+      if (pId) {
+        const p = gameState && gameState.players.find(pl => pl.id === pId);
+        if (p) {
+          p.isAsleep = true;
+          renderTvPlayersList();
+          renderTvPilotsStrip();
         }
       }
     });
@@ -541,9 +569,16 @@
 
     if (data.type === 'PLAYER_JOIN') {
       const { playerId, name, color, avatar } = data;
+      conn._playerId = playerId;
+      if (peerResilienceHost) {
+        peerResilienceHost.registerPlayerConnection(playerId, conn);
+      }
+
       let player = gameState.players.find(p => p.id === playerId);
 
-      if (!player) {
+      if (player) {
+        player.isAsleep = false;
+      } else {
         if (gameState.players.length >= 6) {
           conn.send({ type: 'JOIN_REJECTED', reason: 'La arena está completa (máx 6 pilotos).' });
           return;
@@ -574,6 +609,7 @@
           program: [null, null, null, null],
           lockedSlots: [false, false, false, false],
           programLocked: false,
+          isAsleep: false,
           stats: {
             lasersHit: 0,
             timesDestroyed: 0,
@@ -595,6 +631,43 @@
         isVip: player.isVip,
         gameState: getSanitizedGameStateForPlayer(player.id)
       });
+
+      // Enviar sincronización completa
+      conn.send({
+        type: 'FULL_STATE_SYNC',
+        payload: {
+          phase: gameState.phase,
+          round: gameState.round,
+          isVip: player.isVip,
+          playerId: player.id,
+          name: player.name,
+          color: player.color,
+          avatar: player.avatar,
+          hp: player.hp,
+          facing: player.facing,
+          lastCheckpoint: player.lastCheckpoint,
+          hand: player.hand,
+          program: player.program,
+          lockedSlots: player.lockedSlots,
+          programLocked: player.programLocked,
+          yaEnvioEnEstaFase: Boolean(player.programLocked),
+          phaseKey: `${gameState.phase}_round_${gameState.round}`
+        }
+      });
+
+      if (gameState.phase === 'programming') {
+        conn.send({
+          type: 'ROUND_STARTED',
+          round: gameState.round,
+          hand: player.hand,
+          program: player.program,
+          lockedSlots: player.lockedSlots,
+          hp: player.hp,
+          facing: player.facing,
+          lastCheckpoint: player.lastCheckpoint,
+          timer: gameState.roundTimer
+        });
+      }
 
       // Actualizar lobby
       broadcastToPlayers({
@@ -727,8 +800,8 @@
           ${p.avatar}
         </div>
         <div class="tv-player-info">
-          <div class="tv-player-name">${p.name} ${p.isVip ? '👑' : ''}</div>
-          <div class="tv-player-status">Chasis listo para combate</div>
+          <div class="tv-player-name">${p.name} ${p.isVip ? '👑' : ''} ${p.isAsleep ? '💤' : ''}</div>
+          <div class="tv-player-status">${p.isAsleep ? 'En pausa (pantalla bloqueada)' : 'Chasis listo para combate'}</div>
         </div>
       `;
       dom.tvPlayersList.appendChild(card);
@@ -1125,6 +1198,8 @@
       const hearts = renderHearts(p.hp);
       const statusText = !p.alive
         ? '💀 DESTRUIDO'
+        : p.isAsleep
+        ? '💤 En reposo'
         : p.programLocked
         ? '✅ Listo'
         : '🧠 Programando...';
@@ -1132,7 +1207,7 @@
       chip.innerHTML = `
         <span class="chip-avatar">${p.avatar}</span>
         <div>
-          <div class="chip-name" style="color: ${p.color};">${p.name}</div>
+          <div class="chip-name" style="color: ${p.color};">${p.name} ${p.isAsleep ? '💤' : ''}</div>
           <div class="chip-hp">${hearts}</div>
           <div class="chip-status">${statusText} | CP: ${p.lastCheckpoint}/3</div>
         </div>
@@ -1287,10 +1362,31 @@
   }
 
   function connectToHost(roomCode) {
+    if (!peerResilienceClient && typeof PeerResilience !== 'undefined') {
+      peerResilienceClient = PeerResilience.createClient({
+        getConn: () => myPhoneConn,
+        getPeer: () => peer,
+        getRoomCode: () => currentRoomCode || roomCode,
+        onReconnect: () => {
+          connectToHost(currentRoomCode || roomCode);
+        },
+        onStateSync: (payload) => {
+          applyPhoneFullStateSync(payload);
+        }
+      });
+    }
+    if (peerResilienceClient) {
+      peerResilienceClient.start();
+    }
+    if (typeof PeerResilience !== 'undefined') {
+      PeerResilience.enableWakeLock();
+    }
+
     const hostPeerId = PEER_PREFIX + roomCode;
     myPhoneConn = peer.connect(hostPeerId, { reliable: true });
 
     myPhoneConn.on('open', () => {
+      if (peerResilienceClient) peerResilienceClient.onConnected();
       dom.phoneJoinAlert.classList.add('d-none');
       myPhoneConn.send({
         type: 'PLAYER_JOIN',
@@ -1302,16 +1398,52 @@
     });
 
     myPhoneConn.on('data', (data) => {
+      if (peerResilienceClient && peerResilienceClient.handleIncomingData(data)) return;
       handlePhoneDataReceived(data);
     });
 
     myPhoneConn.on('close', () => {
       console.log('Conexión cerrada con el host');
+      if (peerResilienceClient) {
+        peerResilienceClient.checkConnectionInstantly();
+      }
     });
+
+    myPhoneConn.on('error', () => {
+      if (peerResilienceClient) {
+        peerResilienceClient.checkConnectionInstantly();
+      }
+    });
+  }
+
+  function applyPhoneFullStateSync(payload) {
+    if (!payload) return;
+    if (payload.phase === 'programming') {
+      myHandCards = payload.hand || [];
+      myProgramSlots = payload.program || [null, null, null, null];
+      myLockedSlots = payload.lockedSlots || [false, false, false, false];
+      myProgramLocked = Boolean(payload.yaEnvioEnEstaFase || payload.programLocked);
+
+      updatePhoneHud(payload.hp, payload.facing, payload.lastCheckpoint);
+      renderPhoneProgramSlots();
+      renderPhoneHandList();
+      updateLockProgramButton();
+
+      showPhoneView('programming');
+    } else if (payload.phase === 'execution') {
+      showPhoneView('executing');
+    } else if (payload.phase === 'lobby') {
+      showPhoneView('lobby');
+    }
   }
 
   function handlePhoneDataReceived(data) {
     if (!data || !data.type) return;
+
+    if (data.type === 'FULL_STATE_SYNC') {
+      applyPhoneFullStateSync(data.payload || data);
+      return;
+    }
 
     if (data.type === 'JOIN_ACCEPTED') {
       currentRoomCode = data.roomCode;
