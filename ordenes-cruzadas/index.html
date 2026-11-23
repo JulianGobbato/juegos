@@ -127,24 +127,39 @@
             </div>
             <div class="tv-qr-help">Conexión directa P2P sin registros</div>
 
-            <!-- Resumen de Configuración en la TV -->
+            <!-- Configuración Interactiva en el Lobby de la TV (Editable en TV y sincronizado con Celular VIP) -->
             <div class="tv-config-summary-bar my-3 p-3 rounded">
-              <div class="row g-2 text-center text-md-start">
-                <div class="col-md-3">
-                  <span class="small d-block config-label">Arena Táctica:</span>
-                  <span class="badge config-badge-cyan" id="tvConfigArenaName">🏭 Fábrica Central</span>
+              <div class="row g-2 text-center text-md-start align-items-center">
+                <div class="col-6 col-md-3">
+                  <label for="tvSelectArena" class="small d-block config-label">Arena Táctica:</label>
+                  <select class="form-select form-select-sm tv-config-select" id="tvSelectArena">
+                    <option value="fabrica">🏭 Fábrica Central</option>
+                    <option value="abismo">🌋 Puente sobre el Abismo</option>
+                    <option value="turbo">⚡ Circuito Turbo</option>
+                  </select>
                 </div>
-                <div class="col-md-3">
-                  <span class="small d-block config-label">Regla de Daño:</span>
-                  <span class="badge config-badge-amber" id="tvConfigDamageRule">🛡️ Daño Táctico</span>
+                <div class="col-6 col-md-3">
+                  <label for="tvSelectDamage" class="small d-block config-label">Regla de Daño:</label>
+                  <select class="form-select form-select-sm tv-config-select" id="tvSelectDamage">
+                    <option value="tactical">🛡️ Daño Táctico</option>
+                    <option value="simple">💥 Daño Simple</option>
+                  </select>
                 </div>
-                <div class="col-md-3">
-                  <span class="small d-block config-label">Reloj Programación:</span>
-                  <span class="badge config-badge-purple" id="tvConfigRoundTimer">⏱️ 45s</span>
+                <div class="col-6 col-md-3">
+                  <label for="tvSelectTimer" class="small d-block config-label">Reloj Programación:</label>
+                  <select class="form-select form-select-sm tv-config-select" id="tvSelectTimer">
+                    <option value="45">⏱️ 45s (Recomendado)</option>
+                    <option value="60">⏱️ 60s</option>
+                    <option value="90">⏱️ 90s</option>
+                    <option value="0">♾️ Sin límite</option>
+                  </select>
                 </div>
-                <div class="col-md-3">
-                  <span class="small d-block config-label">Velocidad:</span>
-                  <span class="badge config-badge-cyan" id="tvConfigSpeed">⚡ Normal</span>
+                <div class="col-6 col-md-3">
+                  <label for="tvSelectSpeed" class="small d-block config-label">Velocidad:</label>
+                  <select class="form-select form-select-sm tv-config-select" id="tvSelectSpeed">
+                    <option value="normal">⚡ Normal</option>
+                    <option value="slow">🐢 Didáctico</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -226,6 +241,9 @@
                 <div class="cmd-timer-wrap" id="tvCmdTimerWrap">
                   <span class="cmd-timer-label">TIEMPO PARA PROGRAMAR:</span>
                   <span class="cmd-timer-number" id="tvCmdTimerSecs">45s</span>
+                  <button type="button" class="btn-tv-force-execute mt-1" id="btnTvForceExecute" title="Forzar ejecución inmediata">
+                    ⚡ Ejecutar ya
+                  </button>
                 </div>
                 <!-- En ejecución: Barra de los 4 pasos -->
                 <div class="cmd-steps-progress d-none" id="tvCmdStepsProgress">

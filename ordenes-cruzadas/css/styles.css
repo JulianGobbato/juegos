@@ -420,6 +420,46 @@ body {
 .config-label {
   color: #cbd5e1 !important;
   font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.tv-config-select {
+  background: #090d16 !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tv-config-select:focus {
+  border-color: #00e5ff !important;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4) !important;
+  outline: none;
+}
+
+.btn-tv-force-execute {
+  font-family: var(--font-hud);
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 158, 11, 0.6);
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-tv-force-execute:hover {
+  background: rgba(245, 158, 11, 0.35);
+  border-color: #fbbf24;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
 }
 
 .config-badge-cyan {

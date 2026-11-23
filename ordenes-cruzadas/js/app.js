@@ -1,6 +1,6 @@
 /**
  * Órdenes Cruzadas - Aplicación Principal y Control de Red PeerJS
- * Versión 2.0 - Motor de animación atómica por timeline y diseño panorámico TV
+ * Versión 2.1 - Blindaje total de configuración (TV + Celular VIP) y motor de ejecución determinista
  */
 
 (function () {
@@ -187,6 +187,7 @@
   let gameState = null;
   let timerInterval = null;
   let remainingTimerSecs = 0;
+  let isExecuting = false; // Bandera de guardia anti-concurrencia
   let visualRobots = new Map(); // playerId -> { x, y, facing, visualAngleDeg, hp, alive, shieldActive, lastCheckpoint }
 
   // Phone state
@@ -229,10 +230,10 @@
     tvViewLobby: document.getElementById('tvViewLobby'),
     tvRoomCodeText: document.getElementById('tvRoomCodeText'),
     tvLobbyQr: document.getElementById('tvLobbyQr'),
-    tvConfigArenaName: document.getElementById('tvConfigArenaName'),
-    tvConfigDamageRule: document.getElementById('tvConfigDamageRule'),
-    tvConfigRoundTimer: document.getElementById('tvConfigRoundTimer'),
-    tvConfigSpeed: document.getElementById('tvConfigSpeed'),
+    tvSelectArena: document.getElementById('tvSelectArena'),
+    tvSelectDamage: document.getElementById('tvSelectDamage'),
+    tvSelectTimer: document.getElementById('tvSelectTimer'),
+    tvSelectSpeed: document.getElementById('tvSelectSpeed'),
     tvLobbyStatusMsg: document.getElementById('tvLobbyStatusMsg'),
     btnTvStartGame: document.getElementById('btnTvStartGame'),
     tvPlayerCount: document.getElementById('tvPlayerCount'),
@@ -252,6 +253,7 @@
     tvCmdMapName: document.getElementById('tvCmdMapName'),
     tvCmdTimerWrap: document.getElementById('tvCmdTimerWrap'),
     tvCmdTimerSecs: document.getElementById('tvCmdTimerSecs'),
+    btnTvForceExecute: document.getElementById('btnTvForceExecute'),
     tvCmdStepsProgress: document.getElementById('tvCmdStepsProgress'),
     tvCmdSubphaseTracker: document.getElementById('tvCmdSubphaseTracker'),
     tvCmdSpotlightBox: document.getElementById('tvCmdSpotlightBox'),
@@ -521,8 +523,10 @@
     if (!dom.tvFxLayer) return;
     const fx = document.createElement('div');
     fx.className = `floating-fx fx-${type}`;
-    fx.style.left = `${(gridX + 0.5) * 10}%`;
-    fx.style.top = `${(gridY + 0.5) * 12.5}%`;
+    const leftVal = (gridX !== undefined && !isNaN(gridX)) ? (gridX + 0.5) * 10 : 50;
+    const topVal = (gridY !== undefined && !isNaN(gridY)) ? (gridY + 0.5) * 12.5 : 50;
+    fx.style.left = `${leftVal}%`;
+    fx.style.top = `${topVal}%`;
     fx.textContent = text;
     dom.tvFxLayer.appendChild(fx);
 
@@ -561,6 +565,7 @@
     setupColorPalette();
     setupRulesModal();
     setupVipConfigControls();
+    setupTvLobbyControls();
     bindEvents();
 
     const params = new URLSearchParams(window.location.search);
@@ -638,10 +643,10 @@
         type: 'VIP_UPDATE_CONFIG',
         playerId: myPlayerId,
         config: {
-          arenaId: dom.selectArenaMap.value,
-          damageRule: dom.selectDamageRule.value,
-          roundTimer: parseInt(dom.selectRoundTimer.value, 10),
-          executionSpeed: dom.selectExecutionSpeed.value
+          arenaId: dom.selectArenaMap?.value,
+          damageRule: dom.selectDamageRule?.value,
+          roundTimer: parseInt(dom.selectRoundTimer?.value || '45', 10),
+          executionSpeed: dom.selectExecutionSpeed?.value
         }
       });
     };
@@ -650,6 +655,48 @@
     dom.selectDamageRule?.addEventListener('change', sendConfig);
     dom.selectRoundTimer?.addEventListener('change', sendConfig);
     dom.selectExecutionSpeed?.addEventListener('change', sendConfig);
+  }
+
+  function setupTvLobbyControls() {
+    const handleTvConfigChange = () => {
+      if (!isTvMode || !gameState) return;
+      applyConfigToGameState({
+        arenaId: dom.tvSelectArena?.value,
+        damageRule: dom.tvSelectDamage?.value,
+        roundTimer: parseInt(dom.tvSelectTimer?.value || '45', 10),
+        executionSpeed: dom.tvSelectSpeed?.value
+      });
+      broadcastLobbyUpdate();
+    };
+
+    dom.tvSelectArena?.addEventListener('change', handleTvConfigChange);
+    dom.tvSelectDamage?.addEventListener('change', handleTvConfigChange);
+    dom.tvSelectTimer?.addEventListener('change', handleTvConfigChange);
+    dom.tvSelectSpeed?.addEventListener('change', handleTvConfigChange);
+
+    // Botón de forzar ejecución inmediata desde la TV
+    dom.btnTvForceExecute?.addEventListener('click', () => {
+      if (!isTvMode || gameState.phase !== 'programming') return;
+      forceSubmitPendingPlayers();
+    });
+  }
+
+  function applyConfigToPhoneControls(config) {
+    if (!config) return;
+    if (config.arenaId && dom.selectArenaMap) dom.selectArenaMap.value = config.arenaId;
+    if (config.damageRule && dom.selectDamageRule) dom.selectDamageRule.value = config.damageRule;
+    if (config.roundTimer !== undefined && dom.selectRoundTimer) dom.selectRoundTimer.value = String(config.roundTimer);
+    if (config.executionSpeed && dom.selectExecutionSpeed) dom.selectExecutionSpeed.value = config.executionSpeed;
+  }
+
+  function updateVipVisibility() {
+    if (isVipPlayer) {
+      dom.phoneVipControls?.classList.remove('d-none');
+      dom.phoneRegularWaiting?.classList.add('d-none');
+    } else {
+      dom.phoneVipControls?.classList.add('d-none');
+      dom.phoneRegularWaiting?.classList.remove('d-none');
+    }
   }
 
   function bindEvents() {
@@ -687,10 +734,10 @@
     // VIP Iniciar Partida
     dom.btnPhoneVipStart?.addEventListener('click', () => {
       if (!isVipPlayer || !myPhoneConn) return;
-      const arenaId = dom.selectArenaMap.value;
-      const damageRule = dom.selectDamageRule.value;
-      const roundTimer = parseInt(dom.selectRoundTimer.value, 10);
-      const executionSpeed = dom.selectExecutionSpeed.value;
+      const arenaId = dom.selectArenaMap?.value;
+      const damageRule = dom.selectDamageRule?.value;
+      const roundTimer = parseInt(dom.selectRoundTimer?.value || '45', 10);
+      const executionSpeed = dom.selectExecutionSpeed?.value;
 
       myPhoneConn.send({
         type: 'VIP_START_GAME',
@@ -711,9 +758,9 @@
     });
 
     dom.btnTvBackToLobby?.addEventListener('click', () => {
-      dom.tvViewPodium.classList.add('d-none');
-      dom.tvViewArena.classList.add('d-none');
-      dom.tvViewLobby.classList.remove('d-none');
+      dom.tvViewPodium?.classList.add('d-none');
+      dom.tvViewArena?.classList.add('d-none');
+      dom.tvViewLobby?.classList.remove('d-none');
     });
 
     // Slots de Celular
@@ -752,6 +799,33 @@
   // ==========================================================================
   // 8. MODO TV (HOST)
   // ==========================================================================
+  function ensureVipPlayer() {
+    if (!gameState || !gameState.players || gameState.players.length === 0) return null;
+    let vip = gameState.players.find(p => p.isVip);
+    if (!vip) {
+      vip = gameState.players.find(p => !p.isAsleep) || gameState.players[0];
+      vip.isVip = true;
+    }
+    // Asegurar único VIP
+    gameState.players.forEach(p => {
+      if (p.id !== vip.id) p.isVip = false;
+    });
+    return vip;
+  }
+
+  function applyConfigToGameState(config) {
+    if (!config || !gameState) return;
+    if (config.arenaId && ARENAS_DATA.ARENAS[config.arenaId]) {
+      gameState.arenaId = config.arenaId;
+      gameState.arena = ARENAS_DATA.ARENAS[config.arenaId];
+    }
+    if (config.damageRule) gameState.damageRule = config.damageRule;
+    if (typeof config.roundTimer === 'number') gameState.roundTimer = config.roundTimer;
+    if (config.executionSpeed) gameState.executionSpeed = config.executionSpeed;
+
+    updateTvConfigDisplay();
+  }
+
   function startTvMode() {
     isTvMode = true;
     switchToScreen('tv');
@@ -826,10 +900,16 @@
     conn.on('data', (data) => {
       if (!data || !data.type) return;
 
-      const pId = data.playerId || conn._playerId;
-      if (pId && peerResilienceHost) {
-        if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
-        if (data.type !== 'PLAYER_JOIN' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+      const senderId = data.playerId || conn._playerId;
+      if (!conn._playerId && data.playerId) {
+        conn._playerId = data.playerId;
+      }
+
+      if (senderId && peerResilienceHost) {
+        if (peerResilienceHost.handleIncomingHostData(senderId, conn, data)) return;
+        if (data.type !== 'PLAYER_JOIN' && !peerResilienceHost.isConnectionActive(senderId, conn)) {
+          peerResilienceHost.registerPlayerConnection(senderId, conn);
+        }
       }
 
       handleHostDataReceived(conn, data);
@@ -837,7 +917,6 @@
 
     conn.on('close', () => {
       const pId = conn._playerId;
-      if (pId && peerResilienceHost && !peerResilienceHost.isConnectionActive(pId, conn)) return;
       if (pId) {
         const p = gameState && gameState.players.find(pl => pl.id === pId);
         if (p) {
@@ -852,6 +931,8 @@
   function handleHostDataReceived(conn, data) {
     if (!data || !data.type) return;
 
+    const senderId = data.playerId || conn._playerId;
+
     if (data.type === 'PLAYER_JOIN') {
       const { playerId, name, color, avatar } = data;
       conn._playerId = playerId;
@@ -863,6 +944,7 @@
 
       if (player) {
         player.isAsleep = false;
+        ensureVipPlayer();
       } else {
         if (gameState.players.length >= 6) {
           conn.send({ type: 'JOIN_REJECTED', reason: 'La arena está completa (máx 6 pilotos).' });
@@ -903,6 +985,7 @@
           }
         };
         gameState.players.push(player);
+        ensureVipPlayer();
         playJoin();
       }
 
@@ -914,6 +997,12 @@
         roomCode: currentRoomCode,
         player,
         isVip: player.isVip,
+        config: {
+          arenaId: gameState.arenaId,
+          damageRule: gameState.damageRule,
+          roundTimer: gameState.roundTimer,
+          executionSpeed: gameState.executionSpeed
+        },
         gameState: getSanitizedGameStateForPlayer(player.id)
       });
 
@@ -936,13 +1025,20 @@
           lockedSlots: player.lockedSlots,
           programLocked: player.programLocked,
           yaEnvioEnEstaFase: Boolean(player.programLocked),
-          phaseKey: `${gameState.phase}_round_${gameState.roundNumber}`
+          phaseKey: `${gameState.phase}_round_${gameState.roundNumber}`,
+          config: {
+            arenaId: gameState.arenaId,
+            damageRule: gameState.damageRule,
+            roundTimer: gameState.roundTimer,
+            executionSpeed: gameState.executionSpeed
+          }
         }
       });
 
       if (gameState.phase === 'programming') {
         conn.send({
           type: 'ROUND_STARTED',
+          playerId: player.id,
           roundNumber: gameState.roundNumber,
           hand: player.hand,
           program: player.program,
@@ -954,82 +1050,49 @@
         });
       }
 
-      // Actualizar lobby
-      broadcastToPlayers({
-        type: 'LOBBY_UPDATE',
-        players: gameState.players.map(p => ({
-          id: p.id,
-          name: p.name,
-          color: p.color,
-          avatar: p.avatar,
-          isVip: p.isVip
-        }))
-      });
-
-      renderTvPlayersList();
-
-      if (gameState.players.length >= 2) {
-        dom.btnTvStartGame?.classList.remove('d-none');
-        if (dom.tvLobbyStatusMsg) {
-          dom.tvLobbyStatusMsg.textContent = '¡Listos para combatir! El VIP puede iniciar desde su móvil o pueden pulsar el botón de abajo.';
-        }
-      } else {
-        dom.btnTvStartGame?.classList.add('d-none');
-        if (dom.tvLobbyStatusMsg) {
-          dom.tvLobbyStatusMsg.textContent = 'Esperando al menos 2 pilotos para comenzar...';
-        }
-      }
+      broadcastLobbyUpdate();
     }
 
     if (data.type === 'VIP_UPDATE_CONFIG') {
-      const player = gameState.players.find(p => p.id === data.playerId && p.isVip);
+      ensureVipPlayer();
+      const player = gameState.players.find(p => p.id === senderId && p.isVip);
       if (player && data.config) {
-        if (data.config.arenaId && ARENAS_DATA.ARENAS[data.config.arenaId]) {
-          gameState.arenaId = data.config.arenaId;
-          gameState.arena = ARENAS_DATA.ARENAS[data.config.arenaId];
-        }
-        if (data.config.damageRule) gameState.damageRule = data.config.damageRule;
-        if (typeof data.config.roundTimer === 'number') gameState.roundTimer = data.config.roundTimer;
-        if (data.config.executionSpeed) gameState.executionSpeed = data.config.executionSpeed;
-
-        updateTvConfigDisplay();
+        applyConfigToGameState(data.config);
+        broadcastLobbyUpdate();
       }
     }
 
     if (data.type === 'VIP_START_GAME') {
-      const player = gameState.players.find(p => p.id === data.playerId && p.isVip);
+      ensureVipPlayer();
+      const player = gameState.players.find(p => p.id === senderId && p.isVip);
       if (player && gameState.players.length >= 2) {
         if (data.config) {
-          if (data.config.arenaId && ARENAS_DATA.ARENAS[data.config.arenaId]) {
-            gameState.arenaId = data.config.arenaId;
-            gameState.arena = ARENAS_DATA.ARENAS[data.config.arenaId];
-          }
-          if (data.config.damageRule) gameState.damageRule = data.config.damageRule;
-          if (typeof data.config.roundTimer === 'number') gameState.roundTimer = data.config.roundTimer;
-          if (data.config.executionSpeed) gameState.executionSpeed = data.config.executionSpeed;
+          applyConfigToGameState(data.config);
         }
         startHostGame();
       }
     }
 
     if (data.type === 'PLAYER_SUBMIT_PROGRAM') {
-      const player = gameState.players.find(p => p.id === data.playerId);
+      const player = gameState.players.find(p => p.id === senderId);
       if (player && gameState.phase === 'programming') {
-        player.program = data.program;
-        player.programLocked = true;
-        playProgramLocked();
+        if (Array.isArray(data.program) && data.program.filter(Boolean).length === 4) {
+          player.program = data.program;
+          player.programLocked = true;
+          playProgramLocked();
 
-        conn.send({ type: 'PROGRAM_ACCEPTED', locked: true });
-        renderTvPilotsGrid();
-        checkAllProgramsLocked();
+          conn.send({ type: 'PROGRAM_ACCEPTED', locked: true, playerId: senderId });
+          renderTvPilotsGrid();
+          checkAllProgramsLocked();
+        }
       }
     }
 
     if (data.type === 'PLAYER_UNLOCK_PROGRAM') {
-      const player = gameState.players.find(p => p.id === data.playerId);
+      const player = gameState.players.find(p => p.id === senderId);
       if (player && gameState.phase === 'programming') {
         player.programLocked = false;
-        conn.send({ type: 'PROGRAM_ACCEPTED', locked: false });
+        conn.send({ type: 'PROGRAM_ACCEPTED', locked: false, playerId: senderId });
         renderTvPilotsGrid();
       }
     }
@@ -1039,6 +1102,41 @@
     for (const conn of hostConnections.values()) {
       if (conn && conn.open) {
         conn.send(msg);
+      }
+    }
+  }
+
+  function broadcastLobbyUpdate() {
+    ensureVipPlayer();
+    broadcastToPlayers({
+      type: 'LOBBY_UPDATE',
+      config: {
+        arenaId: gameState.arenaId,
+        damageRule: gameState.damageRule,
+        roundTimer: gameState.roundTimer,
+        executionSpeed: gameState.executionSpeed
+      },
+      players: gameState.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        color: p.color,
+        avatar: p.avatar,
+        isVip: p.isVip,
+        isAsleep: p.isAsleep
+      }))
+    });
+
+    renderTvPlayersList();
+
+    if (gameState.players.length >= 2) {
+      dom.btnTvStartGame?.classList.remove('d-none');
+      if (dom.tvLobbyStatusMsg) {
+        dom.tvLobbyStatusMsg.textContent = '¡Listos para combatir! El VIP puede iniciar desde su móvil o pueden pulsar el botón de abajo.';
+      }
+    } else {
+      dom.btnTvStartGame?.classList.add('d-none');
+      if (dom.tvLobbyStatusMsg) {
+        dom.tvLobbyStatusMsg.textContent = 'Esperando al menos 2 pilotos para comenzar...';
       }
     }
   }
@@ -1069,16 +1167,10 @@
   }
 
   function updateTvConfigDisplay() {
-    if (dom.tvConfigArenaName) dom.tvConfigArenaName.textContent = gameState.arena.name;
-    if (dom.tvConfigDamageRule) {
-      dom.tvConfigDamageRule.textContent = gameState.damageRule === 'tactical' ? '🛡️ Daño Táctico' : '💥 Daño Simple';
-    }
-    if (dom.tvConfigRoundTimer) {
-      dom.tvConfigRoundTimer.textContent = gameState.roundTimer > 0 ? `⏱️ ${gameState.roundTimer}s` : '♾️ Sin Límite';
-    }
-    if (dom.tvConfigSpeed) {
-      dom.tvConfigSpeed.textContent = gameState.executionSpeed === 'slow' ? '🐢 Didáctico' : '⚡ Normal';
-    }
+    if (dom.tvSelectArena) dom.tvSelectArena.value = gameState.arenaId;
+    if (dom.tvSelectDamage) dom.tvSelectDamage.value = gameState.damageRule;
+    if (dom.tvSelectTimer) dom.tvSelectTimer.value = String(gameState.roundTimer);
+    if (dom.tvSelectSpeed) dom.tvSelectSpeed.value = gameState.executionSpeed;
   }
 
   function renderTvPlayersList() {
@@ -1096,7 +1188,7 @@
         </div>
         <div class="tv-player-info">
           <div class="tv-player-name">${p.name} ${p.isVip ? '👑' : ''} ${p.isAsleep ? '💤' : ''}</div>
-          <div class="tv-player-status">${p.isAsleep ? 'En pausa (pantalla bloqueada)' : 'Chasis listo para combate'}</div>
+          <div class="tv-player-status">${p.isAsleep ? 'En pausa (pantalla bloqueada)' : (p.isVip ? '👑 Piloto VIP (Configura la partida)' : 'Chasis listo para combate')}</div>
         </div>
       `;
       dom.tvPlayersList.appendChild(card);
@@ -1120,6 +1212,8 @@
       p.alive = true;
       p.shieldActive = false;
       p.lastCheckpoint = 0;
+      p.programLocked = false;
+      p.program = [null, null, null, null];
     });
 
     renderTvBoardGrid();
@@ -1263,6 +1357,7 @@
   }
 
   function startNewRound() {
+    isExecuting = false;
     gameState.phase = 'programming';
     gameState.currentStep = 0;
 
@@ -1287,6 +1382,7 @@
       if (conn && conn.open) {
         conn.send({
           type: 'ROUND_STARTED',
+          playerId: p.id,
           roundNumber: gameState.roundNumber,
           hand: p.hand,
           program: p.program,
@@ -1334,7 +1430,6 @@
   function forceSubmitPendingPlayers() {
     for (const p of gameState.players) {
       if (p.alive && !p.programLocked) {
-        // Filtrar cartas que no estén ya asignadas a algún slot
         const placedIds = new Set(p.program.filter(Boolean).map(c => c.id));
         const availableCards = p.hand.filter(c => !placedIds.has(c.id));
 
@@ -1349,6 +1444,7 @@
         if (conn && conn.open) {
           conn.send({
             type: 'FORCE_SUBMIT_CONFIRMED',
+            playerId: p.id,
             program: p.program
           });
         }
@@ -1359,14 +1455,18 @@
   }
 
   function checkAllProgramsLocked() {
+    if (gameState.phase !== 'programming') return;
+    if (isExecuting) return;
+
     const alivePlayers = gameState.players.filter(p => p.alive);
-    const allLocked = alivePlayers.every(p => p.programLocked);
+    const allLocked = alivePlayers.length > 0 && alivePlayers.every(p => p.programLocked);
 
     if (allLocked) {
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
       }
+      isExecuting = true;
       runExecutionPhase();
     }
   }
@@ -1460,9 +1560,10 @@
   }
 
   // ==========================================================================
-  // 10. REPRODUCTOR DE TIMELINE ATÓMICO (FASE DE EJECUCIÓN)
+  // 10. REPRODUCTOR DE TIMELINE ATÓMICO (FASE DE EJECUCIÓN CON BLINDAJE TRY/CATCH)
   // ==========================================================================
   async function runExecutionPhase() {
+    isExecuting = true;
     gameState.phase = 'executing';
     dom.tvCmdTimerWrap?.classList.add('d-none');
     dom.tvCmdStepsProgress?.classList.remove('d-none');
@@ -1471,68 +1572,85 @@
 
     broadcastToPlayers({ type: 'EXECUTION_STARTED' });
 
-    for (let step = 0; step < 4; step++) {
-      gameState.currentStep = step;
-      updateStepProgress(step);
+    try {
+      for (let step = 0; step < 4; step++) {
+        gameState.currentStep = step;
+        updateStepProgress(step);
 
-      // Recopilar cartas activas de este paso y ordenarlas por prioridad
-      const stepCards = [];
-      for (const p of gameState.players) {
-        if (p.alive && p.program[step]) {
-          stepCards.push({ player: p, card: p.program[step] });
+        // Recopilar cartas activas de este paso y ordenarlas por prioridad
+        const stepCards = [];
+        for (const p of gameState.players) {
+          if (p.alive && p.program[step]) {
+            stepCards.push({ player: p, card: p.program[step] });
+          }
         }
-      }
-      stepCards.sort((a, b) => b.card.priority - a.card.priority);
+        stepCards.sort((a, b) => b.card.priority - a.card.priority);
 
-      renderTvStepCardsQueue(stepCards);
+        renderTvStepCardsQueue(stepCards);
 
-      broadcastToPlayers({
-        type: 'STEP_START',
-        stepIndex: step + 1
-      });
+        broadcastToPlayers({
+          type: 'STEP_START',
+          stepIndex: step + 1
+        });
 
-      setSpotlight(`PASO ${step + 1} DE 4`, `Iniciando resolución del paso... ${stepCards.length} órdenes en cola.`);
-      const speedMult = gameState.executionSpeed === 'slow' ? 1.6 : 1.0;
-      await delay(900 * speedMult);
+        setSpotlight(`PASO ${step + 1} DE 4`, `Iniciando resolución del paso... ${stepCards.length} órdenes en cola.`);
+        const speedMult = gameState.executionSpeed === 'slow' ? 1.6 : 1.0;
+        await delay(900 * speedMult);
 
-      // Ejecutar motor determinista y obtener stream de eventos atómicos
-      const stepRes = ROBO_ENGINE.executeStep(gameState, step);
+        // Ejecutar motor determinista y obtener stream de eventos atómicos
+        const stepRes = ROBO_ENGINE.executeStep(gameState, step);
 
-      // Reproducir eventos atómicos en secuencia
-      for (const ev of stepRes.timeline) {
-        await playTimelineEvent(ev);
-      }
-
-      // Notificar a los celulares sobre sus estadísticas actuales
-      for (const p of gameState.players) {
-        const conn = hostConnections.get(p.id);
-        if (conn && conn.open) {
-          conn.send({
-            type: 'LIVE_STATUS_UPDATE',
-            hp: p.hp,
-            alive: p.alive,
-            lastCheckpoint: p.lastCheckpoint
-          });
+        // Reproducir eventos atómicos en secuencia
+        if (stepRes && Array.isArray(stepRes.timeline)) {
+          for (const ev of stepRes.timeline) {
+            await playTimelineEvent(ev);
+          }
         }
+
+        // Notificar a los celulares sobre sus estadísticas actuales
+        for (const p of gameState.players) {
+          const conn = hostConnections.get(p.id);
+          if (conn && conn.open) {
+            conn.send({
+              type: 'LIVE_STATUS_UPDATE',
+              playerId: p.id,
+              hp: p.hp,
+              alive: p.alive,
+              lastCheckpoint: p.lastCheckpoint
+            });
+          }
+        }
+
+        // Si hubo ganador
+        if (stepRes && stepRes.winner) {
+          isExecuting = false;
+          showPodiumScreen(stepRes.winner);
+          return;
+        }
+
+        await delay(700 * speedMult);
       }
 
-      // Si hubo ganador
-      if (stepRes.winner) {
-        showPodiumScreen(stepRes.winner);
-        return;
-      }
-
-      await delay(700 * speedMult);
+      // Fin de los 4 pasos: preparar siguiente ronda
+      setSpotlight('FIN DE RONDA', 'Reparando chasis en talleres y reapareciendo robots destruidos...');
+      await delay(1200);
+      ROBO_ENGINE.finishRoundAndRespawn(gameState);
+      isExecuting = false;
+      startNewRound();
+    } catch (err) {
+      console.error('Error crítico durante runExecutionPhase:', err);
+      isExecuting = false;
+      setSpotlight('⚠️ ERROR DE ANIMACIÓN', 'Ocurrió un error inesperado al animar la ronda. Reanudando combate...');
+      showFloatingFx(5, 4, '⚠️ ERROR DE ANIMACIÓN', 'damage');
+      await delay(2000);
+      ROBO_ENGINE.finishRoundAndRespawn(gameState);
+      startNewRound();
     }
-
-    // Fin de los 4 pasos: preparar siguiente ronda
-    setSpotlight('FIN DE RONDA', 'Reparando chasis en talleres y reapareciendo robots destruidos...');
-    await delay(1200);
-    ROBO_ENGINE.finishRoundAndRespawn(gameState);
-    startNewRound();
   }
 
   async function playTimelineEvent(ev) {
+    if (!ev || !ev.type) return;
+
     const isSlow = gameState.executionSpeed === 'slow';
     const mult = isSlow ? 1.6 : 1.0;
 
@@ -1546,7 +1664,7 @@
           lasers: { title: 'FASE 4: LÁSERES', desc: 'Disparos de torretas tácticas y cañones de robots...' },
           objectives: { title: 'FASE 5: METAS', desc: 'Registro de checkpoints y talleres de reparación...' }
         };
-        const info = subphaseNames[ev.phase] || { title: 'SUB-FASE', desc: '' };
+        const info = subphaseNames[ev.phase] || { title: ev.title || 'SUB-FASE', desc: ev.subtitle || '' };
         setSpotlight(info.title, info.desc);
         await delay(350 * mult);
         break;
@@ -1554,9 +1672,13 @@
 
       case 'CARD_START': {
         highlightQueueCard(ev.playerId);
+        const pName = ev.playerName || (ev.player ? ev.player.name : 'Piloto');
+        const cIcon = ev.card ? ev.card.icon : '⚡';
+        const cName = ev.card ? ev.card.name : 'Orden';
+        const cPrio = ev.card ? ev.card.priority : 0;
         setSpotlight(
-          `ORDEN [${ev.card.priority}]`,
-          `<strong>${ev.player.name}</strong> ejecuta <span>${ev.card.icon} ${ev.card.name}</span>`
+          `ORDEN [${cPrio}]`,
+          `<strong>${pName}</strong> ejecuta <span>${cIcon} ${cName}</span>`
         );
         broadcastToPlayers({
           type: 'PLAYER_CARD_EXECUTING',
@@ -1568,14 +1690,20 @@
       }
 
       case 'MOVE': {
-        const vis = visualRobots.get(ev.playerId);
-        if (vis) {
-          vis.x = ev.toX;
-          vis.y = ev.toY;
-          const token = document.getElementById(`robot_token_${ev.playerId}`);
+        const moves = Array.isArray(ev.moves) && ev.moves.length > 0
+          ? ev.moves
+          : (ev.toX !== undefined ? [{ id: ev.playerId, toX: ev.toX, toY: ev.toY }] : []);
+
+        for (const m of moves) {
+          const vis = visualRobots.get(m.id);
+          if (vis) {
+            vis.x = m.toX;
+            vis.y = m.toY;
+          }
+          const token = document.getElementById(`robot_token_${m.id}`);
           if (token) {
-            token.style.left = `${ev.toX * 10}%`;
-            token.style.top = `${ev.toY * 12.5}%`;
+            token.style.left = `${m.toX * 10}%`;
+            token.style.top = `${m.toY * 12.5}%`;
           }
         }
         playRobotMove();
@@ -1585,12 +1713,16 @@
 
       case 'BUMP': {
         playBump();
+        const vis = visualRobots.get(ev.playerId);
         const token = document.getElementById(`robot_token_${ev.playerId}`);
         if (token) {
           token.classList.add('is-bumping');
           setTimeout(() => token.classList.remove('is-bumping'), 300);
         }
-        showFloatingFx(ev.x, ev.y, '🛡️ BLOQUEADO', 'shield');
+        const bx = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
+        const by = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
+        const label = ev.blockedBy === 'turret' ? '🚨 TORRETA' : (ev.blockedBy === 'wall' ? '🧱 MURO' : '🛡️ BLOQUEADO');
+        showFloatingFx(bx, by, label, 'shield');
         await delay(320 * mult);
         break;
       }
@@ -1598,11 +1730,11 @@
       case 'TURN': {
         const vis = visualRobots.get(ev.playerId);
         if (vis) {
-          let delta = 90;
-          if (ev.turnType === 'ccw') delta = -90;
-          else if (ev.turnType === 'uturn') delta = 180;
+          const delta = ev.deltaAngle !== undefined
+            ? ev.deltaAngle
+            : (ev.turnType === 'ccw' ? -90 : (ev.turnType === 'uturn' ? 180 : 90));
           vis.visualAngleDeg += delta;
-          vis.facing = ev.toFacing;
+          if (ev.newFacing !== undefined) vis.facing = ev.newFacing;
 
           const token = document.getElementById(`robot_token_${ev.playerId}`);
           if (token) {
@@ -1617,35 +1749,40 @@
 
       case 'PIT_FALL': {
         playExplosion();
+        const vis = visualRobots.get(ev.playerId);
         const token = document.getElementById(`robot_token_${ev.playerId}`);
         if (token) {
           token.classList.add('is-falling');
         }
-        showFloatingFx(ev.x, ev.y, '💥 ¡AL ABISMO!', 'damage');
+        const px = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
+        const py = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
+        showFloatingFx(px, py, '💥 ¡AL ABISMO!', 'damage');
         await delay(550 * mult);
         break;
       }
 
       case 'LASER': {
-        const strokeColor = ev.sourceType === 'turret'
-          ? '#ef4444'
-          : (ev.sourceType === 'overload' ? '#f59e0b' : '#38bdf8');
-
+        const strokeColor = ev.color || (ev.sourceType === 'turret' ? '#ef4444' : '#38bdf8');
         drawLaserBeam(ev.fromX, ev.fromY, ev.toX, ev.toY, strokeColor);
         playLaser();
 
-        if (ev.hitPlayerId) {
-          const hitToken = document.getElementById(`robot_token_${ev.hitPlayerId}`);
+        const hitId = ev.hitRobotId || ev.hitPlayerId;
+        if (hitId) {
+          const hitToken = document.getElementById(`robot_token_${hitId}`);
           if (hitToken) {
             hitToken.classList.add('is-hit');
             setTimeout(() => hitToken.classList.remove('is-hit'), 350);
           }
 
-          if (ev.shieldAbsorbed) {
+          const hx = ev.hitX !== undefined ? ev.hitX : ev.toX;
+          const hy = ev.hitY !== undefined ? ev.hitY : ev.toY;
+
+          if (ev.shieldBlocked || ev.shieldAbsorbed) {
             playShield();
-            showFloatingFx(ev.toX, ev.toY, '🛡️ ESCUDO', 'shield');
+            showFloatingFx(hx, hy, '🛡️ ESCUDO', 'shield');
           } else {
-            showFloatingFx(ev.toX, ev.toY, '-1 HP', 'damage');
+            const dmg = ev.damage !== undefined ? ev.damage : 1;
+            showFloatingFx(hx, hy, `-${dmg} HP`, 'damage');
           }
         }
         renderTvPilotsGrid();
@@ -1655,11 +1792,14 @@
 
       case 'DESTROYED': {
         playExplosion();
+        const vis = visualRobots.get(ev.playerId);
         const token = document.getElementById(`robot_token_${ev.playerId}`);
         if (token) {
           token.classList.add('is-dead');
         }
-        showFloatingFx(token ? parseFloat(token.style.left) / 10 : 5, token ? parseFloat(token.style.top) / 12.5 : 4, '💥 DESTRUIDO', 'damage');
+        const dx = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
+        const dy = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
+        showFloatingFx(dx, dy, '💥 DESTRUIDO', 'damage');
         renderTvPilotsGrid();
         await delay(500 * mult);
         break;
@@ -1668,17 +1808,17 @@
       case 'SHIELD_REPAIR': {
         playShield();
         const p = gameState.players.find(pl => pl.id === ev.playerId);
-        if (p) {
-          if (ev.healed) {
-            showFloatingFx(p.x, p.y, '+1 HP', 'heal');
-          } else {
-            showFloatingFx(p.x, p.y, '🛡️ ESCUDO', 'shield');
-          }
-          const token = document.getElementById(`robot_token_${ev.playerId}`);
-          const shield = token ? token.querySelector('.robot-shield-bubble') : null;
-          if (shield) {
-            shield.className = `robot-shield-bubble ${ev.shieldActive ? 'is-active' : ''}`;
-          }
+        const sx = ev.x !== undefined ? ev.x : (p ? p.x : 5);
+        const sy = ev.y !== undefined ? ev.y : (p ? p.y : 4);
+        if (ev.healed) {
+          showFloatingFx(sx, sy, '+1 HP', 'heal');
+        } else {
+          showFloatingFx(sx, sy, '🛡️ ESCUDO', 'shield');
+        }
+        const token = document.getElementById(`robot_token_${ev.playerId}`);
+        const shield = token ? token.querySelector('.robot-shield-bubble') : null;
+        if (shield) {
+          shield.className = 'robot-shield-bubble is-active';
         }
         renderTvPilotsGrid();
         await delay(350 * mult);
@@ -1687,10 +1827,8 @@
 
       case 'CHECKPOINT': {
         playCheckpoint();
-        const p = gameState.players.find(pl => pl.id === ev.playerId);
-        if (p) {
-          showFloatingFx(p.x, p.y, `🚩 CHECKPOINT ${ev.checkpointNumber}`, 'checkpoint');
-        }
+        const cpNum = ev.cpId !== undefined ? ev.cpId : (ev.checkpointNumber || 1);
+        showFloatingFx(ev.x, ev.y, `🚩 CHECKPOINT ${cpNum}`, 'checkpoint');
         renderTvPilotsGrid();
         await delay(650 * mult);
         break;
@@ -1698,17 +1836,15 @@
 
       case 'REPAIR_TILE': {
         playShield();
-        const p = gameState.players.find(pl => pl.id === ev.playerId);
-        if (p) {
-          showFloatingFx(p.x, p.y, '🔧 +1 HP', 'heal');
-        }
+        showFloatingFx(ev.x, ev.y, '🔧 +1 HP', 'heal');
         renderTvPilotsGrid();
         await delay(350 * mult);
         break;
       }
 
       case 'WINNER': {
-        setSpotlight('🏆 ¡VICTORIA!', `<strong>${ev.player.name}</strong> ha capturado los 3 Checkpoints.`);
+        const w = ev.winner || ev.player || {};
+        setSpotlight('🏆 ¡VICTORIA!', `<strong>${w.name || 'Un piloto'}</strong> ha capturado los 3 Checkpoints.`);
         break;
       }
     }
@@ -1786,6 +1922,8 @@
       p.alive = true;
       p.shieldActive = false;
       p.lastCheckpoint = 0;
+      p.programLocked = false;
+      p.program = [null, null, null, null];
       p.stats = { lasersHit: 0, timesDestroyed: 0, checkpointsReached: 0, damageDealt: 0 };
     });
 
@@ -1910,6 +2048,14 @@
     myLockedSlots = payload.lockedSlots || [false, false, false, false];
     myProgramLocked = Boolean(payload.yaEnvioEnEstaFase || payload.programLocked);
 
+    if (payload.isVip !== undefined) {
+      isVipPlayer = !!payload.isVip;
+      updateVipVisibility();
+    }
+    if (payload.config) {
+      applyConfigToPhoneControls(payload.config);
+    }
+
     updatePhoneHud(payload.hp, payload.facing, payload.lastCheckpoint);
 
     if (payload.phase === 'programming') {
@@ -1944,15 +2090,31 @@
       if (dom.phoneLobbyRoomCode) dom.phoneLobbyRoomCode.textContent = currentRoomCode;
       if (dom.phoneLobbyRobotBadge) dom.phoneLobbyRobotBadge.style.backgroundColor = myPlayerColor;
 
-      if (isVipPlayer) {
-        dom.phoneVipControls?.classList.remove('d-none');
-        dom.phoneRegularWaiting?.classList.add('d-none');
-      } else {
-        dom.phoneVipControls?.classList.add('d-none');
-        dom.phoneRegularWaiting?.classList.remove('d-none');
+      if (data.config) {
+        applyConfigToPhoneControls(data.config);
       }
 
+      updateVipVisibility();
       showPhoneView('lobby');
+    }
+
+    if (data.type === 'LOBBY_UPDATE') {
+      if (data.config) {
+        applyConfigToPhoneControls(data.config);
+      }
+      if (Array.isArray(data.players)) {
+        const me = data.players.find(p => p.id === myPlayerId);
+        if (me) {
+          isVipPlayer = !!me.isVip;
+          updateVipVisibility();
+        }
+      }
+    }
+
+    if (data.type === 'CONFIG_UPDATED') {
+      if (data.config) {
+        applyConfigToPhoneControls(data.config);
+      }
     }
 
     if (data.type === 'ROUND_STARTED') {
