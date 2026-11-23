@@ -378,6 +378,10 @@
         this.startMatch();
       });
 
+      document.getElementById('btnTvPrevShowStep')?.addEventListener('click', () => {
+        this.prevShowStep();
+      });
+
       document.getElementById('btnTvNextShowStep')?.addEventListener('click', () => {
         this.revealNextShowStep();
       });
@@ -443,12 +447,36 @@
         case 'SHOW_REACTION':
           this.spawnFloatingReaction(msg.payload.emoji, msg.payload.authorName);
           break;
+        case 'VIP_SHOW_PREV_STEP':
+          this.prevShowStep();
+          break;
         case 'VIP_SHOW_NEXT_STEP':
           this.revealNextShowStep();
           break;
         case 'VIP_SHOW_NEXT_ALBUM':
           this.nextAlbum();
           break;
+        case 'REMOTE_SCROLL':
+          this.handleRemoteScroll(msg.payload?.direction);
+          break;
+        case 'REQUEST_ALBUM_EXPORT': {
+          const albumIdx = msg.payload?.albumIndex ?? this.showState.albumIndex;
+          const album = this.cadenas[albumIdx];
+          if (album) {
+            try {
+              conn.send({
+                type: 'ALBUM_EXPORT_DATA',
+                payload: {
+                  albumIndex: albumIdx,
+                  album: album
+                }
+              });
+            } catch (err) {
+              console.warn('Error enviando ALBUM_EXPORT_DATA a', conn.peer, err);
+            }
+          }
+          break;
+        }
         case 'VIP_RESTART_MATCH':
           this.restartMatch();
           break;
@@ -482,9 +510,37 @@
           }
         });
 
-        // Si la partida ya empezó, reenviar tarea
+        // Si la partida está en curso, reenviar tarea
         if (this.totalSteps > 0 && this.stepIndex < this.totalSteps) {
           this.syncPlayerStep(existing);
+        } else if (this.cadenas && this.cadenas.length > 0 && this.stepIndex >= this.totalSteps) {
+          // Si estamos en el Show Final, sincronizar estado del show
+          conn.send({
+            type: 'START_FINAL_SHOW',
+            payload: {
+              totalAlbums: this.cadenas.length,
+              albumIndex: this.showState.albumIndex
+            }
+          });
+          // Notificar álbumes completados hasta ahora
+          const isComp = !document.getElementById('tvComparisonBox').classList.contains('d-none');
+          const maxCompletedIdx = isComp ? this.showState.albumIndex : this.showState.albumIndex - 1;
+          for (let k = 0; k <= maxCompletedIdx; k++) {
+            const cad = this.cadenas[k];
+            if (cad) {
+              conn.send({
+                type: 'ALBUM_COMPLETED',
+                payload: {
+                  albumIndex: k,
+                  authorId: cad.authorPlayerId,
+                  authorName: cad.authorName,
+                  authorAvatar: cad.authorAvatar,
+                  isLastAlbum: (k + 1 >= this.cadenas.length)
+                }
+              });
+            }
+          }
+          this.broadcastShowState();
         }
 
         this.renderLobbyRoster();
@@ -988,6 +1044,32 @@
       document.getElementById('btnTvNextAlbum').classList.add('d-none');
       document.getElementById('btnTvDownloadComic').classList.add('d-none');
       document.getElementById('btnTvNextShowStep').classList.remove('d-none');
+
+      this.broadcastShowState();
+    },
+
+    broadcastShowState() {
+      const cadena = this.cadenas[this.showState.albumIndex];
+      const isComparisonVisible = !document.getElementById('tvComparisonBox').classList.contains('d-none');
+      const canGoBack = (this.showState.albumIndex > 0 || this.showState.stepRevealIndex > 1 || isComparisonVisible);
+
+      const btnTvPrev = document.getElementById('btnTvPrevShowStep');
+      if (btnTvPrev) {
+        btnTvPrev.classList.toggle('d-none', !canGoBack);
+      }
+
+      this.broadcast({
+        type: 'SHOW_STATE_UPDATE',
+        payload: {
+          albumIndex: this.showState.albumIndex,
+          totalAlbums: this.cadenas.length,
+          stepRevealIndex: this.showState.stepRevealIndex,
+          totalSteps: cadena ? cadena.eslabones.length : 0,
+          isComparisonVisible: isComparisonVisible,
+          canGoBack: canGoBack,
+          isCompleted: (this.showState.albumIndex + 1 >= this.cadenas.length && isComparisonVisible)
+        }
+      });
     },
 
     revealNextShowStep() {
@@ -996,7 +1078,7 @@
 
       if (stepIdx < cadena.eslabones.length) {
         const eslabon = cadena.eslabones[stepIdx];
-        this.appendChainStepToTv(eslabon, stepIdx);
+        this.appendChainStepToTv(eslabon, stepIdx, true);
         this.showState.stepRevealIndex++;
 
         // Sonido según tipo
@@ -1005,6 +1087,8 @@
         } else {
           SoundEffects.playRevealDrawing();
         }
+
+        this.broadcastShowState();
 
         // Si fue el último eslabón de este álbum:
         if (this.showState.stepRevealIndex >= cadena.eslabones.length) {
@@ -1015,7 +1099,76 @@
       }
     },
 
-    appendChainStepToTv(eslabon, index) {
+    prevShowStep() {
+      const compBox = document.getElementById('tvComparisonBox');
+      const isComparisonVisible = !compBox.classList.contains('d-none');
+
+      if (isComparisonVisible) {
+        // Ocultar caja de comparación y restaurar botones
+        compBox.classList.add('d-none');
+        document.getElementById('btnTvNextAlbum')?.classList.add('d-none');
+        document.getElementById('btnTvDownloadComic')?.classList.add('d-none');
+        document.getElementById('btnTvNextShowStep')?.classList.remove('d-none');
+
+        const streamEl = document.getElementById('tvChainStream');
+        if (streamEl && streamEl.lastElementChild) {
+          streamEl.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        this.broadcastShowState();
+        return;
+      }
+
+      if (this.showState.stepRevealIndex > 1) {
+        const streamEl = document.getElementById('tvChainStream');
+        if (streamEl && streamEl.lastElementChild) {
+          streamEl.lastElementChild.remove();
+        }
+        this.showState.stepRevealIndex--;
+
+        if (streamEl && streamEl.lastElementChild) {
+          streamEl.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        this.broadcastShowState();
+        return;
+      }
+
+      if (this.showState.stepRevealIndex <= 1 && this.showState.albumIndex > 0) {
+        this.prevAlbum();
+      }
+    },
+
+    prevAlbum() {
+      if (this.showState.albumIndex <= 0) return;
+      this.showState.albumIndex--;
+      const cadena = this.cadenas[this.showState.albumIndex];
+
+      document.getElementById('tvAlbumIndexPill').textContent = `ÁLBUM ${this.showState.albumIndex + 1} DE ${this.cadenas.length}`;
+      document.getElementById('tvAlbumAuthorTitle').textContent = `Iniciado por ${cadena.authorAvatar} ${cadena.authorName}`;
+
+      const streamEl = document.getElementById('tvChainStream');
+      streamEl.innerHTML = '';
+
+      cadena.eslabones.forEach((eslabon, idx) => {
+        this.appendChainStepToTv(eslabon, idx, false);
+      });
+      this.showState.stepRevealIndex = cadena.eslabones.length;
+
+      this.showAlbumComparison(cadena);
+      this.broadcast({
+        type: 'ALBUM_CHANGED',
+        payload: { albumIndex: this.showState.albumIndex }
+      });
+      this.broadcastShowState();
+    },
+
+    handleRemoteScroll(direction) {
+      const container = document.getElementById('tvAlbumStreamContainer');
+      if (!container) return;
+      const delta = direction === 'up' ? -380 : 380;
+      container.scrollBy({ top: delta, behavior: 'smooth' });
+    },
+
+    appendChainStepToTv(eslabon, index, doScroll = true) {
       const streamEl = document.getElementById('tvChainStream');
       const card = document.createElement('div');
       card.className = 'chain-step-card';
@@ -1048,7 +1201,9 @@
       `;
 
       streamEl.appendChild(card);
-      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (doScroll) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     },
 
     showAlbumComparison(cadena) {
@@ -1080,9 +1235,13 @@
         payload: {
           albumIndex: this.showState.albumIndex,
           authorId: cadena.authorPlayerId,
+          authorName: cadena.authorName,
+          authorAvatar: cadena.authorAvatar,
           isLastAlbum: (this.showState.albumIndex + 1 >= this.cadenas.length)
         }
       });
+
+      this.broadcastShowState();
     },
 
     nextAlbum() {
@@ -1140,8 +1299,9 @@
     },
 
     downloadCurrentAlbumComic() {
+      const btn = document.getElementById('btnTvDownloadComic');
       const cadena = this.cadenas[this.showState.albumIndex];
-      renderAndDownloadComicStrip(cadena);
+      generarYDescargarTiraPNG(cadena, btn);
     },
 
     showFinalRecapView() {
@@ -1172,11 +1332,21 @@
       document.querySelectorAll('.btn-download-single-recap').forEach(btn => {
         btn.addEventListener('click', () => {
           const idx = parseInt(btn.dataset.album, 10);
-          renderAndDownloadComicStrip(this.cadenas[idx]);
+          generarYDescargarTiraPNG(this.cadenas[idx], btn);
         });
       });
 
-      this.broadcast({ type: 'MATCH_FINISHED' });
+      const allAlbumsMeta = this.cadenas.map((cad, idx) => ({
+        albumIndex: idx,
+        authorId: cad.authorPlayerId,
+        authorName: cad.authorName,
+        authorAvatar: cad.authorAvatar
+      }));
+
+      this.broadcast({
+        type: 'MATCH_FINISHED',
+        payload: { albums: allAlbumsMeta }
+      });
     },
 
     restartMatch() {
@@ -1190,126 +1360,255 @@
   };
 
   // ============================================================================
-  // GENERADOR DE TIRA CÓMICA EN IMAGEN (PNG) PARA WHATSAPP
+  // GENERADOR ROBUSTO DE TIRA CÓMICA EN IMAGEN (PNG) PARA WHATSAPP / DESCARGA
   // ============================================================================
-  function renderAndDownloadComicStrip(cadena) {
-    if (!cadena || !cadena.eslabones) return;
+  function countTextLines(ctx, text, maxWidth) {
+    const words = (text || '').split(' ');
+    let line = '';
+    let count = 0;
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && n > 0) {
+        count++;
+        line = words[n] + ' ';
+      } else {
+        line = testLine;
+      }
+    }
+    return Math.max(1, count + 1);
+  }
 
-    const canvas = document.getElementById('comicStripCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+  function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, align = 'center') {
+    const words = (text || '').split(' ');
+    let line = '';
+    const lines = [];
 
-    const width = 800;
-    // Calcular alto según cantidad de eslabones
-    let totalHeight = 180; // Header
-    cadena.eslabones.forEach(e => {
-      totalHeight += (e.tipo === 'DIBUJO' ? 620 : 150) + 40;
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && n > 0) {
+        lines.push(line.trim());
+        line = words[n] + ' ';
+      } else {
+        line = testLine;
+      }
+    }
+    lines.push(line.trim());
+
+    ctx.textAlign = align;
+    let curY = y;
+    lines.forEach(l => {
+      ctx.fillText(l, x, curY);
+      curY += lineHeight;
     });
-    totalHeight += 120; // Footer
 
-    canvas.width = width;
-    canvas.height = totalHeight;
+    return lines.length;
+  }
 
-    // Fondo elegante oscuro
-    ctx.fillStyle = '#131127';
-    ctx.fillRect(0, 0, width, totalHeight);
+  async function generarYDescargarTiraPNG(album, btnEl = null) {
+    if (!album || !album.eslabones || album.eslabones.length === 0) {
+      if (btnEl) btnEl.disabled = false;
+      return;
+    }
 
-    // Borde decorativo exterior
-    ctx.strokeStyle = '#28244c';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(5, 5, width - 10, totalHeight - 10);
+    const originalBtnText = btnEl ? btnEl.innerHTML : '';
+    if (btnEl) {
+      btnEl.disabled = true;
+      btnEl.innerHTML = '<span>⏳ Generando imagen...</span>';
+    }
 
-    // Encabezado
-    ctx.fillStyle = '#facc15';
-    ctx.font = 'bold 38px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('📞 TELÉFONO DESCOMPUESTO', width / 2, 65);
+    try {
+      // 1. Precargar todas las imágenes de dibujos en paralelo
+      const imageLoadPromises = album.eslabones.map(eslabon => {
+        if (eslabon.tipo === 'DIBUJO' && eslabon.contenido) {
+          return new Promise(resolve => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve({ img, ok: true });
+            img.onerror = () => {
+              console.warn('Error al cargar imagen de dibujo para la tira');
+              resolve({ img: null, ok: false });
+            };
+            img.src = eslabon.contenido;
+          });
+        }
+        return Promise.resolve(null);
+      });
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.fillText(`Álbum de ${cadena.authorAvatar} ${cadena.authorName}`, width / 2, 105);
+      const loadedImages = await Promise.all(imageLoadPromises);
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(60, 130);
-    ctx.lineTo(width - 60, 130);
-    ctx.stroke();
+      // 2. Preparar canvas y medir alturas dinámicamente
+      let canvas = document.getElementById('comicStripCanvas');
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'comicStripCanvas';
+        canvas.className = 'd-none';
+        document.body.appendChild(canvas);
+      }
+      const ctx = canvas.getContext('2d');
 
-    let curY = 170;
+      const width = 800;
+      const headerHeight = 160;
+      const footerHeight = 85;
+      const cardMargin = 22;
 
-    // Dibujar cada eslabón uno debajo del otro
-    const renderPromises = cadena.eslabones.map((eslabon, idx) => {
-      return new Promise((resolve) => {
-        // Header del eslabón
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 20px sans-serif';
+      // Medir la altura de cada paso
+      ctx.font = 'bold 24px sans-serif';
+      const stepHeights = album.eslabones.map(eslabon => {
+        const headerPillHeight = 36;
+        if (eslabon.tipo === 'TEXTO') {
+          const lineCount = countTextLines(ctx, `"${eslabon.contenido}"`, 660);
+          const bubbleHeight = 44 + (lineCount * 34);
+          return headerPillHeight + bubbleHeight + cardMargin;
+        } else {
+          // Dibujo: 720 x 540
+          return headerPillHeight + 540 + cardMargin;
+        }
+      });
+
+      const totalHeight = headerHeight + stepHeights.reduce((a, b) => a + b, 0) + footerHeight;
+
+      canvas.width = width;
+      canvas.height = totalHeight;
+
+      // 3. Renderizar diseño visual
+      // Fondo oscuro
+      ctx.fillStyle = '#131127';
+      ctx.fillRect(0, 0, width, totalHeight);
+
+      // Borde exterior
+      ctx.strokeStyle = '#28244c';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(5, 5, width - 10, totalHeight - 10);
+
+      // Encabezado
+      ctx.fillStyle = '#facc15';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('📞 TELÉFONO DESCOMPUESTO', width / 2, 60);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(`Álbum iniciado por ${album.authorAvatar || '🦊'} ${album.authorName || 'Jugador'}`, width / 2, 100);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(50, 128);
+      ctx.lineTo(width - 50, 128);
+      ctx.stroke();
+
+      let curY = 160;
+
+      // Renderizar cada eslabón
+      album.eslabones.forEach((eslabon, idx) => {
+        let actionDesc = 'escribió la frase original:';
+        if (idx > 0) {
+          actionDesc = eslabon.tipo === 'DIBUJO' ? 'dibujó esto:' : 'creyó que el dibujo era:';
+        }
+
+        // Header de autor
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 18px sans-serif';
         ctx.textAlign = 'left';
-        const action = idx === 0 ? 'escribió la frase original:' : (eslabon.tipo === 'DIBUJO' ? 'dibujó:' : 'adivinó:');
-        ctx.fillText(`${eslabon.autorAvatar} ${eslabon.autorName} ${action}`, 60, curY);
-        curY += 28;
+        ctx.fillText(`${eslabon.autorAvatar || '👤'} ${eslabon.autorName || 'Jugador'} ${actionDesc}`, 50, curY + 20);
+        curY += 34;
 
         if (eslabon.tipo === 'TEXTO') {
-          // Tarjeta de texto
-          ctx.fillStyle = '#1d1a38';
+          ctx.font = 'bold 24px sans-serif';
+          const lineCount = countTextLines(ctx, `"${eslabon.contenido}"`, 660);
+          const bubbleHeight = 44 + (lineCount * 34);
+
+          // Fondo burbuja
+          ctx.fillStyle = '#1e1b4b';
           ctx.strokeStyle = '#facc15';
           ctx.lineWidth = 3;
           ctx.beginPath();
-          ctx.roundRect(60, curY, width - 120, 90, 12);
+          if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(40, curY, width - 80, bubbleHeight, 14);
+          } else {
+            ctx.rect(40, curY, width - 80, bubbleHeight);
+          }
           ctx.fill();
           ctx.stroke();
 
+          // Texto
           ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 26px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(`"${eslabon.contenido}"`, width / 2, curY + 54);
+          drawWrappedText(ctx, `"${eslabon.contenido}"`, width / 2, curY + 36, 660, 34, 'center');
 
-          curY += 120;
-          resolve();
+          curY += bubbleHeight + cardMargin;
         } else {
-          // Dibujo
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => {
-            const frameW = width - 120;
-            const frameH = 500;
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(60, curY, frameW, frameH);
-            ctx.drawImage(img, 60, curY, frameW, frameH);
+          // Dibujo (720x540)
+          const frameX = 40;
+          const frameW = 720;
+          const frameH = 540;
 
-            ctx.strokeStyle = '#a855f7';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(60, curY, frameW, frameH);
+          // Fondo blanco para dibujo
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(frameX, curY, frameW, frameH);
 
-            curY += frameH + 30;
-            resolve();
-          };
-          img.onerror = () => {
-            curY += 80;
-            resolve();
-          };
-          img.src = eslabon.contenido;
+          const preloaded = loadedImages[idx];
+          if (preloaded && preloaded.ok && preloaded.img) {
+            ctx.drawImage(preloaded.img, frameX, curY, frameW, frameH);
+          } else {
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = 'bold 26px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎨 (Dibujo no disponible)', width / 2, curY + (frameH / 2));
+          }
+
+          // Borde violeta
+          ctx.strokeStyle = '#a855f7';
+          ctx.lineWidth = 4;
+          ctx.strokeRect(frameX, curY, frameW, frameH);
+
+          curY += frameH + cardMargin;
         }
       });
-    });
 
-    Promise.all(renderPromises).then(() => {
       // Pie
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = 'italic 18px sans-serif';
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'italic 16px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Hub de Juegos de Mesa • juliangobbato.github.io/juegos', width / 2, totalHeight - 35);
+      ctx.fillText('Hub de Juegos • juliangobbato.github.io/juegos', width / 2, totalHeight - 32);
 
-      // Trigger download
-      try {
-        const link = document.createElement('a');
-        link.download = `telefono-descompuesto-${cadena.authorName.toLowerCase()}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      } catch (err) {
-        console.error('Error generando descarga PNG:', err);
+      // 4. Exportar a Blob y disparar descarga
+      canvas.toBlob(blob => {
+        if (!blob) {
+          throw new Error('No se pudo generar el Blob de imagen');
+        }
+
+        const cleanName = (album.authorName || 'album').toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+        const filename = `telefono-descompuesto-${cleanName}.png`;
+        const blobUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 7000);
+
+        if (btnEl) {
+          btnEl.disabled = false;
+          btnEl.innerHTML = '<span>✅ ¡Tira Descargada!</span>';
+          setTimeout(() => {
+            btnEl.innerHTML = originalBtnText || `<span>📸 Descargar Tira de ${album.authorAvatar || ''} ${album.authorName}</span>`;
+          }, 2500);
+        }
+      }, 'image/png');
+
+    } catch (err) {
+      console.error('Error al generar la tira cómica:', err);
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.innerHTML = originalBtnText || '<span>📸 Descargar Tira</span>';
       }
-    });
+      alert('Hubo un problema al generar la imagen. Intentá de nuevo.');
+    }
   }
 
   // ============================================================================
@@ -1325,6 +1624,10 @@
     currentStepIndex: 0,
     currentPhaseType: 'ESCRIBIR', // 'ESCRIBIR' o 'DIBUJAR'
 
+    // Álbumes revelados disponibles para descargar
+    revealedAlbums: [],
+    activeDownloadBtn: null,
+
     // Estado de la herramienta de dibujo
     phoneCanvas: null,
     phoneCtx: null,
@@ -1336,6 +1639,8 @@
 
     init(preloadedRoomCode = '') {
       appState.mode = 'PHONE';
+      this.revealedAlbums = [];
+      this.activeDownloadBtn = null;
       document.getElementById('screenLanding').classList.remove('active');
       document.getElementById('screenLanding').classList.add('d-none');
       document.getElementById('screenPhone').classList.remove('d-none');
@@ -1456,6 +1761,10 @@
       });
 
       // Controles VIP de Show
+      document.getElementById('btnPhoneVipPrevStep')?.addEventListener('click', () => {
+        this.send({ type: 'VIP_SHOW_PREV_STEP' });
+      });
+
       document.getElementById('btnPhoneVipNextStep')?.addEventListener('click', () => {
         this.send({ type: 'VIP_SHOW_NEXT_STEP' });
       });
@@ -1464,12 +1773,13 @@
         this.send({ type: 'VIP_SHOW_NEXT_ALBUM' });
       });
 
-      // Descargar mi álbum
-      document.getElementById('btnPhoneDownloadMyAlbum')?.addEventListener('click', () => {
-        if (TvHost && TvHost.cadenas) {
-          const myChain = TvHost.cadenas.find(c => c.authorPlayerId === this.playerId) || TvHost.cadenas[TvHost.showState.albumIndex];
-          renderAndDownloadComicStrip(myChain);
-        }
+      // Scroll remoto de la pantalla de TV
+      document.getElementById('btnPhoneScrollUp')?.addEventListener('click', () => {
+        this.send({ type: 'REMOTE_SCROLL', payload: { direction: 'up' } });
+      });
+
+      document.getElementById('btnPhoneScrollDown')?.addEventListener('click', () => {
+        this.send({ type: 'REMOTE_SCROLL', payload: { direction: 'down' } });
       });
 
       // Conectar a otra sala
@@ -1821,14 +2131,29 @@
           this.showView('phonePhaseShow');
           this.updateShowVipControls();
           break;
+        case 'SHOW_STATE_UPDATE':
+          this.updateShowStateFromTv(msg.payload);
+          break;
         case 'ALBUM_CHANGED':
           this.updateShowVipControls();
           break;
         case 'ALBUM_COMPLETED':
           this.onAlbumCompleted(msg.payload);
           break;
+        case 'ALBUM_EXPORT_DATA':
+          if (msg.payload && msg.payload.album) {
+            generarYDescargarTiraPNG(msg.payload.album, this.activeDownloadBtn);
+          } else if (this.activeDownloadBtn) {
+            this.activeDownloadBtn.disabled = false;
+            this.activeDownloadBtn.innerHTML = '<span>❌ Error al exportar</span>';
+          }
+          break;
         case 'MATCH_FINISHED':
           this.showView('phonePhaseShow');
+          if (msg.payload && Array.isArray(msg.payload.albums)) {
+            msg.payload.albums.forEach(a => this.addRevealedAlbum(a));
+          }
+          this.renderRevealedAlbumsList();
           break;
       }
     },
@@ -2062,10 +2387,101 @@
       }
     },
 
+    updateShowStateFromTv(payload) {
+      if (!payload) return;
+      this.updateShowVipControls();
+
+      const btnPrev = document.getElementById('btnPhoneVipPrevStep');
+      const btnNext = document.getElementById('btnPhoneVipNextStep');
+      const btnNextAlbum = document.getElementById('btnPhoneVipNextAlbum');
+
+      if (btnPrev) {
+        btnPrev.disabled = !payload.canGoBack;
+      }
+
+      if (payload.isComparisonVisible) {
+        if (btnNext) btnNext.classList.add('d-none');
+        if (btnNextAlbum) {
+          btnNextAlbum.classList.remove('d-none');
+          btnNextAlbum.disabled = (payload.albumIndex + 1 >= payload.totalAlbums);
+          if (payload.albumIndex + 1 >= payload.totalAlbums) {
+            btnNextAlbum.innerHTML = '<span>🏁 Fin del Show</span>';
+          } else {
+            btnNextAlbum.innerHTML = '<span>⏩ Siguiente Álbum</span>';
+          }
+        }
+      } else {
+        if (btnNext) {
+          btnNext.classList.remove('d-none');
+          btnNext.disabled = false;
+        }
+        if (btnNextAlbum) {
+          btnNextAlbum.classList.add('d-none');
+        }
+      }
+    },
+
     onAlbumCompleted(payload) {
-      const downloadWrap = document.getElementById('phoneDownloadWrap');
-      if (downloadWrap) {
-        downloadWrap.classList.remove('d-none');
+      if (!payload) return;
+      this.addRevealedAlbum({
+        albumIndex: payload.albumIndex,
+        authorName: payload.authorName || `Jugador ${payload.albumIndex + 1}`,
+        authorAvatar: payload.authorAvatar || '🦊'
+      });
+    },
+
+    addRevealedAlbum(albumInfo) {
+      if (!albumInfo || typeof albumInfo.albumIndex !== 'number') return;
+      const exists = this.revealedAlbums.some(a => a.albumIndex === albumInfo.albumIndex);
+      if (!exists) {
+        this.revealedAlbums.push(albumInfo);
+        this.revealedAlbums.sort((a, b) => a.albumIndex - b.albumIndex);
+      }
+      this.renderRevealedAlbumsList();
+    },
+
+    renderRevealedAlbumsList() {
+      const wrap = document.getElementById('phoneDownloadWrap');
+      const list = document.getElementById('phoneAlbumsDownloadList');
+      const badge = document.getElementById('phoneAlbumsCountBadge');
+      if (!wrap || !list) return;
+
+      if (this.revealedAlbums.length === 0) {
+        wrap.classList.add('d-none');
+        return;
+      }
+
+      wrap.classList.remove('d-none');
+      if (badge) badge.textContent = this.revealedAlbums.length;
+
+      list.innerHTML = '';
+      this.revealedAlbums.forEach(alb => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-download-album';
+        btn.dataset.albumIndex = alb.albumIndex;
+        btn.innerHTML = `
+          <span>📸 Tira de <strong>${alb.authorAvatar || '🦊'} ${alb.authorName || 'Álbum'}</strong></span>
+          <span class="small opacity-75">PNG ⬇️</span>
+        `;
+        btn.addEventListener('click', () => {
+          this.requestAlbumDownload(alb.albumIndex, btn);
+        });
+        list.appendChild(btn);
+      });
+    },
+
+    requestAlbumDownload(albumIndex, btn) {
+      if (this.conn && this.conn.open) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Generando imagen...</span>';
+        this.activeDownloadBtn = btn;
+        this.send({
+          type: 'REQUEST_ALBUM_EXPORT',
+          payload: { albumIndex }
+        });
+      } else {
+        alert('Conexión perdida con la TV. Intentando reconectar...');
       }
     },
 

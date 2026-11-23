@@ -240,6 +240,9 @@
 
           <!-- Acciones del Show en la TV -->
           <div class="tv-show-actions text-center mt-4" id="tvShowActions">
+            <button type="button" class="btn btn-outline-light btn-lg me-2 d-none" id="btnTvPrevShowStep">
+              <span>⬅️ Paso Anterior</span>
+            </button>
             <button type="button" class="btn-action-primary btn-lg" id="btnTvNextShowStep">
               <span>➡️ Revelar Siguiente Paso</span>
             </button>
@@ -541,20 +544,35 @@
 
           <!-- Controles de VIP -->
           <div id="phoneVipShowControls" class="d-none mt-4 p-3 rounded" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3);">
-            <div class="vip-badge-tag mb-2">👑 Control del Show</div>
-            <button type="button" class="btn-phone-submit mb-2" id="btnPhoneVipNextStep">
-              <span>➡️ Revelar Siguiente Paso</span>
-            </button>
-            <button type="button" class="btn btn-outline-warning w-100" id="btnPhoneVipNextAlbum">
+            <div class="vip-badge-tag mb-2">👑 Control del Show en la TV</div>
+            <div class="d-flex gap-2 mb-2">
+              <button type="button" class="btn btn-outline-light flex-fill" id="btnPhoneVipPrevStep" disabled>
+                <span>⬅️ Anterior</span>
+              </button>
+              <button type="button" class="btn-phone-submit flex-fill" id="btnPhoneVipNextStep">
+                <span>➡️ Siguiente</span>
+              </button>
+            </div>
+            <button type="button" class="btn btn-outline-warning w-100 d-none mb-2" id="btnPhoneVipNextAlbum">
               <span>⏩ Siguiente Álbum</span>
             </button>
+            <div class="d-flex gap-2 mt-2 pt-2 border-top border-secondary-subtle">
+              <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" id="btnPhoneScrollUp">
+                <span>🔼 Subir TV</span>
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" id="btnPhoneScrollDown">
+                <span>🔽 Bajar TV</span>
+              </button>
+            </div>
           </div>
 
-          <!-- Botón de Descarga de mi Álbum -->
-          <div class="mt-4" id="phoneDownloadWrap">
-            <button type="button" class="btn btn-outline-info btn-sm w-100" id="btnPhoneDownloadMyAlbum">
-              <span>📸 Descargar Tira de este Álbum (PNG)</span>
-            </button>
+          <!-- Botones de Descarga de Tiras Cómicas -->
+          <div class="mt-4 text-start d-none" id="phoneDownloadWrap">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="small fw-bold text-uppercase" style="color: var(--accent-yellow); letter-spacing: 1px;">📸 Descargar Tiras Cómicas</span>
+              <span class="badge bg-secondary small" id="phoneAlbumsCountBadge">0</span>
+            </div>
+            <div id="phoneAlbumsDownloadList" class="d-flex flex-column gap-2"></div>
           </div>
         </div>
       </div>
