@@ -931,14 +931,17 @@
 
         // Ubicación de reaparición: último Checkpoint capturado o su Muelle de Salida
         let targetX, targetY;
-        if (p.lastCheckpoint === 1) {
-          const cp = arena.checkpoints.find(c => c.id === 1);
-          targetX = cp.x; targetY = cp.y;
-        } else if (p.lastCheckpoint === 2) {
-          const cp = arena.checkpoints.find(c => c.id === 2);
-          targetX = cp.x; targetY = cp.y;
+        const cp1 = arena.checkpoints ? arena.checkpoints.find(c => c.id === 1) : null;
+        const cp2 = arena.checkpoints ? arena.checkpoints.find(c => c.id === 2) : null;
+        const spawnIdx = p.spawnIdx !== undefined ? p.spawnIdx : (p.spawnIndex !== undefined ? p.spawnIndex : 0);
+        const spawnsList = (arena && arena.spawns && arena.spawns.length > 0) ? arena.spawns : [{ x: 1, y: 7 }];
+        const spawn = spawnsList[spawnIdx % spawnsList.length] || spawnsList[0];
+
+        if (p.lastCheckpoint === 1 && cp1) {
+          targetX = cp1.x; targetY = cp1.y;
+        } else if (p.lastCheckpoint === 2 && cp2) {
+          targetX = cp2.x; targetY = cp2.y;
         } else {
-          const spawn = arena.spawns[p.spawnIdx % arena.spawns.length];
           targetX = spawn.x; targetY = spawn.y;
         }
 

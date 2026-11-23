@@ -407,11 +407,19 @@
       return `
         <svg viewBox="0 0 100 100" class="tile-svg tile-svg-checkpoint">
           <rect width="100" height="100" fill="#1f1807"/>
-          <rect x="8" y="8" width="84" height="84" rx="8" fill="#2d2208" stroke="#f59e0b" stroke-width="3"/>
-          <polygon points="50,15 80,35 50,55" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5"/>
-          <line x1="50" y1="15" x2="50" y2="85" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
-          <circle cx="50" cy="84" r="8" fill="#f59e0b"/>
-          <text x="50" y="70" font-family="'Outfit', sans-serif" font-size="28" font-weight="900" fill="#ffffff" text-anchor="middle">${num}</text>
+          <rect x="6" y="6" width="88" height="88" rx="8" fill="#2d2208" stroke="#f59e0b" stroke-width="3"/>
+          <!-- Mástil y bandera posicionados en la mitad superior izquierda -->
+          <line x1="24" y1="14" x2="24" y2="52" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="24" cy="14" r="3" fill="#fde68a"/>
+          <polygon points="24,16 62,28 24,40" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5"/>
+          <path d="M24 28 Q43 23 62 28" stroke="#fef3c7" stroke-width="1" fill="none"/>
+          <!-- Badge circular nítido con el número en la mitad inferior sin interferencia -->
+          <circle cx="58" cy="62" r="23" fill="#181307" stroke="#fbbf24" stroke-width="3"/>
+          <circle cx="58" cy="62" r="18" fill="#2d2208" stroke="#f59e0b" stroke-width="1.5"/>
+          <text x="58" y="71" font-family="'Outfit', sans-serif" font-size="26" font-weight="900" fill="#ffffff" text-anchor="middle">${num}</text>
+          <!-- Etiqueta CP decorativa -->
+          <rect x="14" y="66" width="22" height="14" rx="3" fill="#3b2b09" stroke="#f59e0b" stroke-width="1"/>
+          <text x="25" y="77" font-family="'Chakra Petch', sans-serif" font-size="9" font-weight="700" fill="#fbbf24" text-anchor="middle">CP</text>
         </svg>
       `;
     }
@@ -1100,8 +1108,12 @@
 
   function broadcastToPlayers(msg) {
     for (const conn of hostConnections.values()) {
-      if (conn && conn.open) {
-        conn.send(msg);
+      try {
+        if (conn && conn.open) {
+          conn.send(msg);
+        }
+      } catch (err) {
+        console.warn('Error al transmitir mensaje a peer:', err);
       }
     }
   }
@@ -1204,7 +1216,9 @@
 
     const arena = gameState.arena;
     gameState.players.forEach((p, idx) => {
-      const sp = arena.spawns[idx % arena.spawns.length];
+      const sp = (arena.spawns && arena.spawns.length > 0) ? arena.spawns[idx % arena.spawns.length] : { x: 1, y: 7 };
+      p.spawnIdx = idx;
+      p.spawnIndex = idx;
       p.x = sp.x;
       p.y = sp.y;
       p.facing = sp.facing !== undefined ? sp.facing : 0;
@@ -1580,11 +1594,11 @@
         // Recopilar cartas activas de este paso y ordenarlas por prioridad
         const stepCards = [];
         for (const p of gameState.players) {
-          if (p.alive && p.program[step]) {
+          if (p.alive && p.program && p.program[step]) {
             stepCards.push({ player: p, card: p.program[step] });
           }
         }
-        stepCards.sort((a, b) => b.card.priority - a.card.priority);
+        stepCards.sort((a, b) => (b.card ? b.card.priority : 0) - (a.card ? a.card.priority : 0));
 
         renderTvStepCardsQueue(stepCards);
 
@@ -1598,26 +1612,40 @@
         await delay(900 * speedMult);
 
         // Ejecutar motor determinista y obtener stream de eventos atómicos
-        const stepRes = ROBO_ENGINE.executeStep(gameState, step);
+        let stepRes = null;
+        try {
+          stepRes = ROBO_ENGINE.executeStep(gameState, step);
+        } catch (engineErr) {
+          console.error('Error al ejecutar ROBO_ENGINE.executeStep:', engineErr);
+        }
 
-        // Reproducir eventos atómicos en secuencia
+        // Reproducir eventos atómicos en secuencia con blindaje individual
         if (stepRes && Array.isArray(stepRes.timeline)) {
           for (const ev of stepRes.timeline) {
-            await playTimelineEvent(ev);
+            try {
+              await playTimelineEvent(ev);
+            } catch (evErr) {
+              console.error('Error al reproducir evento timeline:', ev ? ev.type : 'unknown', evErr);
+              await delay(100);
+            }
           }
         }
 
         // Notificar a los celulares sobre sus estadísticas actuales
         for (const p of gameState.players) {
           const conn = hostConnections.get(p.id);
-          if (conn && conn.open) {
-            conn.send({
-              type: 'LIVE_STATUS_UPDATE',
-              playerId: p.id,
-              hp: p.hp,
-              alive: p.alive,
-              lastCheckpoint: p.lastCheckpoint
-            });
+          try {
+            if (conn && conn.open) {
+              conn.send({
+                type: 'LIVE_STATUS_UPDATE',
+                playerId: p.id,
+                hp: p.hp,
+                alive: p.alive,
+                lastCheckpoint: p.lastCheckpoint
+              });
+            }
+          } catch (connErr) {
+            console.warn('Error al enviar LIVE_STATUS_UPDATE:', connErr);
           }
         }
 
@@ -1634,7 +1662,11 @@
       // Fin de los 4 pasos: preparar siguiente ronda
       setSpotlight('FIN DE RONDA', 'Reparando chasis en talleres y reapareciendo robots destruidos...');
       await delay(1200);
-      ROBO_ENGINE.finishRoundAndRespawn(gameState);
+      try {
+        ROBO_ENGINE.finishRoundAndRespawn(gameState);
+      } catch (respawnErr) {
+        console.error('Error al finalizar ronda en motor:', respawnErr);
+      }
       isExecuting = false;
       startNewRound();
     } catch (err) {
@@ -1643,8 +1675,17 @@
       setSpotlight('⚠️ ERROR DE ANIMACIÓN', 'Ocurrió un error inesperado al animar la ronda. Reanudando combate...');
       showFloatingFx(5, 4, '⚠️ ERROR DE ANIMACIÓN', 'damage');
       await delay(2000);
-      ROBO_ENGINE.finishRoundAndRespawn(gameState);
+      try {
+        ROBO_ENGINE.finishRoundAndRespawn(gameState);
+      } catch (e) {
+        console.error('Error en fallback finishRoundAndRespawn:', e);
+      }
+      isExecuting = false;
       startNewRound();
+    } finally {
+      if (gameState.phase !== 'executing') {
+        isExecuting = false;
+      }
     }
   }
 
@@ -1654,200 +1695,207 @@
     const isSlow = gameState.executionSpeed === 'slow';
     const mult = isSlow ? 1.6 : 1.0;
 
-    switch (ev.type) {
-      case 'SUBPHASE': {
-        highlightSubphasePill(ev.phase);
-        const subphaseNames = {
-          cards: { title: 'FASE 1: ÓRDENES', desc: 'Los robots ejecutan sus cartas por orden de prioridad...' },
-          conveyors: { title: 'FASE 2: CINTAS', desc: 'Las cintas industriales mueven a los robots...' },
-          gears: { title: 'FASE 3: ENGRANAJES', desc: 'Los engranajes rotan a los robots sobre ellos...' },
-          lasers: { title: 'FASE 4: LÁSERES', desc: 'Disparos de torretas tácticas y cañones de robots...' },
-          objectives: { title: 'FASE 5: METAS', desc: 'Registro de checkpoints y talleres de reparación...' }
-        };
-        const info = subphaseNames[ev.phase] || { title: ev.title || 'SUB-FASE', desc: ev.subtitle || '' };
-        setSpotlight(info.title, info.desc);
-        await delay(350 * mult);
-        break;
-      }
-
-      case 'CARD_START': {
-        highlightQueueCard(ev.playerId);
-        const pName = ev.playerName || (ev.player ? ev.player.name : 'Piloto');
-        const cIcon = ev.card ? ev.card.icon : '⚡';
-        const cName = ev.card ? ev.card.name : 'Orden';
-        const cPrio = ev.card ? ev.card.priority : 0;
-        setSpotlight(
-          `ORDEN [${cPrio}]`,
-          `<strong>${pName}</strong> ejecuta <span>${cIcon} ${cName}</span>`
-        );
-        broadcastToPlayers({
-          type: 'PLAYER_CARD_EXECUTING',
-          playerId: ev.playerId,
-          card: ev.card
-        });
-        await delay(450 * mult);
-        break;
-      }
-
-      case 'MOVE': {
-        const moves = Array.isArray(ev.moves) && ev.moves.length > 0
-          ? ev.moves
-          : (ev.toX !== undefined ? [{ id: ev.playerId, toX: ev.toX, toY: ev.toY }] : []);
-
-        for (const m of moves) {
-          const vis = visualRobots.get(m.id);
-          if (vis) {
-            vis.x = m.toX;
-            vis.y = m.toY;
-          }
-          const token = document.getElementById(`robot_token_${m.id}`);
-          if (token) {
-            token.style.left = `${m.toX * 10}%`;
-            token.style.top = `${m.toY * 12.5}%`;
-          }
+    try {
+      switch (ev.type) {
+        case 'SUBPHASE': {
+          highlightSubphasePill(ev.phase);
+          const subphaseNames = {
+            cards: { title: 'FASE 1: ÓRDENES', desc: 'Los robots ejecutan sus cartas por orden de prioridad...' },
+            conveyors: { title: 'FASE 2: CINTAS', desc: 'Las cintas industriales mueven a los robots...' },
+            gears: { title: 'FASE 3: ENGRANAJES', desc: 'Los engranajes rotan a los robots sobre ellos...' },
+            lasers: { title: 'FASE 4: LÁSERES', desc: 'Disparos de torretas tácticas y cañones de robots...' },
+            objectives: { title: 'FASE 5: METAS', desc: 'Registro de checkpoints y talleres de reparación...' }
+          };
+          const info = subphaseNames[ev.phase] || { title: ev.title || 'SUB-FASE', desc: ev.subtitle || '' };
+          setSpotlight(info.title, info.desc);
+          await delay(350 * mult);
+          break;
         }
-        playRobotMove();
-        await delay(420 * mult);
-        break;
-      }
 
-      case 'BUMP': {
-        playBump();
-        const vis = visualRobots.get(ev.playerId);
-        const token = document.getElementById(`robot_token_${ev.playerId}`);
-        if (token) {
-          token.classList.add('is-bumping');
-          setTimeout(() => token.classList.remove('is-bumping'), 300);
+        case 'CARD_START': {
+          highlightQueueCard(ev.playerId);
+          const pName = ev.playerName || (ev.player ? ev.player.name : 'Piloto');
+          const cIcon = ev.card ? ev.card.icon : '⚡';
+          const cName = ev.card ? ev.card.name : 'Orden';
+          const cPrio = ev.card ? ev.card.priority : 0;
+          setSpotlight(
+            `ORDEN [${cPrio}]`,
+            `<strong>${pName}</strong> ejecuta <span>${cIcon} ${cName}</span>`
+          );
+          broadcastToPlayers({
+            type: 'PLAYER_CARD_EXECUTING',
+            playerId: ev.playerId,
+            card: ev.card
+          });
+          await delay(450 * mult);
+          break;
         }
-        const bx = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
-        const by = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
-        const label = ev.blockedBy === 'turret' ? '🚨 TORRETA' : (ev.blockedBy === 'wall' ? '🧱 MURO' : '🛡️ BLOQUEADO');
-        showFloatingFx(bx, by, label, 'shield');
-        await delay(320 * mult);
-        break;
-      }
 
-      case 'TURN': {
-        const vis = visualRobots.get(ev.playerId);
-        if (vis) {
-          const delta = ev.deltaAngle !== undefined
-            ? ev.deltaAngle
-            : (ev.turnType === 'ccw' ? -90 : (ev.turnType === 'uturn' ? 180 : 90));
-          vis.visualAngleDeg += delta;
-          if (ev.newFacing !== undefined) vis.facing = ev.newFacing;
+        case 'MOVE': {
+          const moves = Array.isArray(ev.moves) && ev.moves.length > 0
+            ? ev.moves
+            : (ev.toX !== undefined ? [{ id: ev.playerId, toX: ev.toX, toY: ev.toY }] : []);
 
+          for (const m of moves) {
+            if (!m || !m.id) continue;
+            const vis = visualRobots.get(m.id);
+            if (vis) {
+              vis.x = m.toX;
+              vis.y = m.toY;
+            }
+            const token = document.getElementById(`robot_token_${m.id}`);
+            if (token) {
+              token.style.left = `${m.toX * 10}%`;
+              token.style.top = `${m.toY * 12.5}%`;
+            }
+          }
+          playRobotMove();
+          await delay(420 * mult);
+          break;
+        }
+
+        case 'BUMP': {
+          playBump();
+          const vis = visualRobots.get(ev.playerId);
           const token = document.getElementById(`robot_token_${ev.playerId}`);
           if (token) {
-            const chassis = token.querySelector('.robot-chassis');
-            if (chassis) chassis.style.transform = `rotate(${vis.visualAngleDeg}deg)`;
+            token.classList.add('is-bumping');
+            setTimeout(() => token.classList.remove('is-bumping'), 300);
           }
+          const bx = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
+          const by = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
+          const label = ev.blockedBy === 'turret' ? '🚨 TORRETA' : (ev.blockedBy === 'wall' ? '🧱 MURO' : '🛡️ BLOQUEADO');
+          showFloatingFx(bx, by, label, 'shield');
+          await delay(320 * mult);
+          break;
         }
-        playRobotMove();
-        await delay(360 * mult);
-        break;
-      }
 
-      case 'PIT_FALL': {
-        playExplosion();
-        const vis = visualRobots.get(ev.playerId);
-        const token = document.getElementById(`robot_token_${ev.playerId}`);
-        if (token) {
-          token.classList.add('is-falling');
-        }
-        const px = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
-        const py = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
-        showFloatingFx(px, py, '💥 ¡AL ABISMO!', 'damage');
-        await delay(550 * mult);
-        break;
-      }
+        case 'TURN': {
+          const vis = visualRobots.get(ev.playerId);
+          if (vis) {
+            const delta = ev.deltaAngle !== undefined
+              ? ev.deltaAngle
+              : (ev.turnType === 'ccw' ? -90 : (ev.turnType === 'uturn' ? 180 : 90));
+            vis.visualAngleDeg += delta;
+            if (ev.newFacing !== undefined) vis.facing = ev.newFacing;
 
-      case 'LASER': {
-        const strokeColor = ev.color || (ev.sourceType === 'turret' ? '#ef4444' : '#38bdf8');
-        drawLaserBeam(ev.fromX, ev.fromY, ev.toX, ev.toY, strokeColor);
-        playLaser();
-
-        const hitId = ev.hitRobotId || ev.hitPlayerId;
-        if (hitId) {
-          const hitToken = document.getElementById(`robot_token_${hitId}`);
-          if (hitToken) {
-            hitToken.classList.add('is-hit');
-            setTimeout(() => hitToken.classList.remove('is-hit'), 350);
+            const token = document.getElementById(`robot_token_${ev.playerId}`);
+            if (token) {
+              const chassis = token.querySelector('.robot-chassis');
+              if (chassis) chassis.style.transform = `rotate(${vis.visualAngleDeg}deg)`;
+            }
           }
+          playRobotMove();
+          await delay(360 * mult);
+          break;
+        }
 
-          const hx = ev.hitX !== undefined ? ev.hitX : ev.toX;
-          const hy = ev.hitY !== undefined ? ev.hitY : ev.toY;
+        case 'PIT_FALL': {
+          playExplosion();
+          const vis = visualRobots.get(ev.playerId);
+          const token = document.getElementById(`robot_token_${ev.playerId}`);
+          if (token) {
+            token.classList.add('is-falling');
+          }
+          const px = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
+          const py = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
+          showFloatingFx(px, py, '💥 ¡AL ABISMO!', 'damage');
+          await delay(550 * mult);
+          break;
+        }
 
-          if (ev.shieldBlocked || ev.shieldAbsorbed) {
-            playShield();
-            showFloatingFx(hx, hy, '🛡️ ESCUDO', 'shield');
+        case 'LASER': {
+          const strokeColor = ev.color || (ev.sourceType === 'turret' ? '#ef4444' : '#38bdf8');
+          drawLaserBeam(ev.fromX, ev.fromY, ev.toX, ev.toY, strokeColor);
+          playLaser();
+
+          const hitId = ev.hitRobotId || ev.hitPlayerId;
+          if (hitId) {
+            const hitToken = document.getElementById(`robot_token_${hitId}`);
+            if (hitToken) {
+              hitToken.classList.add('is-hit');
+              setTimeout(() => hitToken.classList.remove('is-hit'), 350);
+            }
+
+            const hx = ev.hitX !== undefined ? ev.hitX : ev.toX;
+            const hy = ev.hitY !== undefined ? ev.hitY : ev.toY;
+
+            if (ev.shieldBlocked || ev.shieldAbsorbed) {
+              playShield();
+              showFloatingFx(hx, hy, '🛡️ ESCUDO', 'shield');
+            } else {
+              const dmg = ev.damage !== undefined ? ev.damage : 1;
+              showFloatingFx(hx, hy, `-${dmg} HP`, 'damage');
+            }
+          }
+          renderTvPilotsGrid();
+          await delay(500 * mult);
+          break;
+        }
+
+        case 'DESTROYED': {
+          playExplosion();
+          const vis = visualRobots.get(ev.playerId);
+          const token = document.getElementById(`robot_token_${ev.playerId}`);
+          if (token) {
+            token.classList.add('is-dead');
+          }
+          const dx = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
+          const dy = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
+          showFloatingFx(dx, dy, '💥 DESTRUIDO', 'damage');
+          renderTvPilotsGrid();
+          await delay(500 * mult);
+          break;
+        }
+
+        case 'SHIELD_REPAIR': {
+          playShield();
+          const p = gameState.players.find(pl => pl.id === ev.playerId);
+          const sx = ev.x !== undefined ? ev.x : (p ? p.x : 5);
+          const sy = ev.y !== undefined ? ev.y : (p ? p.y : 4);
+          if (ev.healed) {
+            showFloatingFx(sx, sy, '+1 HP', 'heal');
           } else {
-            const dmg = ev.damage !== undefined ? ev.damage : 1;
-            showFloatingFx(hx, hy, `-${dmg} HP`, 'damage');
+            showFloatingFx(sx, sy, '🛡️ ESCUDO', 'shield');
           }
+          const token = document.getElementById(`robot_token_${ev.playerId}`);
+          const shield = token ? token.querySelector('.robot-shield-bubble') : null;
+          if (shield) {
+            shield.className = 'robot-shield-bubble is-active';
+          }
+          renderTvPilotsGrid();
+          await delay(350 * mult);
+          break;
         }
-        renderTvPilotsGrid();
-        await delay(500 * mult);
-        break;
-      }
 
-      case 'DESTROYED': {
-        playExplosion();
-        const vis = visualRobots.get(ev.playerId);
-        const token = document.getElementById(`robot_token_${ev.playerId}`);
-        if (token) {
-          token.classList.add('is-dead');
+        case 'CHECKPOINT': {
+          playCheckpoint();
+          const cpNum = ev.cpId !== undefined ? ev.cpId : (ev.checkpointNumber || 1);
+          showFloatingFx(ev.x, ev.y, `🚩 CHECKPOINT ${cpNum}`, 'checkpoint');
+          renderTvPilotsGrid();
+          await delay(650 * mult);
+          break;
         }
-        const dx = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
-        const dy = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
-        showFloatingFx(dx, dy, '💥 DESTRUIDO', 'damage');
-        renderTvPilotsGrid();
-        await delay(500 * mult);
-        break;
-      }
 
-      case 'SHIELD_REPAIR': {
-        playShield();
-        const p = gameState.players.find(pl => pl.id === ev.playerId);
-        const sx = ev.x !== undefined ? ev.x : (p ? p.x : 5);
-        const sy = ev.y !== undefined ? ev.y : (p ? p.y : 4);
-        if (ev.healed) {
-          showFloatingFx(sx, sy, '+1 HP', 'heal');
-        } else {
-          showFloatingFx(sx, sy, '🛡️ ESCUDO', 'shield');
+        case 'REPAIR_TILE': {
+          playShield();
+          showFloatingFx(ev.x, ev.y, '🔧 +1 HP', 'heal');
+          renderTvPilotsGrid();
+          await delay(350 * mult);
+          break;
         }
-        const token = document.getElementById(`robot_token_${ev.playerId}`);
-        const shield = token ? token.querySelector('.robot-shield-bubble') : null;
-        if (shield) {
-          shield.className = 'robot-shield-bubble is-active';
+
+        case 'WINNER': {
+          const w = ev.winner || ev.player || {};
+          setSpotlight('🏆 ¡VICTORIA!', `<strong>${w.name || 'Un piloto'}</strong> ha capturado los 3 Checkpoints.`);
+          break;
         }
-        renderTvPilotsGrid();
-        await delay(350 * mult);
-        break;
       }
-
-      case 'CHECKPOINT': {
-        playCheckpoint();
-        const cpNum = ev.cpId !== undefined ? ev.cpId : (ev.checkpointNumber || 1);
-        showFloatingFx(ev.x, ev.y, `🚩 CHECKPOINT ${cpNum}`, 'checkpoint');
-        renderTvPilotsGrid();
-        await delay(650 * mult);
-        break;
-      }
-
-      case 'REPAIR_TILE': {
-        playShield();
-        showFloatingFx(ev.x, ev.y, '🔧 +1 HP', 'heal');
-        renderTvPilotsGrid();
-        await delay(350 * mult);
-        break;
-      }
-
-      case 'WINNER': {
-        const w = ev.winner || ev.player || {};
-        setSpotlight('🏆 ¡VICTORIA!', `<strong>${w.name || 'Un piloto'}</strong> ha capturado los 3 Checkpoints.`);
-        break;
-      }
+    } catch (eventErr) {
+      console.error('Error no fatal durante playTimelineEvent:', ev ? ev.type : 'desconocido', eventErr);
+      await delay(100);
     }
+  }
   }
 
   function showPodiumScreen(winner) {
