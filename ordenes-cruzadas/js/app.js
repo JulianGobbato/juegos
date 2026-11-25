@@ -298,19 +298,22 @@
     }
     if (tile.startsWith('conveyor_')) {
       const dir = tile.split('_')[1]; // N, E, S, W
-      const rot = dir === 'N' ? 0 : dir === 'E' ? 90 : dir === 'S' ? 180 : 270;
       return `
-        <svg viewBox="0 0 100 100" class="tile-svg tile-svg-conveyor">
-          <rect width="100" height="100" fill="#0b1329"/>
-          <rect x="4" y="4" width="92" height="92" fill="none" stroke="rgba(56, 189, 248, 0.28)" stroke-width="2" rx="4"/>
-          <g transform="rotate(${rot} 50 50)">
-            <g class="chev-anim">
-              <path d="M50 16 L76 38 L66 44 L50 30 L34 44 L24 38 Z" fill="#00e5ff" opacity="0.95"/>
-              <path d="M50 42 L76 64 L66 70 L50 56 L34 70 L24 64 Z" fill="#00e5ff" opacity="0.7"/>
-              <path d="M50 68 L76 90 L66 96 L50 82 L34 96 L24 90 Z" fill="#00e5ff" opacity="0.45"/>
-            </g>
-          </g>
-        </svg>
+        <div class="conveyor-tile">
+          <div class="conveyor-frame">
+            <div class="conveyor-viewport conveyor-dir-${dir}">
+              <svg viewBox="0 0 100 100" class="conveyor-svg" aria-hidden="true">
+                <g class="conveyor-track">
+                  <path d="M-28 26 L-13 50 L-28 74 L-18 74 L-3 50 L-18 26 Z" fill="#00e5ff"/>
+                  <path d="M0 26 L15 50 L0 74 L10 74 L25 50 L10 26 Z" fill="#00e5ff"/>
+                  <path d="M28 26 L43 50 L28 74 L38 74 L53 50 L38 26 Z" fill="#00e5ff"/>
+                  <path d="M56 26 L71 50 L56 74 L66 74 L81 50 L66 26 Z" fill="#00e5ff"/>
+                  <path d="M84 26 L99 50 L84 74 L94 74 L109 50 L94 26 Z" fill="#00e5ff"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
       `;
     }
     if (tile.startsWith('gear_')) {

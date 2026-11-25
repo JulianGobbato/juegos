@@ -687,14 +687,56 @@ body {
   display: block;
 }
 
-@keyframes conveyorArrowFlow {
-  0% { transform: translateY(5px); opacity: 0.4; }
-  50% { opacity: 1; }
-  100% { transform: translateY(-5px); opacity: 0.4; }
+/* Cintas transportadoras con bucle infinito continuo sin blink */
+.conveyor-tile {
+  width: 100%;
+  height: 100%;
+  padding: 5%;
+  background: #0b1329;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.tile-svg-conveyor .chev-anim {
-  animation: conveyorArrowFlow 1.2s infinite ease-in-out;
+.conveyor-frame {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  border: 2px solid rgba(56, 189, 248, 0.35);
+  background: rgba(14, 165, 233, 0.08);
+  box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.14);
+  overflow: hidden;
+  position: relative;
+}
+
+.conveyor-viewport {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 20%, #000 80%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 20%, #000 80%, transparent 100%);
+}
+
+.conveyor-dir-N { transform: rotate(-90deg); }
+.conveyor-dir-E { transform: rotate(0deg); }
+.conveyor-dir-S { transform: rotate(90deg); }
+.conveyor-dir-W { transform: rotate(180deg); }
+
+.conveyor-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@keyframes conveyorFlow {
+  from { transform: translateX(0px); }
+  to   { transform: translateX(28px); }
+}
+
+.conveyor-track {
+  animation: conveyorFlow 1.1s linear infinite;
+  will-change: transform;
 }
 
 /* CAPAS SUPERPUESTAS EN EL TABLERO */
@@ -2194,7 +2236,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tile-svg-conveyor .chev-anim,
+  .conveyor-track,
   .podium-trophy,
   .laser-beam,
   .floating-fx,
