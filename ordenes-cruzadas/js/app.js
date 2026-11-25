@@ -1,6 +1,6 @@
 /**
  * Órdenes Cruzadas - Aplicación Principal y Control de Red PeerJS
- * Versión 2.1 - Blindaje total de configuración (TV + Celular VIP) y motor de ejecución determinista
+ * Arquitectura modular: Host TV (Arena Panorámica + Motor Timeline) y Celulares (Control VIP + Programación)
  */
 
 (function () {
@@ -13,37 +13,45 @@
   let soundEnabled = true;
 
   function initAudio() {
-    if (!audioCtx) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        audioCtx = new AudioContext();
+    try {
+      if (!audioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          audioCtx = new AudioCtx();
+        }
       }
-    }
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
-    }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+    } catch (e) {}
   }
 
-  function playTone(freq, type, duration, gainStart = 0.25, gainEnd = 0.001) {
+  function playTone(freq, type, duration, gainStart = 0.25, gainEnd = 0.005, freqEnd = null) {
     if (!soundEnabled) return;
     initAudio();
     if (!audioCtx) return;
 
     try {
+      const now = audioCtx.currentTime;
+      const safeStart = Math.max(0.001, gainStart);
+      const safeEnd = Math.max(0.001, gainEnd);
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
 
       osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(freq, now);
+      if (freqEnd !== null && freqEnd > 0) {
+        osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
+      }
 
-      gain.gain.setValueAtTime(gainStart, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(gainEnd, audioCtx.currentTime + duration);
+      gain.gain.setValueAtTime(safeStart, now);
+      gain.gain.exponentialRampToValueAtTime(safeEnd, now + duration);
 
       osc.connect(gain);
       gain.connect(audioCtx.destination);
 
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+      osc.start(now);
+      osc.stop(now + duration);
     } catch (e) {}
   }
 
@@ -58,104 +66,36 @@
   }
 
   function playRobotMove() {
-    playTone(280, 'sawtooth', 0.09, 0.14, 0.01);
+    playTone(280, 'sawtooth', 0.09, 0.12, 0.01);
   }
 
   function playBump() {
-    if (!soundEnabled) return;
-    initAudio();
-    if (!audioCtx) return;
-    try {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.14);
-      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.14);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.14);
-    } catch (e) {}
+    playTone(140, 'triangle', 0.14, 0.3, 0.01, 40);
   }
 
   function playShield() {
-    if (!soundEnabled) return;
-    initAudio();
-    if (!audioCtx) return;
-    try {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.2);
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.2);
-    } catch (e) {}
+    playTone(587, 'sine', 0.2, 0.2, 0.01, 880);
   }
 
   function playLaser() {
-    if (!soundEnabled) return;
-    initAudio();
-    if (!audioCtx) return;
-    try {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(950, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(140, audioCtx.currentTime + 0.22);
-
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.22);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.22);
-    } catch (e) {}
+    playTone(950, 'sawtooth', 0.22, 0.25, 0.01, 140);
   }
 
   function playExplosion() {
-    if (!soundEnabled) return;
-    initAudio();
-    if (!audioCtx) return;
-    try {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(160, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.5);
-
-      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.5);
-    } catch (e) {}
+    playTone(160, 'triangle', 0.45, 0.35, 0.01, 30);
   }
 
   function playCheckpoint() {
     const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((freq, i) => {
-      setTimeout(() => playTone(freq, 'sine', 0.25, 0.25, 0.01), i * 90);
+      setTimeout(() => playTone(freq, 'sine', 0.25, 0.22, 0.01), i * 90);
     });
   }
 
   function playVictory() {
     const notes = [392, 523.25, 659.25, 783.99, 1046.5];
     notes.forEach((freq, i) => {
-      setTimeout(() => playTone(freq, 'square', 0.35, 0.2, 0.01), i * 140);
+      setTimeout(() => playTone(freq, 'square', 0.35, 0.18, 0.01), i * 140);
     });
   }
 
@@ -172,30 +112,37 @@
     { id: 'orange', hex: '#f97316', name: 'Naranja Fuego' }
   ];
 
+  const DIR_DELTAS = [
+    { dx: 0, dy: -1, bumpClass: 'bump-north' },
+    { dx: 1, dy: 0,  bumpClass: 'bump-east' },
+    { dx: 0, dy: 1,  bumpClass: 'bump-south' },
+    { dx: -1, dy: 0, bumpClass: 'bump-west' }
+  ];
+
   // ==========================================================================
   // 3. ESTADO GLOBAL
   // ==========================================================================
   let peer = null;
   let isTvMode = false;
-  let isPhoneMode = false;
   let currentRoomCode = '';
   let peerResilienceHost = null;
   let peerResilienceClient = null;
 
   // Host state
-  let hostConnections = new Map(); // playerId -> dataConnection
+  const hostConnections = new Map(); // playerId -> DataConnection
   let gameState = null;
   let timerInterval = null;
   let remainingTimerSecs = 0;
-  let isExecuting = false; // Bandera de guardia anti-concurrencia
-  let visualRobots = new Map(); // playerId -> { x, y, facing, visualAngleDeg, hp, alive, shieldActive, lastCheckpoint }
+  let isExecuting = false;
+  const visualRobots = new Map(); // playerId -> { x, y, facing, visualAngleDeg, hp, alive, shieldActive, lastCheckpoint }
 
   // Phone state
   let myPlayerId = '';
   let myPlayerName = '';
   let myPlayerColor = ROBOT_COLORS[0].hex;
-  let myPlayerAvatar = '🤖';
+  const myPlayerAvatar = '🤖';
   let myPhoneConn = null;
+  let isConnectingHost = false;
   let myHandCards = [];
   let myProgramSlots = [null, null, null, null];
   let myLockedSlots = [false, false, false, false];
@@ -203,7 +150,7 @@
   let isVipPlayer = false;
 
   // ==========================================================================
-  // 4. ELEMENTOS DEL DOM
+  // 4. REFERENCIAS DEL DOM (100% VERIFICADAS CONTRA index.html)
   // ==========================================================================
   const dom = {
     // Header
@@ -239,7 +186,7 @@
     tvPlayerCount: document.getElementById('tvPlayerCount'),
     tvPlayersList: document.getElementById('tvPlayersList'),
 
-    // TV Arena (Panoramic layout)
+    // TV Arena
     tvViewArena: document.getElementById('tvViewArena'),
     tvBoardWrap: document.getElementById('tvBoardWrap'),
     tvBoardGrid: document.getElementById('tvBoardGrid'),
@@ -275,6 +222,7 @@
     // Phone Views
     phoneViewJoin: document.getElementById('phoneViewJoin'),
     phoneJoinAlert: document.getElementById('phoneJoinAlert'),
+    formPhoneJoin: document.getElementById('formPhoneJoin'),
     inputPhoneRoom: document.getElementById('inputPhoneRoom'),
     inputPhoneName: document.getElementById('inputPhoneName'),
     phoneColorPalette: document.getElementById('phoneColorPalette'),
@@ -320,7 +268,7 @@
   };
 
   // ==========================================================================
-  // 5. GENERADORES SVG NÍTITOS (TABLERO Y ROBOTS)
+  // 5. GENERADORES SVG NÍTIDOS (TABLERO Y ROBOTS)
   // ==========================================================================
   function getTileSvg(tile) {
     if (tile === 'wall') {
@@ -341,10 +289,10 @@
       return `
         <svg viewBox="0 0 100 100" class="tile-svg tile-svg-pit">
           <rect width="100" height="100" fill="#030408"/>
-          <rect x="4" y="4" width="92" height="92" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="8 6" opacity="0.6"/>
+          <rect x="4" y="4" width="92" height="92" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="8 6" opacity="0.65"/>
           <circle cx="50" cy="50" r="38" fill="#000" stroke="#ea580c" stroke-width="3"/>
-          <circle cx="50" cy="50" r="26" fill="#0a0502" opacity="0.8"/>
-          <circle cx="50" cy="50" r="14" fill="#000"/>
+          <circle cx="50" cy="50" r="25" fill="#180804" stroke="#dc2626" stroke-width="1.5" opacity="0.85"/>
+          <circle cx="50" cy="50" r="13" fill="#000"/>
         </svg>
       `;
     }
@@ -354,23 +302,28 @@
       return `
         <svg viewBox="0 0 100 100" class="tile-svg tile-svg-conveyor">
           <rect width="100" height="100" fill="#0b1329"/>
+          <rect x="4" y="4" width="92" height="92" fill="none" stroke="rgba(56, 189, 248, 0.28)" stroke-width="2" rx="4"/>
           <g transform="rotate(${rot} 50 50)">
-            <path d="M50 16 L76 38 L66 44 L50 30 L34 44 L24 38 Z" fill="#00e5ff" opacity="0.95"/>
-            <path d="M50 42 L76 64 L66 70 L50 56 L34 70 L24 64 Z" fill="#00e5ff" opacity="0.7"/>
-            <path d="M50 68 L76 90 L66 96 L50 82 L34 96 L24 90 Z" fill="#00e5ff" opacity="0.45"/>
+            <g class="chev-anim">
+              <path d="M50 16 L76 38 L66 44 L50 30 L34 44 L24 38 Z" fill="#00e5ff" opacity="0.95"/>
+              <path d="M50 42 L76 64 L66 70 L50 56 L34 70 L24 64 Z" fill="#00e5ff" opacity="0.7"/>
+              <path d="M50 68 L76 90 L66 96 L50 82 L34 96 L24 90 Z" fill="#00e5ff" opacity="0.45"/>
+            </g>
           </g>
         </svg>
       `;
     }
     if (tile.startsWith('gear_')) {
       const isCcw = tile === 'gear_ccw';
+      const ringColor = isCcw ? '#a855f7' : '#10b981';
+      const innerStroke = isCcw ? '#c084fc' : '#34d399';
       return `
-        <svg viewBox="0 0 100 100" class="tile-svg tile-svg-gear ${isCcw ? 'gear-ccw' : 'gear-cw'}">
+        <svg viewBox="0 0 100 100" class="tile-svg tile-svg-gear">
           <rect width="100" height="100" fill="#131024"/>
-          <circle cx="50" cy="50" r="36" fill="none" stroke="#a855f7" stroke-width="4" stroke-dasharray="10 8"/>
-          <circle cx="50" cy="50" r="24" fill="#1e1838" stroke="#c084fc" stroke-width="2"/>
+          <circle cx="50" cy="50" r="36" fill="none" stroke="${ringColor}" stroke-width="4" stroke-dasharray="10 8"/>
+          <circle cx="50" cy="50" r="24" fill="#1e1838" stroke="${innerStroke}" stroke-width="2"/>
           <circle cx="50" cy="50" r="10" fill="#0b0816"/>
-          <text x="50" y="55" font-size="18" font-weight="bold" fill="#f3e8ff" text-anchor="middle" dominant-baseline="middle">${isCcw ? '↺' : '↻'}</text>
+          <text x="50" y="54" font-size="22" font-weight="bold" fill="#f3e8ff" text-anchor="middle" dominant-baseline="middle">${isCcw ? '↺' : '↻'}</text>
         </svg>
       `;
     }
@@ -380,9 +333,10 @@
       return `
         <svg viewBox="0 0 100 100" class="tile-svg tile-svg-turret">
           <rect width="100" height="100" fill="#181014"/>
+          <rect x="4" y="4" width="92" height="92" fill="none" stroke="#ef4444" stroke-width="2" rx="6"/>
           <g transform="rotate(${rot} 50 50)">
-            <circle cx="50" cy="50" r="36" fill="#2d151c" stroke="#ef4444" stroke-width="3"/>
-            <circle cx="50" cy="50" r="22" fill="#451119" stroke="#f87171" stroke-width="2"/>
+            <circle cx="50" cy="50" r="34" fill="#2d151c" stroke="#ef4444" stroke-width="3"/>
+            <circle cx="50" cy="50" r="21" fill="#451119" stroke="#f87171" stroke-width="2"/>
             <rect x="44" y="8" width="12" height="30" rx="3" fill="#ef4444" stroke="#ffffff" stroke-width="1.5"/>
             <circle cx="50" cy="8" r="4" fill="#ffffff"/>
             <circle cx="50" cy="50" r="8" fill="#ef4444"/>
@@ -395,10 +349,10 @@
         <svg viewBox="0 0 100 100" class="tile-svg tile-svg-repair">
           <rect width="100" height="100" fill="#071b16"/>
           <rect x="10" y="10" width="80" height="80" rx="10" fill="#0c2d25" stroke="#10b981" stroke-width="2"/>
-          <rect x="42" y="24" width="16" height="52" rx="4" fill="#10b981"/>
-          <rect x="24" y="42" width="52" height="16" rx="4" fill="#10b981"/>
-          <circle cx="50" cy="50" r="6" fill="#ecfdf5"/>
-          <text x="50" y="84" font-size="12" font-weight="bold" fill="#34d399" text-anchor="middle">+1 HP</text>
+          <rect x="42" y="20" width="16" height="48" rx="4" fill="#10b981"/>
+          <rect x="26" y="36" width="48" height="16" rx="4" fill="#10b981"/>
+          <circle cx="50" cy="44" r="5" fill="#ecfdf5"/>
+          <text x="50" y="83" font-family="'Chakra Petch', monospace" font-size="13" font-weight="bold" fill="#34d399" text-anchor="middle">+1 HP</text>
         </svg>
       `;
     }
@@ -408,18 +362,15 @@
         <svg viewBox="0 0 100 100" class="tile-svg tile-svg-checkpoint">
           <rect width="100" height="100" fill="#1f1807"/>
           <rect x="6" y="6" width="88" height="88" rx="8" fill="#2d2208" stroke="#f59e0b" stroke-width="3"/>
-          <!-- Mástil y bandera posicionados en la mitad superior izquierda -->
           <line x1="24" y1="14" x2="24" y2="52" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round"/>
           <circle cx="24" cy="14" r="3" fill="#fde68a"/>
           <polygon points="24,16 62,28 24,40" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5"/>
           <path d="M24 28 Q43 23 62 28" stroke="#fef3c7" stroke-width="1" fill="none"/>
-          <!-- Badge circular nítido con el número en la mitad inferior sin interferencia -->
           <circle cx="58" cy="62" r="23" fill="#181307" stroke="#fbbf24" stroke-width="3"/>
           <circle cx="58" cy="62" r="18" fill="#2d2208" stroke="#f59e0b" stroke-width="1.5"/>
           <text x="58" y="71" font-family="'Outfit', sans-serif" font-size="26" font-weight="900" fill="#ffffff" text-anchor="middle">${num}</text>
-          <!-- Etiqueta CP decorativa -->
           <rect x="14" y="66" width="22" height="14" rx="3" fill="#3b2b09" stroke="#f59e0b" stroke-width="1"/>
-          <text x="25" y="77" font-family="'Chakra Petch', sans-serif" font-size="9" font-weight="700" fill="#fbbf24" text-anchor="middle">CP</text>
+          <text x="25" y="77" font-family="'Chakra Petch', monospace" font-size="9" font-weight="700" fill="#fbbf24" text-anchor="middle">CP</text>
         </svg>
       `;
     }
@@ -430,11 +381,10 @@
           <rect width="100" height="100" fill="#0d1424"/>
           <circle cx="50" cy="50" r="38" fill="#13203b" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 4"/>
           <circle cx="50" cy="50" r="24" fill="#0b1322" stroke="#0284c7" stroke-width="1.5"/>
-          <text x="50" y="58" font-family="'Chakra Petch', sans-serif" font-size="24" font-weight="700" fill="#38bdf8" text-anchor="middle">S${num}</text>
+          <text x="50" y="58" font-family="'Chakra Petch', monospace" font-size="24" font-weight="700" fill="#38bdf8" text-anchor="middle">S${num}</text>
         </svg>
       `;
     }
-    // Suelo estándar
     return `
       <svg viewBox="0 0 100 100" class="tile-svg tile-svg-floor">
         <rect width="100" height="100" fill="#0c101c"/>
@@ -447,7 +397,7 @@
     `;
   }
 
-  function getRobotChassisSvg(color, initials) {
+  function getRobotChassisSvg(color, initials = '') {
     return `
       <svg viewBox="0 0 100 100" class="robot-chassis-svg">
         <ellipse cx="50" cy="54" rx="40" ry="40" fill="rgba(0,0,0,0.5)"/>
@@ -463,15 +413,25 @@
         <rect x="45" y="4" width="10" height="24" rx="3" fill="#ffffff" stroke="${color}" stroke-width="2"/>
         <circle cx="50" cy="5" r="3.5" fill="#ef4444"/>
         <circle cx="50" cy="50" r="20" fill="#0a0f1d" stroke="#ffffff" stroke-width="2"/>
-        <text x="50" y="56" font-family="'Outfit', sans-serif" font-size="14" font-weight="900" fill="#ffffff" text-anchor="middle">${initials}</text>
+        ${initials ? `<text x="50" y="56" font-family="'Outfit', sans-serif" font-size="14" font-weight="900" fill="#ffffff" text-anchor="middle">${escapeHtml(initials)}</text>` : ''}
         <polygon points="50,23 44,30 56,30" fill="#ffffff"/>
       </svg>
     `;
   }
 
   // ==========================================================================
-  // 6. UTILIDADES GENERALES
+  // 6. UTILIDADES GENERALES Y SEGURIDAD DE RED
   // ==========================================================================
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
   function generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let res = '';
@@ -481,22 +441,62 @@
     return res;
   }
 
-  function limpiarConexionPrevia() {
-    if (peer && !peer.destroyed) {
-      try {
-        peer.destroy();
-      } catch (e) {}
-      peer = null;
+  function safeSend(conn, msg) {
+    if (!conn || !conn.open) return false;
+    try {
+      conn.send(msg);
+      return true;
+    } catch (err) {
+      console.warn('Error al enviar paquete WebRTC:', err);
+      return false;
     }
   }
 
+  function broadcastToPlayers(msg) {
+    for (const conn of hostConnections.values()) {
+      safeSend(conn, msg);
+    }
+  }
+
+  function clearProgrammingTimer() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }
+
+  function destroyPeerInstance() {
+    clearProgrammingTimer();
+    if (peerResilienceHost) {
+      peerResilienceHost.stopSleepMonitor();
+    }
+    if (peerResilienceClient) {
+      peerResilienceClient.stop();
+    }
+    for (const conn of hostConnections.values()) {
+      try { conn.close(); } catch (e) {}
+    }
+    hostConnections.clear();
+
+    if (myPhoneConn) {
+      try { myPhoneConn.close(); } catch (e) {}
+      myPhoneConn = null;
+    }
+    isConnectingHost = false;
+
+    if (peer && !peer.destroyed) {
+      try { peer.destroy(); } catch (e) {}
+    }
+    peer = null;
+  }
+
   function updateRoomHeader(code) {
-    currentRoomCode = code;
-    if (code) {
-      if (dom.headerRoomCode) dom.headerRoomCode.textContent = code;
-      if (dom.roomBadgeWrap) dom.roomBadgeWrap.classList.remove('d-none');
+    currentRoomCode = code || '';
+    if (currentRoomCode) {
+      if (dom.headerRoomCode) dom.headerRoomCode.textContent = currentRoomCode;
+      dom.roomBadgeWrap?.classList.remove('d-none');
     } else {
-      if (dom.roomBadgeWrap) dom.roomBadgeWrap.classList.add('d-none');
+      dom.roomBadgeWrap?.classList.add('d-none');
     }
   }
 
@@ -507,24 +507,36 @@
       '▼ Mirando ABAJO (Sur)',
       '◀ Mirando IZQUIERDA (Oeste)'
     ];
-    return list[facing] || list[0];
+    return list[((facing % 4) + 4) % 4] || list[0];
   }
 
   function renderHearts(hp, max = 5) {
+    const safeHp = Math.max(0, Math.min(max, hp || 0));
     let s = '';
     for (let i = 0; i < max; i++) {
-      s += i < hp ? '❤️' : '🖤';
+      s += i < safeHp ? '❤️' : '🖤';
     }
     return s;
   }
 
-  function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  function renderMiniHpPipsHtml(hp, max = 5) {
+    const safeHp = Math.max(0, Math.min(max, hp || 0));
+    const isLow = safeHp <= 2;
+    let html = '';
+    for (let i = 0; i < max; i++) {
+      const activeClass = i < safeHp ? `active ${isLow ? 'low' : ''}` : '';
+      html += `<span class="hp-pip ${activeClass}"></span>`;
+    }
+    return html;
   }
 
-  function setSpotlight(badge, text) {
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, Math.max(0, ms)));
+  }
+
+  function setSpotlight(badge, htmlText) {
     if (dom.tvSpotlightBadge) dom.tvSpotlightBadge.textContent = badge;
-    if (dom.tvSpotlightText) dom.tvSpotlightText.innerHTML = text;
+    if (dom.tvSpotlightText) dom.tvSpotlightText.innerHTML = htmlText;
   }
 
   function showFloatingFx(gridX, gridY, text, type = 'info') {
@@ -543,12 +555,18 @@
     }, 950);
   }
 
-  function drawLaserBeam(fromX, fromY, toX, toY, color = '#ef4444') {
+  function drawLaserBeam(fromX, fromY, toX, toY, color = '#ef4444', shooterFacing = null) {
     if (!dom.tvLaserSvg) return;
     const fx = fromX * 100 + 50;
     const fy = fromY * 100 + 50;
-    const tx = toX * 100 + 50;
-    const ty = toY * 100 + 50;
+    let tx = toX * 100 + 50;
+    let ty = toY * 100 + 50;
+
+    // Si disparó a quemarropa contra borde del tablero, extender visualmente hasta el límite de la celda
+    if (fx === tx && fy === ty && shooterFacing !== null && DIR_DELTAS[shooterFacing]) {
+      tx += DIR_DELTAS[shooterFacing].dx * 42;
+      ty += DIR_DELTAS[shooterFacing].dy * 42;
+    }
 
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', fx);
@@ -562,11 +580,11 @@
 
     setTimeout(() => {
       if (line.parentNode) line.parentNode.removeChild(line);
-    }, 500);
+    }, 480);
   }
 
   // ==========================================================================
-  // 7. INICIALIZACIÓN Y DETECCIÓN DE URL
+  // 7. INICIALIZACIÓN Y EVENTOS UI
   // ==========================================================================
   function init() {
     setupUniversalHeader();
@@ -582,7 +600,7 @@
     if (roomParam) {
       sessionStorage.setItem('oc_room_code', roomParam);
       switchToScreen('phone');
-      dom.inputPhoneRoom.value = roomParam;
+      if (dom.inputPhoneRoom) dom.inputPhoneRoom.value = roomParam;
       showPhoneView('join');
     } else {
       switchToScreen('landing');
@@ -592,6 +610,7 @@
   function setupUniversalHeader() {
     dom.btnToggleSound?.addEventListener('click', () => {
       soundEnabled = !soundEnabled;
+      if (soundEnabled) initAudio();
       if (dom.soundIcon) dom.soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
     });
 
@@ -609,18 +628,19 @@
   }
 
   function setupRulesModal() {
+    const closeRules = () => dom.rulesModal?.classList.add('d-none');
+
     dom.btnToggleRules?.addEventListener('click', () => {
       dom.rulesModal?.classList.remove('d-none');
     });
-    dom.btnCloseRules?.addEventListener('click', () => {
-      dom.rulesModal?.classList.add('d-none');
-    });
-    dom.btnConfirmRules?.addEventListener('click', () => {
-      dom.rulesModal?.classList.add('d-none');
-    });
+    dom.btnCloseRules?.addEventListener('click', closeRules);
+    dom.btnConfirmRules?.addEventListener('click', closeRules);
     dom.rulesModal?.addEventListener('click', (e) => {
-      if (e.target === dom.rulesModal) {
-        dom.rulesModal.classList.add('d-none');
+      if (e.target === dom.rulesModal) closeRules();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && dom.rulesModal && !dom.rulesModal.classList.contains('d-none')) {
+        closeRules();
       }
     });
   }
@@ -634,6 +654,7 @@
       btn.className = `btn-color-choice ${idx === 0 ? 'is-selected' : ''}`;
       btn.style.backgroundColor = c.hex;
       btn.title = c.name;
+      btn.setAttribute('aria-label', c.name);
       btn.dataset.color = c.hex;
       btn.addEventListener('click', () => {
         document.querySelectorAll('.btn-color-choice').forEach(b => b.classList.remove('is-selected'));
@@ -646,8 +667,8 @@
 
   function setupVipConfigControls() {
     const sendConfig = () => {
-      if (!isVipPlayer || !myPhoneConn) return;
-      myPhoneConn.send({
+      if (!isVipPlayer || !myPhoneConn || !myPhoneConn.open) return;
+      safeSend(myPhoneConn, {
         type: 'VIP_UPDATE_CONFIG',
         playerId: myPlayerId,
         config: {
@@ -682,9 +703,8 @@
     dom.tvSelectTimer?.addEventListener('change', handleTvConfigChange);
     dom.tvSelectSpeed?.addEventListener('change', handleTvConfigChange);
 
-    // Botón de forzar ejecución inmediata desde la TV
     dom.btnTvForceExecute?.addEventListener('click', () => {
-      if (!isTvMode || gameState.phase !== 'programming') return;
+      if (!isTvMode || !gameState || gameState.phase !== 'programming' || isExecuting) return;
       forceSubmitPendingPlayers();
     });
   }
@@ -710,65 +730,74 @@
   function bindEvents() {
     // Selección en Landing
     dom.btnSelectTvMode?.addEventListener('click', () => {
+      initAudio();
       startTvMode();
     });
 
     dom.btnSelectPhoneMode?.addEventListener('click', (e) => {
-      if (e.target !== dom.inputManualRoomCode && e.target !== dom.btnManualJoinRoom) {
+      if (
+        e.target !== dom.inputManualRoomCode &&
+        !dom.btnManualJoinRoom?.contains(e.target)
+      ) {
+        initAudio();
         switchToScreen('phone');
         showPhoneView('join');
       }
     });
 
-    dom.btnManualJoinRoom?.addEventListener('click', () => {
-      const code = dom.inputManualRoomCode.value.trim().toUpperCase();
+    dom.btnManualJoinRoom?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      initAudio();
+      const code = (dom.inputManualRoomCode?.value || '').trim().toUpperCase();
       if (code.length === 4) {
         sessionStorage.setItem('oc_room_code', code);
-        dom.inputPhoneRoom.value = code;
+        if (dom.inputPhoneRoom) dom.inputPhoneRoom.value = code;
         switchToScreen('phone');
         showPhoneView('join');
       } else {
-        dom.inputManualRoomCode.focus();
+        dom.inputManualRoomCode?.focus();
       }
     });
 
     dom.inputManualRoomCode?.addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') dom.btnManualJoinRoom.click();
+      if (e.key === 'Enter') dom.btnManualJoinRoom?.click();
     });
 
-    // Formulario de ingreso Celular
-    dom.btnPhoneConnect?.addEventListener('click', handlePhoneConnect);
+    // Formulario de ingreso Celular (soporta click y tecla Enter / Ir)
+    dom.formPhoneJoin?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      initAudio();
+      handlePhoneConnect();
+    });
 
     // VIP Iniciar Partida
     dom.btnPhoneVipStart?.addEventListener('click', () => {
-      if (!isVipPlayer || !myPhoneConn) return;
-      const arenaId = dom.selectArenaMap?.value;
-      const damageRule = dom.selectDamageRule?.value;
-      const roundTimer = parseInt(dom.selectRoundTimer?.value || '45', 10);
-      const executionSpeed = dom.selectExecutionSpeed?.value;
-
-      myPhoneConn.send({
+      if (!isVipPlayer || !myPhoneConn || !myPhoneConn.open) return;
+      safeSend(myPhoneConn, {
         type: 'VIP_START_GAME',
         playerId: myPlayerId,
-        config: { arenaId, damageRule, roundTimer, executionSpeed }
+        config: {
+          arenaId: dom.selectArenaMap?.value,
+          damageRule: dom.selectDamageRule?.value,
+          roundTimer: parseInt(dom.selectRoundTimer?.value || '45', 10),
+          executionSpeed: dom.selectExecutionSpeed?.value
+        }
       });
     });
 
     // Host Iniciar Partida desde TV
     dom.btnTvStartGame?.addEventListener('click', () => {
-      if (!isTvMode) return;
+      if (!isTvMode || !gameState || gameState.players.length < 2) return;
       startHostGame();
     });
 
-    // Revancha / Fin de partida
+    // Revancha / Volver al Hangar
     dom.btnTvPlayAgain?.addEventListener('click', () => {
       resetGameForRematch();
     });
 
     dom.btnTvBackToLobby?.addEventListener('click', () => {
-      dom.tvViewPodium?.classList.add('d-none');
-      dom.tvViewArena?.classList.add('d-none');
-      dom.tvViewLobby?.classList.remove('d-none');
+      returnTvToLobby();
     });
 
     // Slots de Celular
@@ -809,14 +838,13 @@
   // ==========================================================================
   function ensureVipPlayer() {
     if (!gameState || !gameState.players || gameState.players.length === 0) return null;
-    let vip = gameState.players.find(p => p.isVip);
+    let vip = gameState.players.find(p => p.isVip && !p.isAsleep) || gameState.players.find(p => p.isVip);
     if (!vip) {
       vip = gameState.players.find(p => !p.isAsleep) || gameState.players[0];
       vip.isVip = true;
     }
-    // Asegurar único VIP
     gameState.players.forEach(p => {
-      if (p.id !== vip.id) p.isVip = false;
+      p.isVip = (p.id === vip.id);
     });
     return vip;
   }
@@ -828,7 +856,9 @@
       gameState.arena = ARENAS_DATA.ARENAS[config.arenaId];
     }
     if (config.damageRule) gameState.damageRule = config.damageRule;
-    if (typeof config.roundTimer === 'number') gameState.roundTimer = config.roundTimer;
+    if (typeof config.roundTimer === 'number' && !isNaN(config.roundTimer)) {
+      gameState.roundTimer = config.roundTimer;
+    }
     if (config.executionSpeed) gameState.executionSpeed = config.executionSpeed;
 
     updateTvConfigDisplay();
@@ -837,14 +867,19 @@
   function startTvMode() {
     isTvMode = true;
     switchToScreen('tv');
-    limpiarConexionPrevia();
+    destroyPeerInstance();
 
-    if (!peerResilienceHost && typeof PeerResilience !== 'undefined') {
+    if (typeof PeerResilience !== 'undefined') {
       peerResilienceHost = PeerResilience.createHost({
         onPlayerSleepChange: (playerId, isAsleep) => {
           const p = gameState && gameState.players.find(pl => pl.id === playerId);
           if (p) {
             p.isAsleep = isAsleep;
+            if (isAsleep && p.isVip && gameState.phase === 'lobby') {
+              ensureVipPlayer();
+              broadcastLobbyUpdate();
+              return;
+            }
             renderTvPlayersList();
             renderTvPilotsGrid();
           }
@@ -859,7 +894,7 @@
     if (dom.tvRoomCodeText) dom.tvRoomCodeText.textContent = room;
 
     // Generar QR
-    if (dom.tvLobbyQr) {
+    if (dom.tvLobbyQr && typeof QRCode !== 'undefined') {
       dom.tvLobbyQr.innerHTML = '';
       const joinUrl = `${window.location.origin}${window.location.pathname}?sala=${room}`;
       new QRCode(dom.tvLobbyQr, {
@@ -872,7 +907,15 @@
       });
     }
 
-    // Iniciar Peer Host
+    gameState = ROBO_ENGINE.createGameState({
+      arenaId: 'fabrica',
+      damageRule: 'tactical',
+      roundTimer: 45,
+      executionSpeed: 'normal',
+      phase: 'lobby',
+      players: []
+    });
+
     const fullPeerId = PEER_PREFIX + room;
     peer = new Peer(fullPeerId);
 
@@ -891,15 +934,6 @@
       }
     });
 
-    // Configuración inicial de juego
-    gameState = ROBO_ENGINE.createGameState({
-      arenaId: 'fabrica',
-      damageRule: 'tactical',
-      roundTimer: 45,
-      executionSpeed: 'normal',
-      players: []
-    });
-
     updateTvConfigDisplay();
     renderTvPlayersList();
   }
@@ -909,15 +943,24 @@
       if (!data || !data.type) return;
 
       const senderId = data.playerId || conn._playerId;
-      if (!conn._playerId && data.playerId) {
-        conn._playerId = data.playerId;
+      if (!conn._playerId && senderId) {
+        conn._playerId = senderId;
+      }
+
+      // Evitar procesar datos de una conexión zombi reemplazada
+      if (senderId && data.type !== 'PLAYER_JOIN') {
+        const activeConn = hostConnections.get(senderId);
+        if (activeConn && activeConn !== conn && activeConn.open) {
+          return;
+        }
+        if (peerResilienceHost && !peerResilienceHost.isConnectionActive(senderId, conn)) {
+          peerResilienceHost.registerPlayerConnection(senderId, conn);
+          hostConnections.set(senderId, conn);
+        }
       }
 
       if (senderId && peerResilienceHost) {
         if (peerResilienceHost.handleIncomingHostData(senderId, conn, data)) return;
-        if (data.type !== 'PLAYER_JOIN' && !peerResilienceHost.isConnectionActive(senderId, conn)) {
-          peerResilienceHost.registerPlayerConnection(senderId, conn);
-        }
       }
 
       handleHostDataReceived(conn, data);
@@ -925,7 +968,9 @@
 
     conn.on('close', () => {
       const pId = conn._playerId;
-      if (pId) {
+      if (!pId) return;
+      // Solo marcar dormido si ESTA conexión sigue siendo la activa
+      if (hostConnections.get(pId) === conn) {
         const p = gameState && gameState.players.find(pl => pl.id === pId);
         if (p) {
           p.isAsleep = true;
@@ -936,14 +981,51 @@
     });
   }
 
+  function buildFullSyncPayloadForPlayer(player) {
+    return {
+      phase: gameState.phase,
+      roundNumber: gameState.roundNumber,
+      currentStep: gameState.currentStep,
+      isVip: player.isVip,
+      playerId: player.id,
+      name: player.name,
+      color: player.color,
+      avatar: player.avatar,
+      hp: player.hp,
+      alive: player.alive,
+      facing: player.facing,
+      lastCheckpoint: player.lastCheckpoint,
+      hand: player.hand,
+      program: player.program,
+      lockedSlots: player.lockedSlots,
+      programLocked: player.programLocked,
+      yaEnvioEnEstaFase: Boolean(player.programLocked),
+      phaseKey: `${gameState.phase}_round_${gameState.roundNumber}`,
+      timer: gameState.roundTimer > 0 ? remainingTimerSecs : 0,
+      winner: gameState.winner ? {
+        id: gameState.winner.id,
+        name: gameState.winner.name,
+        color: gameState.winner.color
+      } : null,
+      config: {
+        arenaId: gameState.arenaId,
+        damageRule: gameState.damageRule,
+        roundTimer: gameState.roundTimer,
+        executionSpeed: gameState.executionSpeed
+      }
+    };
+  }
+
   function handleHostDataReceived(conn, data) {
-    if (!data || !data.type) return;
+    if (!data || !data.type || !gameState) return;
 
     const senderId = data.playerId || conn._playerId;
 
     if (data.type === 'PLAYER_JOIN') {
       const { playerId, name, color, avatar } = data;
+      if (!playerId) return;
       conn._playerId = playerId;
+
       if (peerResilienceHost) {
         peerResilienceHost.registerPlayerConnection(playerId, conn);
       }
@@ -952,10 +1034,14 @@
 
       if (player) {
         player.isAsleep = false;
+        if (gameState.phase === 'lobby') {
+          if (name) player.name = name;
+          if (color) player.color = color;
+        }
         ensureVipPlayer();
       } else {
         if (gameState.players.length >= 6) {
-          conn.send({ type: 'JOIN_REJECTED', reason: 'La arena está completa (máx 6 pilotos).' });
+          safeSend(conn, { type: 'JOIN_REJECTED', reason: 'La arena está completa (máx 6 pilotos).' });
           return;
         }
 
@@ -971,6 +1057,7 @@
           avatar: avatar || '🤖',
           isVip,
           spawnIdx,
+          spawnIndex: spawnIdx,
           x: spawn.x,
           y: spawn.y,
           facing: spawn.facing !== undefined ? spawn.facing : 0,
@@ -999,66 +1086,28 @@
 
       hostConnections.set(playerId, conn);
 
-      // Confirmar al jugador
-      conn.send({
+      safeSend(conn, {
         type: 'JOIN_ACCEPTED',
         roomCode: currentRoomCode,
-        player,
+        playerId: player.id,
+        name: player.name,
+        color: player.color,
         isVip: player.isVip,
         config: {
           arenaId: gameState.arenaId,
           damageRule: gameState.damageRule,
           roundTimer: gameState.roundTimer,
           executionSpeed: gameState.executionSpeed
-        },
-        gameState: getSanitizedGameStateForPlayer(player.id)
-      });
-
-      // Enviar sincronización completa
-      conn.send({
-        type: 'FULL_STATE_SYNC',
-        payload: {
-          phase: gameState.phase,
-          roundNumber: gameState.roundNumber,
-          isVip: player.isVip,
-          playerId: player.id,
-          name: player.name,
-          color: player.color,
-          avatar: player.avatar,
-          hp: player.hp,
-          facing: player.facing,
-          lastCheckpoint: player.lastCheckpoint,
-          hand: player.hand,
-          program: player.program,
-          lockedSlots: player.lockedSlots,
-          programLocked: player.programLocked,
-          yaEnvioEnEstaFase: Boolean(player.programLocked),
-          phaseKey: `${gameState.phase}_round_${gameState.roundNumber}`,
-          config: {
-            arenaId: gameState.arenaId,
-            damageRule: gameState.damageRule,
-            roundTimer: gameState.roundTimer,
-            executionSpeed: gameState.executionSpeed
-          }
         }
       });
 
-      if (gameState.phase === 'programming') {
-        conn.send({
-          type: 'ROUND_STARTED',
-          playerId: player.id,
-          roundNumber: gameState.roundNumber,
-          hand: player.hand,
-          program: player.program,
-          lockedSlots: player.lockedSlots,
-          hp: player.hp,
-          facing: player.facing,
-          lastCheckpoint: player.lastCheckpoint,
-          timer: gameState.roundTimer
-        });
-      }
+      safeSend(conn, {
+        type: 'FULL_STATE_SYNC',
+        payload: buildFullSyncPayloadForPlayer(player)
+      });
 
       broadcastLobbyUpdate();
+      return;
     }
 
     if (data.type === 'VIP_UPDATE_CONFIG') {
@@ -1068,52 +1117,43 @@
         applyConfigToGameState(data.config);
         broadcastLobbyUpdate();
       }
+      return;
     }
 
     if (data.type === 'VIP_START_GAME') {
       ensureVipPlayer();
       const player = gameState.players.find(p => p.id === senderId && p.isVip);
-      if (player && gameState.players.length >= 2) {
+      if (player && gameState.phase === 'lobby' && gameState.players.length >= 2) {
         if (data.config) {
           applyConfigToGameState(data.config);
         }
         startHostGame();
       }
+      return;
     }
 
     if (data.type === 'PLAYER_SUBMIT_PROGRAM') {
       const player = gameState.players.find(p => p.id === senderId);
-      if (player && gameState.phase === 'programming') {
+      if (player && gameState.phase === 'programming' && !isExecuting) {
         if (Array.isArray(data.program) && data.program.filter(Boolean).length === 4) {
           player.program = data.program;
           player.programLocked = true;
           playProgramLocked();
 
-          conn.send({ type: 'PROGRAM_ACCEPTED', locked: true, playerId: senderId });
+          safeSend(conn, { type: 'PROGRAM_ACCEPTED', locked: true, playerId: senderId });
           renderTvPilotsGrid();
           checkAllProgramsLocked();
         }
       }
+      return;
     }
 
     if (data.type === 'PLAYER_UNLOCK_PROGRAM') {
       const player = gameState.players.find(p => p.id === senderId);
-      if (player && gameState.phase === 'programming') {
+      if (player && gameState.phase === 'programming' && !isExecuting) {
         player.programLocked = false;
-        conn.send({ type: 'PROGRAM_ACCEPTED', locked: false, playerId: senderId });
+        safeSend(conn, { type: 'PROGRAM_ACCEPTED', locked: false, playerId: senderId });
         renderTvPilotsGrid();
-      }
-    }
-  }
-
-  function broadcastToPlayers(msg) {
-    for (const conn of hostConnections.values()) {
-      try {
-        if (conn && conn.open) {
-          conn.send(msg);
-        }
-      } catch (err) {
-        console.warn('Error al transmitir mensaje a peer:', err);
       }
     }
   }
@@ -1143,7 +1183,7 @@
     if (gameState.players.length >= 2) {
       dom.btnTvStartGame?.classList.remove('d-none');
       if (dom.tvLobbyStatusMsg) {
-        dom.tvLobbyStatusMsg.textContent = '¡Listos para combatir! El VIP puede iniciar desde su móvil o pueden pulsar el botón de abajo.';
+        dom.tvLobbyStatusMsg.textContent = '¡Listos para combatir! El VIP puede iniciar desde su celular o pueden pulsar el botón de abajo.';
       }
     } else {
       dom.btnTvStartGame?.classList.add('d-none');
@@ -1153,32 +1193,8 @@
     }
   }
 
-  function getSanitizedGameStateForPlayer(playerId) {
-    const p = gameState.players.find(pl => pl.id === playerId);
-    return {
-      roundNumber: gameState.roundNumber,
-      arenaId: gameState.arenaId,
-      arenaName: gameState.arena.name,
-      damageRule: gameState.damageRule,
-      executionSpeed: gameState.executionSpeed,
-      phase: gameState.phase,
-      currentStep: gameState.currentStep,
-      myPlayer: p ? {
-        id: p.id,
-        name: p.name,
-        color: p.color,
-        hp: p.hp,
-        facing: p.facing,
-        lastCheckpoint: p.lastCheckpoint,
-        hand: p.hand,
-        program: p.program,
-        lockedSlots: p.lockedSlots,
-        programLocked: p.programLocked
-      } : null
-    };
-  }
-
   function updateTvConfigDisplay() {
+    if (!gameState) return;
     if (dom.tvSelectArena) dom.tvSelectArena.value = gameState.arenaId;
     if (dom.tvSelectDamage) dom.tvSelectDamage.value = gameState.damageRule;
     if (dom.tvSelectTimer) dom.tvSelectTimer.value = String(gameState.roundTimer);
@@ -1186,7 +1202,7 @@
   }
 
   function renderTvPlayersList() {
-    if (!dom.tvPlayersList) return;
+    if (!dom.tvPlayersList || !gameState) return;
     if (dom.tvPlayerCount) dom.tvPlayerCount.textContent = gameState.players.length;
     dom.tvPlayersList.innerHTML = '';
 
@@ -1196,10 +1212,10 @@
       const initials = p.name ? p.name.substring(0, 3).toUpperCase() : 'BOT';
       card.innerHTML = `
         <div class="tv-player-avatar-circle" style="background-color: ${p.color};">
-          ${initials}
+          ${escapeHtml(initials)}
         </div>
         <div class="tv-player-info">
-          <div class="tv-player-name">${p.name} ${p.isVip ? '👑' : ''} ${p.isAsleep ? '💤' : ''}</div>
+          <div class="tv-player-name">${escapeHtml(p.name)} ${p.isVip ? '👑' : ''} ${p.isAsleep ? '💤' : ''}</div>
           <div class="tv-player-status">${p.isAsleep ? 'En pausa (pantalla bloqueada)' : (p.isVip ? '👑 Piloto VIP (Configura la partida)' : 'Chasis listo para combate')}</div>
         </div>
       `;
@@ -1212,11 +1228,15 @@
   // ==========================================================================
   function startHostGame() {
     dom.tvViewLobby?.classList.add('d-none');
+    dom.tvViewPodium?.classList.add('d-none');
     dom.tvViewArena?.classList.remove('d-none');
+
+    gameState.roundNumber = 1;
+    gameState.winner = null;
 
     const arena = gameState.arena;
     gameState.players.forEach((p, idx) => {
-      const sp = (arena.spawns && arena.spawns.length > 0) ? arena.spawns[idx % arena.spawns.length] : { x: 1, y: 7 };
+      const sp = (arena.spawns && arena.spawns.length > 0) ? arena.spawns[idx % arena.spawns.length] : { x: 1, y: 7, facing: 0 };
       p.spawnIdx = idx;
       p.spawnIndex = idx;
       p.x = sp.x;
@@ -1228,12 +1248,52 @@
       p.lastCheckpoint = 0;
       p.programLocked = false;
       p.program = [null, null, null, null];
+      p.lockedSlots = [false, false, false, false];
+      p.stats = { lasersHit: 0, timesDestroyed: 0, checkpointsReached: 0, damageDealt: 0 };
     });
 
     renderTvBoardGrid();
     renderTurretSights();
     initOrUpdateVisualRobots(true);
     startNewRound();
+  }
+
+  function resetGameForRematch() {
+    clearProgrammingTimer();
+    isExecuting = false;
+    startHostGame();
+  }
+
+  function returnTvToLobby() {
+    clearProgrammingTimer();
+    isExecuting = false;
+    gameState.phase = 'lobby';
+    gameState.roundNumber = 1;
+    gameState.currentStep = 0;
+    gameState.winner = null;
+
+    gameState.players.forEach(p => {
+      p.hp = 5;
+      p.alive = true;
+      p.shieldActive = false;
+      p.lastCheckpoint = 0;
+      p.hand = [];
+      p.program = [null, null, null, null];
+      p.lockedSlots = [false, false, false, false];
+      p.programLocked = false;
+    });
+
+    dom.tvViewPodium?.classList.add('d-none');
+    dom.tvViewArena?.classList.add('d-none');
+    dom.tvViewLobby?.classList.remove('d-none');
+
+    broadcastLobbyUpdate();
+    for (const p of gameState.players) {
+      safeSend(hostConnections.get(p.id), {
+        type: 'FULL_STATE_SYNC',
+        payload: buildFullSyncPayloadForPlayer(p)
+      });
+    }
   }
 
   function renderTvBoardGrid() {
@@ -1283,26 +1343,28 @@
             const targetTile = grid[cy][cx];
             stopX = cx;
             stopY = cy;
-            if (ARENAS_DATA.isSolidObstacle(targetTile)) {
-              break;
-            }
+            if (ARENAS_DATA.isSolidObstacle(targetTile)) break;
           }
 
-          const x1 = x * 100 + 50;
-          const y1 = y * 100 + 50;
-          const x2 = stopX * 100 + 50;
-          const y2 = stopY * 100 + 50;
-
           const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          line.setAttribute('x1', x1);
-          line.setAttribute('y1', y1);
-          line.setAttribute('x2', x2);
-          line.setAttribute('y2', y2);
+          line.setAttribute('x1', x * 100 + 50);
+          line.setAttribute('y1', y * 100 + 50);
+          line.setAttribute('x2', stopX * 100 + 50);
+          line.setAttribute('y2', stopY * 100 + 50);
           line.setAttribute('class', 'turret-sight-line');
           dom.tvTurretSightsSvg.appendChild(line);
         }
       }
     }
+  }
+
+  function computeShortestTargetAngle(currentDeg, targetFacing) {
+    const normalizedCur = ((currentDeg % 360) + 360) % 360;
+    const targetDeg = (((targetFacing % 4) + 4) % 4) * 90;
+    let delta = targetDeg - normalizedCur;
+    if (delta > 180) delta -= 360;
+    if (delta <= -180) delta += 360;
+    return currentDeg + delta;
   }
 
   function initOrUpdateVisualRobots(forceRecreate = false) {
@@ -1330,6 +1392,7 @@
       } else {
         vis.x = p.x;
         vis.y = p.y;
+        vis.visualAngleDeg = computeShortestTargetAngle(vis.visualAngleDeg, p.facing);
         vis.facing = p.facing;
         vis.hp = p.hp;
         vis.alive = p.alive;
@@ -1337,7 +1400,9 @@
         vis.lastCheckpoint = p.lastCheckpoint;
       }
 
+      const initials = p.name ? p.name.substring(0, 3).toUpperCase() : 'BOT';
       let token = document.getElementById(`robot_token_${p.id}`);
+
       if (!token) {
         token = document.createElement('div');
         token.className = `robot-token ${!p.alive ? 'is-dead' : ''}`;
@@ -1345,19 +1410,22 @@
         token.style.left = `${vis.x * 10}%`;
         token.style.top = `${vis.y * 12.5}%`;
 
-        const initials = p.name ? p.name.substring(0, 3).toUpperCase() : 'BOT';
-
         token.innerHTML = `
           <div class="robot-chassis" style="transform: rotate(${vis.visualAngleDeg}deg);">
             ${getRobotChassisSvg(p.color, initials)}
           </div>
           <div class="robot-shield-bubble ${p.shieldActive ? 'is-active' : ''}"></div>
+          <div class="robot-status-tag">
+            <span class="robot-mini-name">${escapeHtml(p.name)}</span>
+            <div class="robot-mini-hp-bar">${renderMiniHpPipsHtml(p.hp, p.maxHp)}</div>
+          </div>
         `;
         dom.tvRobotsLayer.appendChild(token);
       } else {
         token.className = `robot-token ${!p.alive ? 'is-dead' : ''}`;
         token.style.left = `${vis.x * 10}%`;
         token.style.top = `${vis.y * 12.5}%`;
+
         const chassis = token.querySelector('.robot-chassis');
         if (chassis) {
           chassis.style.transform = `rotate(${vis.visualAngleDeg}deg)`;
@@ -1366,8 +1434,34 @@
         if (shield) {
           shield.className = `robot-shield-bubble ${p.shieldActive ? 'is-active' : ''}`;
         }
+        const hpBar = token.querySelector('.robot-mini-hp-bar');
+        if (hpBar) {
+          hpBar.innerHTML = renderMiniHpPipsHtml(p.hp, p.maxHp);
+        }
       }
     });
+  }
+
+  function snapshotVisualRobots() {
+    initOrUpdateVisualRobots(false);
+  }
+
+  function updateRobotTokenStatusDom(playerId, newHp, alive, shieldActive) {
+    const token = document.getElementById(`robot_token_${playerId}`);
+    if (!token) return;
+    if (alive === false) {
+      token.classList.add('is-dead');
+    } else if (alive === true) {
+      token.classList.remove('is-dead', 'is-falling');
+    }
+    const hpBar = token.querySelector('.robot-mini-hp-bar');
+    if (hpBar && typeof newHp === 'number') {
+      hpBar.innerHTML = renderMiniHpPipsHtml(newHp, 5);
+    }
+    const shield = token.querySelector('.robot-shield-bubble');
+    if (shield && typeof shieldActive === 'boolean') {
+      shield.className = `robot-shield-bubble ${shieldActive ? 'is-active' : ''}`;
+    }
   }
 
   function startNewRound() {
@@ -1375,10 +1469,8 @@
     gameState.phase = 'programming';
     gameState.currentStep = 0;
 
-    // Repartir cartas
     ROBO_ENGINE.dealRoundCards(gameState);
 
-    // Ajustar vista de comando TV
     if (dom.tvCmdRoundBadge) dom.tvCmdRoundBadge.textContent = `RONDA ${gameState.roundNumber}`;
     if (dom.tvCmdMapName) dom.tvCmdMapName.textContent = gameState.arena.name;
     dom.tvCmdTimerWrap?.classList.remove('d-none');
@@ -1390,58 +1482,57 @@
     renderTvPilotsGrid();
     initOrUpdateVisualRobots(false);
 
-    // Notificar a cada móvil con su mano
     for (const p of gameState.players) {
       const conn = hostConnections.get(p.id);
-      if (conn && conn.open) {
-        conn.send({
-          type: 'ROUND_STARTED',
-          playerId: p.id,
-          roundNumber: gameState.roundNumber,
-          hand: p.hand,
-          program: p.program,
-          lockedSlots: p.lockedSlots,
-          hp: p.hp,
-          facing: p.facing,
-          lastCheckpoint: p.lastCheckpoint,
-          timer: gameState.roundTimer
-        });
-      }
+      safeSend(conn, {
+        type: 'ROUND_STARTED',
+        playerId: p.id,
+        roundNumber: gameState.roundNumber,
+        hand: p.hand,
+        program: p.program,
+        lockedSlots: p.lockedSlots,
+        hp: p.hp,
+        facing: p.facing,
+        lastCheckpoint: p.lastCheckpoint,
+        timer: gameState.roundTimer
+      });
     }
 
     startProgrammingTimer();
   }
 
   function startProgrammingTimer() {
-    if (timerInterval) clearInterval(timerInterval);
+    clearProgrammingTimer();
+    dom.tvCmdTimerWrap?.classList.remove('d-none');
 
     if (gameState.roundTimer <= 0) {
-      dom.tvCmdTimerWrap?.classList.add('d-none');
+      remainingTimerSecs = 0;
+      if (dom.tvCmdTimerSecs) dom.tvCmdTimerSecs.textContent = '♾️';
       return;
     }
 
-    dom.tvCmdTimerWrap?.classList.remove('d-none');
     remainingTimerSecs = gameState.roundTimer;
     if (dom.tvCmdTimerSecs) dom.tvCmdTimerSecs.textContent = `${remainingTimerSecs}s`;
 
     timerInterval = setInterval(() => {
       remainingTimerSecs--;
-      if (dom.tvCmdTimerSecs) dom.tvCmdTimerSecs.textContent = `${remainingTimerSecs}s`;
+      if (dom.tvCmdTimerSecs) dom.tvCmdTimerSecs.textContent = `${Math.max(0, remainingTimerSecs)}s`;
 
       broadcastToPlayers({
         type: 'TIMER_TICK',
-        seconds: remainingTimerSecs
+        seconds: Math.max(0, remainingTimerSecs)
       });
 
       if (remainingTimerSecs <= 0) {
-        clearInterval(timerInterval);
-        timerInterval = null;
+        clearProgrammingTimer();
         forceSubmitPendingPlayers();
       }
     }, 1000);
   }
 
   function forceSubmitPendingPlayers() {
+    if (!gameState || gameState.phase !== 'programming' || isExecuting) return;
+
     for (const p of gameState.players) {
       if (p.alive && !p.programLocked) {
         const placedIds = new Set(p.program.filter(Boolean).map(c => c.id));
@@ -1455,13 +1546,11 @@
         p.programLocked = true;
 
         const conn = hostConnections.get(p.id);
-        if (conn && conn.open) {
-          conn.send({
-            type: 'FORCE_SUBMIT_CONFIRMED',
-            playerId: p.id,
-            program: p.program
-          });
-        }
+        safeSend(conn, {
+          type: 'FORCE_SUBMIT_CONFIRMED',
+          playerId: p.id,
+          program: p.program
+        });
       }
     }
     renderTvPilotsGrid();
@@ -1469,24 +1558,20 @@
   }
 
   function checkAllProgramsLocked() {
-    if (gameState.phase !== 'programming') return;
-    if (isExecuting) return;
+    if (!gameState || gameState.phase !== 'programming' || isExecuting) return;
 
     const alivePlayers = gameState.players.filter(p => p.alive);
     const allLocked = alivePlayers.length > 0 && alivePlayers.every(p => p.programLocked);
 
     if (allLocked) {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
+      clearProgrammingTimer();
       isExecuting = true;
       runExecutionPhase();
     }
   }
 
   function renderTvPilotsGrid() {
-    if (!dom.tvCmdPilotsGrid) return;
+    if (!dom.tvCmdPilotsGrid || !gameState) return;
     dom.tvCmdPilotsGrid.innerHTML = '';
 
     gameState.players.forEach(p => {
@@ -1495,7 +1580,7 @@
       card.id = `pilot_card_${p.id}`;
       card.style.borderLeftColor = p.color;
 
-      const hearts = renderHearts(p.hp);
+      const hearts = renderHearts(p.hp, p.maxHp);
       const statusText = !p.alive
         ? '💀 DESTRUIDO'
         : p.isAsleep
@@ -1508,13 +1593,15 @@
 
       card.innerHTML = `
         <div class="cmd-pilot-avatar" style="background-color: ${p.color};">
-          ${initials}
+          ${escapeHtml(initials)}
         </div>
         <div class="cmd-pilot-details">
-          <div class="cmd-pilot-name" style="color: ${p.color};">
-            ${p.name} ${p.isVip ? '👑' : ''} ${p.isAsleep ? '💤' : ''}
+          <div class="cmd-pilot-top-row">
+            <div class="cmd-pilot-name" style="color: ${p.color};">
+              ${escapeHtml(p.name)} ${p.isVip ? '👑' : ''} ${p.isAsleep ? '💤' : ''}
+            </div>
+            <div class="cmd-pilot-hp">${hearts}</div>
           </div>
-          <div class="cmd-pilot-hp">${hearts}</div>
           <div class="cmd-pilot-meta">
             <span class="cmd-pilot-status">${statusText}</span>
             <span class="cmd-pilot-cp">🚩 ${p.lastCheckpoint}/3</span>
@@ -1535,8 +1622,8 @@
       cardEl.id = `queue_card_${item.player.id}`;
       cardEl.style.borderLeftColor = item.player.color;
       cardEl.innerHTML = `
-        <div class="q-card-pilot" style="color: ${item.player.color};">${item.player.name}</div>
-        <div class="q-card-name">${item.card.icon} ${item.card.name}</div>
+        <div class="q-card-pilot" style="color: ${item.player.color};">${escapeHtml(item.player.name)}</div>
+        <div class="q-card-name">${item.card.icon} ${escapeHtml(item.card.name)}</div>
         <div class="q-card-prio">[${item.card.priority}]</div>
       `;
       dom.tvCmdQueueCardsList.appendChild(cardEl);
@@ -1544,20 +1631,22 @@
   }
 
   function highlightQueueCard(playerId) {
-    document.querySelectorAll('.cmd-card-queue-item').forEach(el => el.classList.remove('is-active'));
+    document.querySelectorAll('.cmd-card-queue-item').forEach(el => {
+      if (el.classList.contains('is-active')) {
+        el.classList.remove('is-active');
+        el.classList.add('is-done');
+      }
+    });
     const target = document.getElementById(`queue_card_${playerId}`);
     if (target) {
+      target.classList.remove('is-done');
       target.classList.add('is-active');
     }
   }
 
   function highlightSubphasePill(phase) {
     document.querySelectorAll('.subphase-pill').forEach(pill => {
-      if (pill.dataset.phase === phase) {
-        pill.classList.add('is-active');
-      } else {
-        pill.classList.remove('is-active');
-      }
+      pill.classList.toggle('is-active', pill.dataset.phase === phase);
     });
   }
 
@@ -1574,7 +1663,7 @@
   }
 
   // ==========================================================================
-  // 10. REPRODUCTOR DE TIMELINE ATÓMICO (FASE DE EJECUCIÓN CON BLINDAJE TRY/CATCH)
+  // 10. REPRODUCTOR DE TIMELINE ATÓMICO (FASE DE EJECUCIÓN CON BLINDAJE)
   // ==========================================================================
   async function runExecutionPhase() {
     isExecuting = true;
@@ -1586,12 +1675,13 @@
 
     broadcastToPlayers({ type: 'EXECUTION_STARTED' });
 
+    const speedMult = gameState.executionSpeed === 'slow' ? 1.6 : 1.0;
+
     try {
       for (let step = 0; step < 4; step++) {
         gameState.currentStep = step;
         updateStepProgress(step);
 
-        // Recopilar cartas activas de este paso y ordenarlas por prioridad
         const stepCards = [];
         for (const p of gameState.players) {
           if (p.alive && p.program && p.program[step]) {
@@ -1601,17 +1691,14 @@
         stepCards.sort((a, b) => (b.card ? b.card.priority : 0) - (a.card ? a.card.priority : 0));
 
         renderTvStepCardsQueue(stepCards);
-
-        broadcastToPlayers({
-          type: 'STEP_START',
-          stepIndex: step + 1
-        });
+        broadcastToPlayers({ type: 'STEP_START', stepIndex: step + 1 });
 
         setSpotlight(`PASO ${step + 1} DE 4`, `Iniciando resolución del paso... ${stepCards.length} órdenes en cola.`);
-        const speedMult = gameState.executionSpeed === 'slow' ? 1.6 : 1.0;
-        await delay(900 * speedMult);
+        await delay(650 * speedMult);
 
-        // Ejecutar motor determinista y obtener stream de eventos atómicos
+        // Guardar snapshot visual ANTES de mutar estado en el motor determinista
+        snapshotVisualRobots();
+
         let stepRes = null;
         try {
           stepRes = ROBO_ENGINE.executeStep(gameState, step);
@@ -1619,49 +1706,34 @@
           console.error('Error al ejecutar ROBO_ENGINE.executeStep:', engineErr);
         }
 
-        // Reproducir eventos atómicos en secuencia con blindaje individual
         if (stepRes && Array.isArray(stepRes.timeline)) {
           for (const ev of stepRes.timeline) {
-            try {
-              await playTimelineEvent(ev);
-            } catch (evErr) {
-              console.error('Error al reproducir evento timeline:', ev ? ev.type : 'unknown', evErr);
-              await delay(100);
-            }
+            await playTimelineEvent(ev, speedMult);
           }
         }
 
-        // Notificar a los celulares sobre sus estadísticas actuales
         for (const p of gameState.players) {
-          const conn = hostConnections.get(p.id);
-          try {
-            if (conn && conn.open) {
-              conn.send({
-                type: 'LIVE_STATUS_UPDATE',
-                playerId: p.id,
-                hp: p.hp,
-                alive: p.alive,
-                lastCheckpoint: p.lastCheckpoint
-              });
-            }
-          } catch (connErr) {
-            console.warn('Error al enviar LIVE_STATUS_UPDATE:', connErr);
-          }
+          safeSend(hostConnections.get(p.id), {
+            type: 'LIVE_STATUS_UPDATE',
+            playerId: p.id,
+            hp: p.hp,
+            alive: p.alive,
+            facing: p.facing,
+            lastCheckpoint: p.lastCheckpoint
+          });
         }
 
-        // Si hubo ganador
         if (stepRes && stepRes.winner) {
           isExecuting = false;
           showPodiumScreen(stepRes.winner);
           return;
         }
 
-        await delay(700 * speedMult);
+        await delay(550 * speedMult);
       }
 
-      // Fin de los 4 pasos: preparar siguiente ronda
       setSpotlight('FIN DE RONDA', 'Reparando chasis en talleres y reapareciendo robots destruidos...');
-      await delay(1200);
+      await delay(950 * speedMult);
       try {
         ROBO_ENGINE.finishRoundAndRespawn(gameState);
       } catch (respawnErr) {
@@ -1671,15 +1743,12 @@
       startNewRound();
     } catch (err) {
       console.error('Error crítico durante runExecutionPhase:', err);
-      isExecuting = false;
-      setSpotlight('⚠️ ERROR DE ANIMACIÓN', 'Ocurrió un error inesperado al animar la ronda. Reanudando combate...');
-      showFloatingFx(5, 4, '⚠️ ERROR DE ANIMACIÓN', 'damage');
-      await delay(2000);
+      setSpotlight('⚠️ ERROR DE ANIMACIÓN', 'Ocurrió un error al animar la ronda. Reanudando combate...');
+      showFloatingFx(5, 4, '⚠️ REANUDANDO', 'damage');
+      await delay(1400);
       try {
         ROBO_ENGINE.finishRoundAndRespawn(gameState);
-      } catch (e) {
-        console.error('Error en fallback finishRoundAndRespawn:', e);
-      }
+      } catch (e) {}
       isExecuting = false;
       startNewRound();
     } finally {
@@ -1689,11 +1758,8 @@
     }
   }
 
-  async function playTimelineEvent(ev) {
+  async function playTimelineEvent(ev, mult = 1.0) {
     if (!ev || !ev.type) return;
-
-    const isSlow = gameState.executionSpeed === 'slow';
-    const mult = isSlow ? 1.6 : 1.0;
 
     try {
       switch (ev.type) {
@@ -1708,26 +1774,21 @@
           };
           const info = subphaseNames[ev.phase] || { title: ev.title || 'SUB-FASE', desc: ev.subtitle || '' };
           setSpotlight(info.title, info.desc);
-          await delay(350 * mult);
+          await delay(320 * mult);
           break;
         }
 
         case 'CARD_START': {
           highlightQueueCard(ev.playerId);
-          const pName = ev.playerName || (ev.player ? ev.player.name : 'Piloto');
+          const pName = escapeHtml(ev.playerName || 'Piloto');
           const cIcon = ev.card ? ev.card.icon : '⚡';
-          const cName = ev.card ? ev.card.name : 'Orden';
+          const cName = escapeHtml(ev.card ? ev.card.name : 'Orden');
           const cPrio = ev.card ? ev.card.priority : 0;
           setSpotlight(
             `ORDEN [${cPrio}]`,
             `<strong>${pName}</strong> ejecuta <span>${cIcon} ${cName}</span>`
           );
-          broadcastToPlayers({
-            type: 'PLAYER_CARD_EXECUTING',
-            playerId: ev.playerId,
-            card: ev.card
-          });
-          await delay(450 * mult);
+          await delay(380 * mult);
           break;
         }
 
@@ -1750,7 +1811,7 @@
             }
           }
           playRobotMove();
-          await delay(420 * mult);
+          await delay(400 * mult);
           break;
         }
 
@@ -1758,24 +1819,24 @@
           playBump();
           const vis = visualRobots.get(ev.playerId);
           const token = document.getElementById(`robot_token_${ev.playerId}`);
+          const dirInfo = DIR_DELTAS[ev.dir] || null;
+          const bumpCls = dirInfo ? dirInfo.bumpClass : 'is-bumping';
           if (token) {
-            token.classList.add('is-bumping');
-            setTimeout(() => token.classList.remove('is-bumping'), 300);
+            token.classList.add(bumpCls);
+            setTimeout(() => token.classList.remove(bumpCls), 300);
           }
           const bx = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
           const by = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
           const label = ev.blockedBy === 'turret' ? '🚨 TORRETA' : (ev.blockedBy === 'wall' ? '🧱 MURO' : '🛡️ BLOQUEADO');
-          showFloatingFx(bx, by, label, 'shield');
-          await delay(320 * mult);
+          showFloatingFx(bx, by, label, 'blocked');
+          await delay(300 * mult);
           break;
         }
 
         case 'TURN': {
           const vis = visualRobots.get(ev.playerId);
           if (vis) {
-            const delta = ev.deltaAngle !== undefined
-              ? ev.deltaAngle
-              : (ev.turnType === 'ccw' ? -90 : (ev.turnType === 'uturn' ? 180 : 90));
+            const delta = ev.deltaAngle !== undefined ? ev.deltaAngle : 90;
             vis.visualAngleDeg += delta;
             if (ev.newFacing !== undefined) vis.facing = ev.newFacing;
 
@@ -1786,27 +1847,31 @@
             }
           }
           playRobotMove();
-          await delay(360 * mult);
+          await delay(340 * mult);
           break;
         }
 
         case 'PIT_FALL': {
           playExplosion();
           const vis = visualRobots.get(ev.playerId);
+          if (vis) {
+            vis.alive = false;
+            vis.hp = 0;
+          }
           const token = document.getElementById(`robot_token_${ev.playerId}`);
           if (token) {
             token.classList.add('is-falling');
           }
           const px = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
           const py = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
-          showFloatingFx(px, py, '💥 ¡AL ABISMO!', 'damage');
-          await delay(550 * mult);
+          showFloatingFx(px, py, '💥 ¡AL ABISMO!', 'boom');
+          await delay(500 * mult);
           break;
         }
 
         case 'LASER': {
           const strokeColor = ev.color || (ev.sourceType === 'turret' ? '#ef4444' : '#38bdf8');
-          drawLaserBeam(ev.fromX, ev.fromY, ev.toX, ev.toY, strokeColor);
+          drawLaserBeam(ev.fromX, ev.fromY, ev.toX, ev.toY, strokeColor, ev.shooterFacing ?? null);
           playLaser();
 
           const hitId = ev.hitRobotId || ev.hitPlayerId;
@@ -1820,85 +1885,90 @@
             const hx = ev.hitX !== undefined ? ev.hitX : ev.toX;
             const hy = ev.hitY !== undefined ? ev.hitY : ev.toY;
 
-            if (ev.shieldBlocked || ev.shieldAbsorbed) {
+            if (ev.shieldBlocked) {
               playShield();
               showFloatingFx(hx, hy, '🛡️ ESCUDO', 'shield');
             } else {
               const dmg = ev.damage !== undefined ? ev.damage : 1;
-              showFloatingFx(hx, hy, `-${dmg} HP`, 'damage');
+              if (dmg > 0) {
+                showFloatingFx(hx, hy, `-${dmg} HP`, 'damage');
+              }
+              if (typeof ev.targetNewHp === 'number') {
+                const hitVis = visualRobots.get(hitId);
+                if (hitVis) hitVis.hp = ev.targetNewHp;
+                updateRobotTokenStatusDom(hitId, ev.targetNewHp, ev.targetNewHp > 0);
+              }
             }
           }
           renderTvPilotsGrid();
-          await delay(500 * mult);
+          await delay(460 * mult);
           break;
         }
 
         case 'DESTROYED': {
           playExplosion();
           const vis = visualRobots.get(ev.playerId);
-          const token = document.getElementById(`robot_token_${ev.playerId}`);
-          if (token) {
-            token.classList.add('is-dead');
+          if (vis) {
+            vis.alive = false;
+            vis.hp = 0;
           }
+          updateRobotTokenStatusDom(ev.playerId, 0, false, false);
           const dx = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
           const dy = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
-          showFloatingFx(dx, dy, '💥 DESTRUIDO', 'damage');
+          showFloatingFx(dx, dy, '💥 DESTRUIDO', 'boom');
           renderTvPilotsGrid();
-          await delay(500 * mult);
+          await delay(460 * mult);
           break;
         }
 
         case 'SHIELD_REPAIR': {
           playShield();
-          const p = gameState.players.find(pl => pl.id === ev.playerId);
-          const sx = ev.x !== undefined ? ev.x : (p ? p.x : 5);
-          const sy = ev.y !== undefined ? ev.y : (p ? p.y : 4);
-          if (ev.healed) {
-            showFloatingFx(sx, sy, '+1 HP', 'heal');
-          } else {
-            showFloatingFx(sx, sy, '🛡️ ESCUDO', 'shield');
-          }
-          const token = document.getElementById(`robot_token_${ev.playerId}`);
-          const shield = token ? token.querySelector('.robot-shield-bubble') : null;
-          if (shield) {
-            shield.className = 'robot-shield-bubble is-active';
-          }
+          const vis = visualRobots.get(ev.playerId);
+          const sx = ev.x !== undefined ? ev.x : (vis ? vis.x : 5);
+          const sy = ev.y !== undefined ? ev.y : (vis ? vis.y : 4);
+          if (vis && typeof ev.newHp === 'number') vis.hp = ev.newHp;
+          updateRobotTokenStatusDom(ev.playerId, ev.newHp, true, true);
+          showFloatingFx(sx, sy, ev.healed ? '🛡️ +1 HP' : '🛡️ ESCUDO', ev.healed ? 'heal' : 'shield');
           renderTvPilotsGrid();
-          await delay(350 * mult);
+          await delay(340 * mult);
           break;
         }
 
         case 'CHECKPOINT': {
           playCheckpoint();
-          const cpNum = ev.cpId !== undefined ? ev.cpId : (ev.checkpointNumber || 1);
-          showFloatingFx(ev.x, ev.y, `🚩 CHECKPOINT ${cpNum}`, 'checkpoint');
+          const cpNum = ev.cpId !== undefined ? ev.cpId : 1;
+          showFloatingFx(ev.x, ev.y, `🚩 CP ${cpNum}`, 'checkpoint');
           renderTvPilotsGrid();
-          await delay(650 * mult);
+          await delay(560 * mult);
           break;
         }
 
         case 'REPAIR_TILE': {
           playShield();
+          const vis = visualRobots.get(ev.playerId);
+          if (vis && typeof ev.newHp === 'number') vis.hp = ev.newHp;
+          updateRobotTokenStatusDom(ev.playerId, ev.newHp, true);
           showFloatingFx(ev.x, ev.y, '🔧 +1 HP', 'heal');
           renderTvPilotsGrid();
-          await delay(350 * mult);
+          await delay(340 * mult);
           break;
         }
 
         case 'WINNER': {
-          const w = ev.winner || ev.player || {};
-          setSpotlight('🏆 ¡VICTORIA!', `<strong>${w.name || 'Un piloto'}</strong> ha capturado los 3 Checkpoints.`);
+          const w = ev.winner || {};
+          setSpotlight('🏆 ¡VICTORIA!', `<strong>${escapeHtml(w.name || 'Un piloto')}</strong> ha capturado los 3 Checkpoints.`);
+          await delay(500 * mult);
           break;
         }
       }
     } catch (eventErr) {
-      console.error('Error no fatal durante playTimelineEvent:', ev ? ev.type : 'desconocido', eventErr);
+      console.error('Error no fatal durante playTimelineEvent:', ev.type, eventErr);
       await delay(100);
     }
   }
-  }
 
   function showPodiumScreen(winner) {
+    gameState.phase = 'podium';
     playVictory();
     dom.tvViewArena?.classList.add('d-none');
     dom.tvViewPodium?.classList.remove('d-none');
@@ -1909,10 +1979,10 @@
       dom.tvWinnerCard.innerHTML = `
         <div class="d-flex align-items-center justify-content-center gap-3">
           <div class="podium-winner-avatar" style="background-color: ${winner.color}; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.8rem; font-weight: 900; color: #fff; border: 3px solid #fff; box-shadow: 0 0 20px ${winner.color};">
-            ${winnerInitials}
+            ${escapeHtml(winnerInitials)}
           </div>
           <div class="text-start">
-            <h3 style="font-family: var(--font-display); font-size: 2.8rem; margin: 0; color: ${winner.color}; line-height: 1;">${winner.name}</h3>
+            <h3 style="font-family: var(--font-display); font-size: 2.8rem; margin: 0; color: ${winner.color}; line-height: 1;">${escapeHtml(winner.name)}</h3>
             <span style="color: #fbbf24; font-family: var(--font-hud); letter-spacing: 1px; font-size: 0.95rem;">¡PRIMER PILOTO EN CAPTURAR EL CHECKPOINT 3!</span>
           </div>
         </div>
@@ -1930,17 +2000,17 @@
         <div class="stat-card">
           <div class="stat-icon">🎯</div>
           <div class="stat-title">FRANCOTIRADOR DE LA ARENA</div>
-          <div class="stat-value">${topSniper ? `${topSniper.name} (${topSniper.stats.lasersHit} impactos)` : 'N/A'}</div>
+          <div class="stat-value">${topSniper ? `${escapeHtml(topSniper.name)} (${topSniper.stats.lasersHit} impactos)` : 'N/A'}</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">💥</div>
           <div class="stat-title">CHATARRA HEROICA</div>
-          <div class="stat-value">${topScrap ? `${topScrap.name} (${topScrap.stats.timesDestroyed} caídas)` : 'N/A'}</div>
+          <div class="stat-value">${topScrap ? `${escapeHtml(topScrap.name)} (${topScrap.stats.timesDestroyed} caídas)` : 'N/A'}</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">🚩</div>
           <div class="stat-title">EXPLORADOR SUPREMO</div>
-          <div class="stat-value">${winner.name} (3 Checkpoints)</div>
+          <div class="stat-value">${escapeHtml(winner.name)} (3 Checkpoints)</div>
         </div>
       `;
     }
@@ -1955,45 +2025,21 @@
     });
   }
 
-  function resetGameForRematch() {
-    dom.tvViewPodium?.classList.add('d-none');
-    dom.tvViewArena?.classList.remove('d-none');
-
-    gameState.roundNumber = 1;
-    gameState.winner = null;
-    gameState.players.forEach((p, idx) => {
-      const sp = gameState.arena.spawns[idx % gameState.arena.spawns.length];
-      p.x = sp.x;
-      p.y = sp.y;
-      p.facing = sp.facing !== undefined ? sp.facing : 0;
-      p.hp = 5;
-      p.alive = true;
-      p.shieldActive = false;
-      p.lastCheckpoint = 0;
-      p.programLocked = false;
-      p.program = [null, null, null, null];
-      p.stats = { lasersHit: 0, timesDestroyed: 0, checkpointsReached: 0, damageDealt: 0 };
-    });
-
-    renderTvBoardGrid();
-    renderTurretSights();
-    initOrUpdateVisualRobots(true);
-    startNewRound();
-  }
-
   // ==========================================================================
   // 11. MODO CELULAR (MANDO DEL JUGADOR)
   // ==========================================================================
   function handlePhoneConnect() {
-    const roomCode = dom.inputPhoneRoom.value.trim().toUpperCase();
-    const name = dom.inputPhoneName.value.trim();
+    const roomCode = (dom.inputPhoneRoom?.value || '').trim().toUpperCase();
+    const name = (dom.inputPhoneName?.value || '').trim();
 
     if (roomCode.length !== 4) {
-      alert('Ingresá el código de sala de 4 letras que ves en la TV.');
+      showJoinAlert('Ingresá el código de sala de 4 letras que ves en la TV.');
+      dom.inputPhoneRoom?.focus();
       return;
     }
     if (!name) {
-      alert('Ingresá un nombre para tu robot.');
+      showJoinAlert('Ingresá un nombre para tu robot.');
+      dom.inputPhoneName?.focus();
       return;
     }
 
@@ -2003,11 +2049,27 @@
     sessionStorage.setItem('oc_player_color', myPlayerColor);
 
     if (!sessionStorage.getItem('oc_player_id')) {
-      sessionStorage.setItem('oc_player_id', 'p_' + Math.random().toString(36).substring(2, 9));
+      sessionStorage.setItem('oc_player_id', 'p_' + Math.random().toString(36).substring(2, 10));
     }
     myPlayerId = sessionStorage.getItem('oc_player_id');
 
-    limpiarConexionPrevia();
+    dom.phoneJoinAlert?.classList.add('d-none');
+    initPhonePeerAndConnect(roomCode);
+  }
+
+  function showJoinAlert(htmlOrText) {
+    if (!dom.phoneJoinAlert) return;
+    dom.phoneJoinAlert.textContent = htmlOrText;
+    dom.phoneJoinAlert.classList.remove('d-none');
+  }
+
+  function initPhonePeerAndConnect(roomCode) {
+    if (isConnectingHost) return;
+    isConnectingHost = true;
+
+    destroyPeerInstance();
+    isConnectingHost = true;
+
     peer = new Peer();
 
     peer.on('open', () => {
@@ -2015,19 +2077,22 @@
     });
 
     peer.on('error', (err) => {
+      isConnectingHost = false;
       console.error('Error en Peer celular:', err);
       if (err.type === 'peer-unavailable') {
         sessionStorage.removeItem('oc_room_code');
         if (dom.phoneJoinAlert) {
           dom.phoneJoinAlert.innerHTML = `
-            <div>⚠️ La sala <strong>${roomCode}</strong> no existe o la TV cambió de sala.</div>
+            <div>⚠️ La sala <strong>${escapeHtml(roomCode)}</strong> no existe o la TV cambió de sala.</div>
             <button type="button" class="btn btn-sm btn-outline-light mt-2" id="btnRetryOtherRoom">🔄 Conectar a otra sala</button>
           `;
           dom.phoneJoinAlert.classList.remove('d-none');
           document.getElementById('btnRetryOtherRoom')?.addEventListener('click', () => {
             dom.phoneJoinAlert.classList.add('d-none');
-            dom.inputPhoneRoom.value = '';
-            dom.inputPhoneRoom.focus();
+            if (dom.inputPhoneRoom) {
+              dom.inputPhoneRoom.value = '';
+              dom.inputPhoneRoom.focus();
+            }
           });
         }
       }
@@ -2035,13 +2100,23 @@
   }
 
   function connectToHost(roomCode) {
+    if (!peer || peer.destroyed) {
+      initPhonePeerAndConnect(roomCode);
+      return;
+    }
+
     if (!peerResilienceClient && typeof PeerResilience !== 'undefined') {
       peerResilienceClient = PeerResilience.createClient({
         getConn: () => myPhoneConn,
         getPeer: () => peer,
         getRoomCode: () => currentRoomCode || roomCode,
         onReconnect: () => {
-          connectToHost(currentRoomCode || roomCode);
+          const targetRoom = currentRoomCode || roomCode;
+          if (!peer || peer.destroyed) {
+            initPhonePeerAndConnect(targetRoom);
+          } else {
+            connectToHost(targetRoom);
+          }
         },
         onStateSync: (payload) => {
           applyPhoneFullStateSync(payload);
@@ -2055,13 +2130,20 @@
       PeerResilience.enableWakeLock();
     }
 
-    const hostPeerId = PEER_PREFIX + roomCode;
-    myPhoneConn = peer.connect(hostPeerId, { reliable: true });
+    if (myPhoneConn) {
+      try { myPhoneConn.close(); } catch (e) {}
+    }
 
-    myPhoneConn.on('open', () => {
+    const hostPeerId = PEER_PREFIX + roomCode;
+    const conn = peer.connect(hostPeerId, { reliable: true });
+    myPhoneConn = conn;
+
+    conn.on('open', () => {
+      if (conn !== myPhoneConn) return;
+      isConnectingHost = false;
       if (peerResilienceClient) peerResilienceClient.onConnected();
       dom.phoneJoinAlert?.classList.add('d-none');
-      myPhoneConn.send({
+      safeSend(conn, {
         type: 'PLAYER_JOIN',
         playerId: myPlayerId,
         name: myPlayerName,
@@ -2070,19 +2152,23 @@
       });
     });
 
-    myPhoneConn.on('data', (data) => {
+    conn.on('data', (data) => {
+      if (conn !== myPhoneConn) return;
       if (peerResilienceClient && peerResilienceClient.handleIncomingData(data)) return;
       handlePhoneDataReceived(data);
     });
 
-    myPhoneConn.on('close', () => {
-      console.log('Conexión cerrada con el host');
+    conn.on('close', () => {
+      if (conn !== myPhoneConn) return;
+      isConnectingHost = false;
       if (peerResilienceClient) {
         peerResilienceClient.checkConnectionInstantly();
       }
     });
 
-    myPhoneConn.on('error', () => {
+    conn.on('error', () => {
+      if (conn !== myPhoneConn) return;
+      isConnectingHost = false;
       if (peerResilienceClient) {
         peerResilienceClient.checkConnectionInstantly();
       }
@@ -2091,6 +2177,10 @@
 
   function applyPhoneFullStateSync(payload) {
     if (!payload) return;
+
+    if (payload.name) myPlayerName = payload.name;
+    if (payload.color) myPlayerColor = payload.color;
+
     myHandCards = payload.hand || [];
     myProgramSlots = payload.program || [null, null, null, null];
     myLockedSlots = payload.lockedSlots || [false, false, false, false];
@@ -2104,19 +2194,38 @@
       applyConfigToPhoneControls(payload.config);
     }
 
+    if (dom.phoneLobbyPlayerName) dom.phoneLobbyPlayerName.textContent = myPlayerName;
+    if (dom.phoneLobbyRoomCode) dom.phoneLobbyRoomCode.textContent = currentRoomCode;
+    if (dom.phoneLobbyRobotBadge) dom.phoneLobbyRobotBadge.style.backgroundColor = myPlayerColor;
+
     updatePhoneHud(payload.hp, payload.facing, payload.lastCheckpoint);
 
     if (payload.phase === 'programming') {
+      if (dom.phoneTimerText) {
+        dom.phoneTimerText.textContent = payload.timer > 0 ? `${payload.timer}s` : '♾️';
+      }
       renderPhoneProgramSlots();
       renderPhoneHandList();
       updateLockProgramButton();
       showPhoneView('programming');
     } else if (payload.phase === 'executing') {
       renderPhoneExecStepsRow(payload.currentStep || 0);
-      if (dom.phoneLiveHpText) dom.phoneLiveHpText.textContent = `${payload.hp || 5}/5`;
+      if (dom.phoneLiveHpText) dom.phoneLiveHpText.textContent = `${payload.hp ?? 5}/5`;
       if (dom.phoneLiveTargetText) dom.phoneLiveTargetText.textContent = `${(payload.lastCheckpoint || 0) + 1} 🚩`;
+      if (dom.phoneExecStatusText) {
+        dom.phoneExecStatusText.textContent = payload.alive === false
+          ? '💥 Tu robot fue destruido. Reaparecerá al iniciar la próxima ronda...'
+          : 'Los robots están ejecutando sus órdenes en la Arena...';
+      }
       showPhoneView('executing');
-    } else if (payload.phase === 'lobby') {
+    } else if (payload.phase === 'podium') {
+      renderPhoneExecStepsRow(3);
+      if (dom.phoneExecStatusText) {
+        const winName = payload.winner ? payload.winner.name : 'Un piloto';
+        dom.phoneExecStatusText.textContent = `🏆 ¡Fin de la Partida! Campeón: ${winName}`;
+      }
+      showPhoneView('executing');
+    } else {
       showPhoneView('lobby');
     }
   }
@@ -2129,8 +2238,14 @@
       return;
     }
 
+    if (data.type === 'JOIN_REJECTED') {
+      showJoinAlert(data.reason || 'No se pudo ingresar a la sala.');
+      showPhoneView('join');
+      return;
+    }
+
     if (data.type === 'JOIN_ACCEPTED') {
-      currentRoomCode = data.roomCode;
+      currentRoomCode = data.roomCode || currentRoomCode;
       updateRoomHeader(currentRoomCode);
       isVipPlayer = !!data.isVip;
 
@@ -2144,6 +2259,7 @@
 
       updateVipVisibility();
       showPhoneView('lobby');
+      return;
     }
 
     if (data.type === 'LOBBY_UPDATE') {
@@ -2157,12 +2273,7 @@
           updateVipVisibility();
         }
       }
-    }
-
-    if (data.type === 'CONFIG_UPDATED') {
-      if (data.config) {
-        applyConfigToPhoneControls(data.config);
-      }
+      return;
     }
 
     if (data.type === 'ROUND_STARTED') {
@@ -2171,55 +2282,74 @@
       myLockedSlots = data.lockedSlots || [false, false, false, false];
       myProgramLocked = false;
 
+      if (dom.phoneTimerText) {
+        dom.phoneTimerText.textContent = data.timer > 0 ? `${data.timer}s` : '♾️';
+      }
       updatePhoneHud(data.hp, data.facing, data.lastCheckpoint);
       renderPhoneProgramSlots();
       renderPhoneHandList();
       updateLockProgramButton();
 
       showPhoneView('programming');
+      return;
     }
 
     if (data.type === 'TIMER_TICK') {
       if (dom.phoneTimerText) dom.phoneTimerText.textContent = `${data.seconds}s`;
+      return;
     }
 
     if (data.type === 'FORCE_SUBMIT_CONFIRMED') {
-      myProgramSlots = data.program;
+      myProgramSlots = data.program || myProgramSlots;
       myProgramLocked = true;
       renderPhoneProgramSlots();
       renderPhoneHandList();
       updateLockProgramButton();
+      return;
     }
 
     if (data.type === 'PROGRAM_ACCEPTED') {
       myProgramLocked = !!data.locked;
       updateLockProgramButton();
+      return;
     }
 
     if (data.type === 'EXECUTION_STARTED') {
+      if (dom.phoneExecStatusText) {
+        dom.phoneExecStatusText.textContent = 'Los robots están ejecutando sus órdenes en la Arena...';
+      }
       renderPhoneExecStepsRow(0);
       showPhoneView('executing');
+      return;
     }
 
     if (data.type === 'STEP_START') {
-      renderPhoneExecStepsRow(data.stepIndex - 1);
+      renderPhoneExecStepsRow(Math.max(0, (data.stepIndex || 1) - 1));
+      return;
     }
 
     if (data.type === 'LIVE_STATUS_UPDATE') {
       if (dom.phoneLiveHpText) dom.phoneLiveHpText.textContent = `${data.hp}/5`;
-      if (dom.phoneLiveTargetText) dom.phoneLiveTargetText.textContent = `${data.lastCheckpoint + 1} 🚩`;
+      if (dom.phoneLiveTargetText) dom.phoneLiveTargetText.textContent = `${(data.lastCheckpoint || 0) + 1} 🚩`;
+      if (data.alive === false && dom.phoneExecStatusText) {
+        dom.phoneExecStatusText.textContent = '💥 Tu robot fue destruido. Reaparecerá en la próxima ronda...';
+      }
+      return;
     }
 
     if (data.type === 'GAME_OVER') {
-      if (dom.phoneExecStatusText) {
-        dom.phoneExecStatusText.textContent = `¡Fin de la Partida! Campeón: ${data.winner.name}`;
+      if (dom.phoneExecStatusText && data.winner) {
+        dom.phoneExecStatusText.textContent = `🏆 ¡Fin de la Partida! Campeón: ${data.winner.name}`;
       }
     }
   }
 
   function updatePhoneHud(hp = 5, facing = 0, lastCp = 0) {
+    if (dom.phoneHudAvatarFrame) {
+      dom.phoneHudAvatarFrame.style.borderColor = myPlayerColor;
+    }
     if (dom.phoneHudAvatar) {
-      dom.phoneHudAvatar.style.backgroundColor = myPlayerColor;
+      dom.phoneHudAvatar.innerHTML = getRobotChassisSvg(myPlayerColor);
       dom.phoneHudAvatar.style.transform = `rotate(${facing * 90}deg)`;
     }
     if (dom.phoneHudName) dom.phoneHudName.textContent = myPlayerName;
@@ -2235,20 +2365,20 @@
       const isLocked = myLockedSlots[idx];
       const cat = card ? (card.category || 'move') : '';
 
-      slotEl.className = `program-slot cat-${cat} ${card ? 'is-filled' : ''} ${isLocked ? 'is-locked' : ''}`;
+      slotEl.className = `program-slot ${cat ? `cat-${cat}` : ''} ${card ? 'is-filled' : ''} ${isLocked ? 'is-locked' : ''}`;
 
       if (isLocked) {
         slotEl.innerHTML = `
           <span class="slot-num">${idx + 1} 🔒</span>
           <div class="slot-card-icon">${card ? card.icon : '🔒'}</div>
-          <div class="slot-card-name">${card ? card.name : 'BLOQUEADO'}</div>
+          <div class="slot-card-name">${escapeHtml(card ? card.name : 'BLOQUEADO')}</div>
           <div class="slot-card-prio">${card ? `[${card.priority}]` : ''}</div>
         `;
       } else if (card) {
         slotEl.innerHTML = `
           <span class="slot-num">${idx + 1}</span>
           <div class="slot-card-icon">${card.icon}</div>
-          <div class="slot-card-name">${card.name}</div>
+          <div class="slot-card-name">${escapeHtml(card.name)}</div>
           <div class="slot-card-prio">[${card.priority}]</div>
         `;
       } else {
@@ -2271,12 +2401,14 @@
       const item = document.createElement('div');
       item.className = `hand-card-item cat-${cat} ${isUsed ? 'is-used' : ''}`;
       item.innerHTML = `
-        <div class="hand-card-icon">${card.icon}</div>
-        <div class="hand-card-details">
-          <div class="hand-card-name">${card.name}</div>
-          <div class="hand-card-desc">${card.desc}</div>
+        <div class="hand-card-top">
+          <span class="hand-card-icon">${card.icon}</span>
+          <span class="hand-card-prio-badge">Prio ${card.priority}</span>
         </div>
-        <div class="hand-card-prio-badge">Prio ${card.priority}</div>
+        <div class="hand-card-details">
+          <div class="hand-card-name">${escapeHtml(card.name)}</div>
+          <div class="hand-card-desc">${escapeHtml(card.desc)}</div>
+        </div>
       `;
 
       item.addEventListener('click', () => {
@@ -2300,7 +2432,7 @@
       pill.innerHTML = `
         <span class="pill-step-idx">P${idx + 1}</span>
         <span class="pill-icon">${card ? card.icon : '❓'}</span>
-        <span class="pill-name">${card ? card.name : 'Vacío'}</span>
+        <span class="pill-name">${escapeHtml(card ? card.name : 'Vacío')}</span>
       `;
       dom.phoneExecStepsRow.appendChild(pill);
     });
@@ -2331,32 +2463,33 @@
   function updateLockProgramButton() {
     if (!dom.btnPhoneLockProgram) return;
     const filledCount = myProgramSlots.filter(s => s !== null).length;
-    dom.btnPhoneLockProgram.disabled = filledCount < 4;
+    dom.btnPhoneLockProgram.disabled = !myProgramLocked && filledCount < 4;
 
     if (myProgramLocked) {
-      dom.btnPhoneLockProgram.disabled = false;
       dom.btnPhoneLockProgram.innerHTML = '<span>✏️ Editar Programa</span>';
-      dom.btnPhoneLockProgram.classList.replace('btn-action-primary', 'btn-outline-warning');
+      dom.btnPhoneLockProgram.classList.remove('btn-action-primary');
+      dom.btnPhoneLockProgram.classList.add('btn', 'btn-outline-warning');
     } else {
       dom.btnPhoneLockProgram.innerHTML = `<span>🔒 ¡Confirmar Programa! (${filledCount}/4)</span>`;
-      dom.btnPhoneLockProgram.classList.replace('btn-outline-warning', 'btn-action-primary');
+      dom.btnPhoneLockProgram.classList.remove('btn', 'btn-outline-warning');
+      dom.btnPhoneLockProgram.classList.add('btn-action-primary');
     }
   }
 
   function handleToggleLockProgram() {
-    if (!myPhoneConn) return;
+    if (!myPhoneConn || !myPhoneConn.open) return;
 
     if (!myProgramLocked) {
       const filledCount = myProgramSlots.filter(s => s !== null).length;
       if (filledCount < 4) return;
 
-      myPhoneConn.send({
+      safeSend(myPhoneConn, {
         type: 'PLAYER_SUBMIT_PROGRAM',
         playerId: myPlayerId,
         program: myProgramSlots
       });
     } else {
-      myPhoneConn.send({
+      safeSend(myPhoneConn, {
         type: 'PLAYER_UNLOCK_PROGRAM',
         playerId: myPlayerId
       });
@@ -2367,5 +2500,4 @@
   // 12. ARRANQUE
   // ==========================================================================
   window.addEventListener('DOMContentLoaded', init);
-
 })();

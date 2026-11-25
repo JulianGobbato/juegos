@@ -132,6 +132,9 @@
     const roundTimer = typeof config.roundTimer === 'number' ? config.roundTimer : 45; // seg
     const executionSpeed = config.executionSpeed || 'normal'; // 'slow' o 'normal'
 
+    const roundNumber = 1;
+    const phase = config.phase || 'programming'; // 'lobby', 'programming', 'executing', 'podium'
+
     const players = (config.players || []).map((p, idx) => {
       const spawn = arena.spawns[idx % arena.spawns.length];
       return {
@@ -169,8 +172,8 @@
       damageRule,
       roundTimer,
       executionSpeed,
-      roundNumber: 1,
-      phase: 'programming', // 'programming', 'executing', 'finished'
+      roundNumber,
+      phase,
       currentStep: 0, // 0..3
       winner: null,
       players
@@ -256,6 +259,7 @@
 
     // 1. Recorrer la cadena de robots en línea en esa dirección
     const chain = [robot];
+    const chainIds = new Set([robot.id]);
     let curX = robot.x;
     let curY = robot.y;
 
@@ -275,9 +279,10 @@
       }
 
       // ¿Hay otro robot vivo en la celda destino?
-      const otherRobot = players.find(p => p.id !== robot.id && p.alive && p.x === nextX && p.y === nextY);
+      const otherRobot = players.find(p => !chainIds.has(p.id) && p.alive && p.x === nextX && p.y === nextY);
       if (otherRobot) {
         chain.push(otherRobot);
+        chainIds.add(otherRobot.id);
         curX = nextX;
         curY = nextY;
       } else {
@@ -459,6 +464,8 @@
             timeline.push({
               type: 'BUMP',
               playerId: p.id,
+              x: p.x,
+              y: p.y,
               dir: p.facing,
               blockedBy: moveRes.blockedBy
             });
@@ -486,6 +493,8 @@
           timeline.push({
             type: 'BUMP',
             playerId: p.id,
+            x: p.x,
+            y: p.y,
             dir: backDir,
             blockedBy: moveRes.blockedBy
           });
@@ -495,6 +504,8 @@
         timeline.push({
           type: 'TURN',
           playerId: p.id,
+          x: p.x,
+          y: p.y,
           deltaAngle: 90,
           newFacing: p.facing
         });
@@ -503,6 +514,8 @@
         timeline.push({
           type: 'TURN',
           playerId: p.id,
+          x: p.x,
+          y: p.y,
           deltaAngle: -90,
           newFacing: p.facing
         });
@@ -511,6 +524,8 @@
         timeline.push({
           type: 'TURN',
           playerId: p.id,
+          x: p.x,
+          y: p.y,
           deltaAngle: 180,
           newFacing: p.facing
         });
@@ -543,6 +558,7 @@
           color: p.color,
           shooterId: p.id,
           shooterName: p.name,
+          shooterFacing: p.facing,
           fromX: p.x,
           fromY: p.y,
           toX: ray.endX,
@@ -621,37 +637,43 @@
       let subphaseEmitted = false;
       const movedInConveyors = new Set();
 
-      for (const cm of conveyorRobots) {
-        if (!cm.player.alive || movedInConveyors.has(cm.player.id)) continue;
+      // Hasta 2 pasadas para resolver dependencias en cadena sin empujar doble nunca
+      for (let pass = 0; pass < 2; pass++) {
+        let movedAnyThisPass = false;
+        for (const cm of conveyorRobots) {
+          if (!cm.player.alive || movedInConveyors.has(cm.player.id)) continue;
 
-        const moveRes = tryMoveRobotInDirection(grid, players, cm.player.id, cm.dir);
-        if (moveRes.success) {
-          if (!subphaseEmitted) {
+          const moveRes = tryMoveRobotInDirection(grid, players, cm.player.id, cm.dir);
+          if (moveRes.success) {
+            movedAnyThisPass = true;
+            if (!subphaseEmitted) {
+              timeline.push({
+                type: 'SUBPHASE',
+                phase: 'conveyors',
+                title: 'Fase 2: Cintas Transportadoras',
+                subtitle: 'Desplazamiento automático de robots'
+              });
+              subphaseEmitted = true;
+            }
+
+            moveRes.movedRobots.forEach(m => movedInConveyors.add(m.id));
+
             timeline.push({
-              type: 'SUBPHASE',
-              phase: 'conveyors',
-              title: 'Fase 2: Cintas Transportadoras',
-              subtitle: 'Desplazamiento automático de robots'
+              type: 'MOVE',
+              playerId: cm.player.id,
+              moves: moveRes.movedRobots,
+              blocked: false
             });
-            subphaseEmitted = true;
-          }
 
-          moveRes.movedRobots.forEach(m => movedInConveyors.add(m.id));
-
-          timeline.push({
-            type: 'MOVE',
-            playerId: cm.player.id,
-            moves: moveRes.movedRobots,
-            blocked: false
-          });
-
-          if (moveRes.destroyedRobots && moveRes.destroyedRobots.length > 0) {
-            for (const d of moveRes.destroyedRobots) {
-              timeline.push({ type: 'PIT_FALL', playerId: d.id, playerName: d.name, x: d.x, y: d.y });
-              timeline.push({ type: 'DESTROYED', playerId: d.id, playerName: d.name, x: d.x, y: d.y, reason: 'pit' });
+            if (moveRes.destroyedRobots && moveRes.destroyedRobots.length > 0) {
+              for (const d of moveRes.destroyedRobots) {
+                timeline.push({ type: 'PIT_FALL', playerId: d.id, playerName: d.name, x: d.x, y: d.y });
+                timeline.push({ type: 'DESTROYED', playerId: d.id, playerName: d.name, x: d.x, y: d.y, reason: 'pit' });
+              }
             }
           }
         }
+        if (!movedAnyThisPass) break;
       }
     }
 
@@ -683,6 +705,8 @@
         timeline.push({
           type: 'TURN',
           playerId: p.id,
+          x: p.x,
+          y: p.y,
           deltaAngle: delta,
           newFacing: p.facing
         });
@@ -737,6 +761,7 @@
             type: 'LASER',
             sourceType: 'turret',
             color: '#ef4444',
+            shooterFacing: dir,
             fromX: x,
             fromY: y,
             toX: ray.endX,
@@ -769,14 +794,16 @@
       shooter: p,
       ray: traceLaserRay(grid, players, p.x, p.y, p.facing, p.id)
     }));
+    const newlyDestroyedByRobotLasers = new Set();
 
     for (const rItem of robotRays) {
       const shooter = rItem.shooter;
       const ray = rItem.ray;
-      const target = ray.hitRobot && ray.hitRobot.alive ? ray.hitRobot : null;
+      const target = ray.hitRobot || null;
 
       let damage = 0;
       let shieldBlocked = false;
+      let justDestroyed = false;
 
       if (target) {
         shooter.stats.lasersHit++;
@@ -785,10 +812,15 @@
         } else {
           damage = 1;
           shooter.stats.damageDealt += 1;
+          const wasAlive = target.alive;
           target.hp = Math.max(0, target.hp - 1);
-          if (target.hp === 0) {
+          if (target.hp === 0 && wasAlive) {
             target.alive = false;
             target.stats.timesDestroyed++;
+            if (!newlyDestroyedByRobotLasers.has(target.id)) {
+              newlyDestroyedByRobotLasers.add(target.id);
+              justDestroyed = true;
+            }
           }
         }
       }
@@ -799,6 +831,7 @@
         color: shooter.color || '#38bdf8',
         shooterId: shooter.id,
         shooterName: shooter.name,
+        shooterFacing: shooter.facing,
         fromX: shooter.x,
         fromY: shooter.y,
         toX: ray.endX,
@@ -811,7 +844,7 @@
         targetNewHp: target ? target.hp : null
       });
 
-      if (target && !target.alive) {
+      if (justDestroyed && target) {
         timeline.push({
           type: 'DESTROYED',
           playerId: target.id,
@@ -923,8 +956,9 @@
     const width = grid[0].length;
     const height = grid.length;
 
-    // Resucitar robots destruidos
+    // Resucitar robots destruidos y limpiar escudos temporales
     for (const p of state.players) {
+      p.shieldActive = false;
       if (!p.alive || p.hp <= 0) {
         p.alive = true;
         p.hp = 5;

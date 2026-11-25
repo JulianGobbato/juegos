@@ -92,7 +92,7 @@
             <h3 class="role-name">Unirme desde mi Celular</h3>
             <p class="role-desc">Ingresá el código de 4 letras que ves en la pantalla de la TV para controlar tu robot y programar tus cartas.</p>
             <div class="join-code-row">
-              <input type="text" id="inputManualRoomCode" class="input-room-code" placeholder="CÓDIGO" maxlength="4" autocomplete="off" autocapitalize="characters">
+              <input type="text" id="inputManualRoomCode" class="input-room-code" placeholder="CÓDIGO" maxlength="4" autocomplete="off" autocapitalize="characters" aria-label="Código de sala de 4 letras">
               <button type="button" class="btn-role btn-phone-launch" id="btnManualJoinRoom">
                 <span>Ingresar</span>
               </button>
@@ -128,9 +128,9 @@
             <div class="tv-qr-help">Conexión directa P2P sin registros</div>
 
             <!-- Configuración Interactiva en el Lobby de la TV (Editable en TV y sincronizado con Celular VIP) -->
-            <div class="tv-config-summary-bar my-3 p-3 rounded">
-              <div class="row g-2 text-center text-md-start align-items-center">
-                <div class="col-6 col-md-3">
+            <div class="tv-config-summary-bar my-2 p-2 rounded">
+              <div class="row g-2 text-start align-items-center">
+                <div class="col-6">
                   <label for="tvSelectArena" class="small d-block config-label">Arena Táctica:</label>
                   <select class="form-select form-select-sm tv-config-select" id="tvSelectArena">
                     <option value="fabrica">🏭 Fábrica Central</option>
@@ -138,14 +138,14 @@
                     <option value="turbo">⚡ Circuito Turbo</option>
                   </select>
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6">
                   <label for="tvSelectDamage" class="small d-block config-label">Regla de Daño:</label>
                   <select class="form-select form-select-sm tv-config-select" id="tvSelectDamage">
                     <option value="tactical">🛡️ Daño Táctico</option>
                     <option value="simple">💥 Daño Simple</option>
                   </select>
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6">
                   <label for="tvSelectTimer" class="small d-block config-label">Reloj Programación:</label>
                   <select class="form-select form-select-sm tv-config-select" id="tvSelectTimer">
                     <option value="45">⏱️ 45s (Recomendado)</option>
@@ -154,7 +154,7 @@
                     <option value="0">♾️ Sin límite</option>
                   </select>
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6">
                   <label for="tvSelectSpeed" class="small d-block config-label">Velocidad:</label>
                   <select class="form-select form-select-sm tv-config-select" id="tvSelectSpeed">
                     <option value="normal">⚡ Normal</option>
@@ -240,10 +240,12 @@
                 <!-- En programación: Reloj gigante -->
                 <div class="cmd-timer-wrap" id="tvCmdTimerWrap">
                   <span class="cmd-timer-label">TIEMPO PARA PROGRAMAR:</span>
-                  <span class="cmd-timer-number" id="tvCmdTimerSecs">45s</span>
-                  <button type="button" class="btn-tv-force-execute mt-1" id="btnTvForceExecute" title="Forzar ejecución inmediata">
-                    ⚡ Ejecutar ya
-                  </button>
+                  <div class="cmd-timer-right">
+                    <span class="cmd-timer-number" id="tvCmdTimerSecs">45s</span>
+                    <button type="button" class="btn-tv-force-execute" id="btnTvForceExecute" title="Forzar ejecución inmediata">
+                      ⚡ Ejecutar ya
+                    </button>
+                  </div>
                 </div>
                 <!-- En ejecución: Barra de los 4 pasos -->
                 <div class="cmd-steps-progress d-none" id="tvCmdStepsProgress">
@@ -369,7 +371,7 @@
           <!-- Alert de desconexión / error -->
           <div class="alert alert-danger d-none" id="phoneJoinAlert"></div>
 
-          <form id="formPhoneJoin" onsubmit="return false;">
+          <form id="formPhoneJoin" novalidate>
             <div class="form-group mb-3">
               <label for="inputPhoneRoom" class="form-label">Código de la Sala:</label>
               <input type="text" id="inputPhoneRoom" class="form-control text-uppercase text-center font-monospace fs-4 fw-bold" maxlength="4" placeholder="XXXX" required autocomplete="off" autocapitalize="characters">
@@ -561,11 +563,11 @@
   <!-- ====================================================================
        MODAL DE REGLAS RÁPIDAS
        ==================================================================== -->
-  <div class="rules-modal-backdrop d-none" id="rulesModal">
+  <div class="rules-modal-backdrop d-none" id="rulesModal" role="dialog" aria-modal="true" aria-labelledby="rulesModalTitle">
     <div class="rules-modal-dialog">
       <div class="rules-modal-content">
         <div class="rules-modal-header">
-          <h3 class="rules-modal-title">🤖 Manual Rápido de Órdenes Cruzadas</h3>
+          <h3 class="rules-modal-title" id="rulesModalTitle">🤖 Manual Rápido de Órdenes Cruzadas</h3>
           <button type="button" class="btn-rules-close" id="btnCloseRules" aria-label="Cerrar">✕</button>
         </div>
         <div class="rules-modal-body">
