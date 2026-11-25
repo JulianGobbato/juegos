@@ -225,6 +225,16 @@
     return code;
   }
 
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function obtenerCoordenadas(canvas, event) {
     const rect = canvas.getBoundingClientRect();
     return {
@@ -238,6 +248,7 @@
   // ============================================================================
   const appState = {
     mode: null, // 'TV' | 'PHONE'
+    currentPhase: 'landing',
     peer: null,
     roomCode: '',
     heartbeatInterval: null,
@@ -267,6 +278,9 @@
 
   const TvHost = {
     players: [], // { id, peerId, conn, name, avatar, color, isVip, isReady }
+    peerRetryCount: 0,
+    peerRetryTimer: null,
+    _eventsBound: false,
     
     // Configuración de la partida
     config: {
@@ -280,6 +294,8 @@
     totalSteps: 0,
     timerSeconds: 0,
     timerInterval: null,
+    graceTimeout: null,
+    stepAdvanceTimeout: null,
 
     // N Libretas simultáneas
     // cadenas[k]: { chainId, authorPlayerId, authorName, authorAvatar, eslabones: [ { tipo, autorId, autorName, autorAvatar, contenido } ] }
@@ -290,11 +306,13 @@
       albumIndex: 0,
       stepRevealIndex: 0,
       autoPlay: false,
-      autoPlayInterval: null
+      autoPlayInterval: null,
+      comparisonTimeout: null
     },
 
     init() {
       appState.mode = 'TV';
+      this.peerRetryCount = 0;
       document.getElementById('screenLanding').classList.remove('active');
       document.getElementById('screenLanding').classList.add('d-none');
       document.getElementById('screenTv').classList.remove('d-none');
@@ -305,6 +323,10 @@
     },
 
     setupPeer() {
+      if (this.peerRetryTimer) {
+        clearTimeout(this.peerRetryTimer);
+        this.peerRetryTimer = null;
+      }
       limpiarConexionPrevia();
       appState.roomCode = generarCodigoSala();
       const peerId = PEER_PREFIX + appState.roomCode;
@@ -319,7 +341,7 @@
               TvHost.renderTvPlayersWorkGrid();
             }
           },
-          getPhaseKey: () => `${appState.currentPhase || 'lobby'}_step_${TvHost.stepIndex}`
+          getPhaseKey: () => `${appState.currentPhase || 'tvViewLobby'}_step_${TvHost.stepIndex}`
         });
         peerResilienceHost.startSleepMonitor();
       }
@@ -334,6 +356,7 @@
       appState.peer = peer;
 
       peer.on('open', (id) => {
+        this.peerRetryCount = 0;
         console.log('TV Host Peer abierto:', id);
         this.showView('tvViewLobby');
       });
@@ -345,7 +368,15 @@
       peer.on('error', (err) => {
         console.error('Error Peer TV:', err);
         if (err.type === 'unavailable-id') {
-          setTimeout(() => this.setupPeer(), 1000);
+          this.peerRetryCount = (this.peerRetryCount || 0) + 1;
+          if (this.peerRetryCount <= 5) {
+            this.peerRetryTimer = setTimeout(() => this.setupPeer(), 1000);
+          } else {
+            const statusMsg = document.getElementById('tvLobbyStatusMsg');
+            if (statusMsg) {
+              statusMsg.textContent = '⚠️ No se pudo registrar la sala en el servidor PeerJS. Recargá la página para reintentar.';
+            }
+          }
         }
       });
     },
@@ -374,6 +405,9 @@
     },
 
     bindEvents() {
+      if (this._eventsBound) return;
+      this._eventsBound = true;
+
       document.getElementById('btnTvStartGame')?.addEventListener('click', () => {
         this.startMatch();
       });
@@ -405,21 +439,25 @@
 
     handleIncomingConnection(conn) {
       conn.on('data', (data) => {
-        if (!data || !data.type) return;
+        try {
+          if (!data || !data.type) return;
 
-        const pId = (data.payload && data.payload.playerId) || conn._playerId;
-        if (pId && peerResilienceHost) {
-          if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
-          if (data.type !== 'JOIN_GAME' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+          const pId = conn._playerId || (data.payload && data.payload.playerId);
+          if (pId && peerResilienceHost) {
+            if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
+            if (data.type !== 'JOIN_GAME' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+          }
+
+          this.handleClientMessage(conn, data);
+        } catch (err) {
+          console.error('Error procesando mensaje de cliente:', err);
         }
-
-        this.handleClientMessage(conn, data);
       });
 
       conn.on('close', () => {
         const pId = conn._playerId;
         if (pId && peerResilienceHost && !peerResilienceHost.isConnectionActive(pId, conn)) return;
-        this.handlePlayerDisconnect(conn.peer);
+        this.handlePlayerDisconnect(conn.peer, conn);
       });
 
       conn.on('error', (e) => {
@@ -428,35 +466,53 @@
     },
 
     handleClientMessage(conn, msg) {
+      const senderId = conn._playerId || (msg.payload && msg.payload.playerId) || null;
+      const senderPlayer = senderId ? this.players.find(p => p.id === senderId) : null;
+      const isVipSender = !!(senderPlayer && senderPlayer.isVip);
+
       switch (msg.type) {
         case 'JOIN_GAME':
-          this.registerPlayer(conn, msg.payload);
+          this.registerPlayer(conn, msg.payload || {});
           break;
         case 'VIP_SETTINGS':
-          this.updateVipSettings(msg.payload);
+          if (!isVipSender) return;
+          this.updateVipSettings(msg.payload || {});
           break;
         case 'VIP_START_MATCH':
+          if (!isVipSender) return;
           this.startMatch();
           break;
-        case 'SUBMIT_STEP_CONTENT':
-          this.handleStepSubmission(msg.payload);
+        case 'SUBMIT_STEP_CONTENT': {
+          const payload = Object.assign({}, msg.payload || {}, {
+            playerId: senderId || (msg.payload && msg.payload.playerId)
+          });
+          this.handleStepSubmission(payload);
           break;
+        }
         case 'PLAYER_EDITING_AGAIN':
-          this.handlePlayerResumeEdit(msg.payload.playerId);
+          this.handlePlayerResumeEdit(senderId || (msg.payload && msg.payload.playerId));
           break;
-        case 'SHOW_REACTION':
-          this.spawnFloatingReaction(msg.payload.emoji, msg.payload.authorName);
+        case 'SHOW_REACTION': {
+          const emoji = msg.payload && msg.payload.emoji;
+          if (!emoji) break;
+          const authorName = senderPlayer ? senderPlayer.name : (msg.payload.authorName || 'Jugador');
+          this.spawnFloatingReaction(emoji, authorName);
           break;
+        }
         case 'VIP_SHOW_PREV_STEP':
+          if (!isVipSender) return;
           this.prevShowStep();
           break;
         case 'VIP_SHOW_NEXT_STEP':
+          if (!isVipSender) return;
           this.revealNextShowStep();
           break;
         case 'VIP_SHOW_NEXT_ALBUM':
+          if (!isVipSender) return;
           this.nextAlbum();
           break;
         case 'REMOTE_SCROLL':
+          if (!isVipSender) return;
           this.handleRemoteScroll(msg.payload?.direction);
           break;
         case 'REQUEST_ALBUM_EXPORT': {
@@ -478,6 +534,7 @@
           break;
         }
         case 'VIP_RESTART_MATCH':
+          if (!isVipSender) return;
           this.restartMatch();
           break;
         case 'PING':
@@ -486,9 +543,47 @@
       }
     },
 
-    registerPlayer(conn, info) {
+    buildShowSyncData() {
+      const compBox = document.getElementById('tvComparisonBox');
+      const isComparisonVisible = compBox ? !compBox.classList.contains('d-none') : false;
+      const canGoBack = (this.showState.albumIndex > 0 || this.showState.stepRevealIndex > 1 || isComparisonVisible);
+      const maxCompletedIdx = isComparisonVisible ? this.showState.albumIndex : this.showState.albumIndex - 1;
+      const revealedAlbums = [];
+      for (let k = 0; k <= maxCompletedIdx; k++) {
+        const cad = this.cadenas[k];
+        if (cad) {
+          revealedAlbums.push({
+            albumIndex: k,
+            authorId: cad.authorPlayerId,
+            authorName: cad.authorName,
+            authorAvatar: cad.authorAvatar
+          });
+        }
+      }
+      const cadena = this.cadenas[this.showState.albumIndex];
+      return {
+        revealedAlbums,
+        showState: {
+          albumIndex: this.showState.albumIndex,
+          totalAlbums: this.cadenas.length,
+          stepRevealIndex: this.showState.stepRevealIndex,
+          totalSteps: cadena ? cadena.eslabones.length : 0,
+          isComparisonVisible,
+          canGoBack,
+          isCompleted: (this.showState.albumIndex + 1 >= this.cadenas.length && isComparisonVisible)
+        }
+      };
+    },
+
+    registerPlayer(conn, info = {}) {
+      const cleanName = (info.name || '').trim();
+      const lowerName = cleanName.toLowerCase();
+
       // Comprobar si es reconexión de un jugador previo
-      const existing = this.players.find(p => (info.playerId && p.id === info.playerId) || (p.name.toLowerCase() === info.name.toLowerCase()));
+      const existing = this.players.find(p =>
+        (info.playerId && p.id === info.playerId) ||
+        (lowerName && p.name.toLowerCase() === lowerName)
+      );
       if (existing) {
         console.log('Reconexión de jugador:', existing.name);
         existing.peerId = conn.peer;
@@ -510,11 +605,16 @@
           }
         });
 
-        // Si la partida está en curso, reenviar tarea
-        if (this.totalSteps > 0 && this.stepIndex < this.totalSteps) {
+        const phase = appState.currentPhase || 'tvViewLobby';
+        if (phase === 'tvViewGame' && this.totalSteps > 0) {
           this.syncPlayerStep(existing);
-        } else if (this.cadenas && this.cadenas.length > 0 && this.stepIndex >= this.totalSteps) {
-          // Si estamos en el Show Final, sincronizar estado del show
+          if (this.timerSeconds > 0) {
+            try {
+              conn.send({ type: 'TIMER_TICK', payload: { remaining: this.timerSeconds } });
+            } catch (e) {}
+          }
+        } else if (phase === 'tvViewShow' && this.cadenas && this.cadenas.length > 0) {
+          const syncInfo = this.buildShowSyncData();
           conn.send({
             type: 'START_FINAL_SHOW',
             payload: {
@@ -522,25 +622,52 @@
               albumIndex: this.showState.albumIndex
             }
           });
-          // Notificar álbumes completados hasta ahora
-          const isComp = !document.getElementById('tvComparisonBox').classList.contains('d-none');
-          const maxCompletedIdx = isComp ? this.showState.albumIndex : this.showState.albumIndex - 1;
-          for (let k = 0; k <= maxCompletedIdx; k++) {
-            const cad = this.cadenas[k];
-            if (cad) {
-              conn.send({
-                type: 'ALBUM_COMPLETED',
-                payload: {
-                  albumIndex: k,
-                  authorId: cad.authorPlayerId,
-                  authorName: cad.authorName,
-                  authorAvatar: cad.authorAvatar,
-                  isLastAlbum: (k + 1 >= this.cadenas.length)
-                }
-              });
+          syncInfo.revealedAlbums.forEach((alb) => {
+            conn.send({
+              type: 'ALBUM_COMPLETED',
+              payload: {
+                albumIndex: alb.albumIndex,
+                authorId: alb.authorId,
+                authorName: alb.authorName,
+                authorAvatar: alb.authorAvatar,
+                isLastAlbum: (alb.albumIndex + 1 >= this.cadenas.length)
+              }
+            });
+          });
+          conn.send({ type: 'SHOW_STATE_UPDATE', payload: syncInfo.showState });
+          conn.send({
+            type: 'FULL_STATE_SYNC',
+            payload: {
+              screenPhase: 'SHOW',
+              phaseKey: `show_${this.showState.albumIndex}_${this.showState.stepRevealIndex}`,
+              revealedAlbums: syncInfo.revealedAlbums,
+              showState: syncInfo.showState
             }
-          }
-          this.broadcastShowState();
+          });
+        } else if (phase === 'tvViewEnd' && this.cadenas && this.cadenas.length > 0) {
+          const allAlbumsMeta = this.cadenas.map((cad, idx) => ({
+            albumIndex: idx,
+            authorId: cad.authorPlayerId,
+            authorName: cad.authorName,
+            authorAvatar: cad.authorAvatar
+          }));
+          conn.send({ type: 'MATCH_FINISHED', payload: { albums: allAlbumsMeta } });
+          conn.send({
+            type: 'FULL_STATE_SYNC',
+            payload: {
+              screenPhase: 'END',
+              phaseKey: 'end_recap',
+              albums: allAlbumsMeta
+            }
+          });
+        } else {
+          conn.send({
+            type: 'FULL_STATE_SYNC',
+            payload: {
+              screenPhase: 'LOBBY',
+              phaseKey: 'lobby'
+            }
+          });
         }
 
         this.renderLobbyRoster();
@@ -553,6 +680,11 @@
         return;
       }
 
+      if (appState.currentPhase && appState.currentPhase !== 'tvViewLobby') {
+        conn.send({ type: 'JOIN_REJECTED', payload: { reason: 'La partida ya está en curso en esta sala.' } });
+        return;
+      }
+
       const isVip = this.players.length === 0;
       const assignedColor = PLAYER_COLORS[this.players.length % PLAYER_COLORS.length];
 
@@ -560,7 +692,7 @@
         id: info.playerId || ('p_' + Math.random().toString(36).substring(2, 9)),
         peerId: conn.peer,
         conn: conn,
-        name: (info.name || 'Jugador').trim().substring(0, 14),
+        name: (cleanName || 'Jugador').substring(0, 14),
         avatar: info.avatar || '🦊',
         color: assignedColor,
         isVip: isVip,
@@ -591,14 +723,15 @@
       this.broadcastRoster();
     },
 
-    handlePlayerDisconnect(peerId) {
-      const idx = this.players.findIndex(p => p.peerId === peerId);
+    handlePlayerDisconnect(peerId, conn) {
+      const idx = this.players.findIndex(p => p.peerId === peerId && (!conn || p.conn === conn));
       if (idx !== -1) {
         const p = this.players[idx];
         console.log('Jugador desconectado:', p.name);
         // Si no empezó la partida, eliminarlo
-        if (this.totalSteps === 0) {
+        if (this.totalSteps === 0 || appState.currentPhase === 'tvViewLobby') {
           this.players.splice(idx, 1);
+          if (peerResilienceHost) peerResilienceHost.removePlayer(p.id);
           if (p.isVip && this.players.length > 0) {
             this.players[0].isVip = true;
             try { this.players[0].conn.send({ type: 'ASSIGNED_VIP' }); } catch (e) {}
@@ -648,10 +781,10 @@
         const card = document.createElement('div');
         card.className = `player-lobby-card ${p.isVip ? 'is-vip' : ''}`;
         card.innerHTML = `
-          <div class="player-avatar-badge">${p.avatar}</div>
+          <div class="player-avatar-badge">${escapeHtml(p.avatar)}</div>
           <div class="player-meta">
             <div class="player-name-text">
-              ${p.name} ${p.isVip ? '<span class="vip-crown-tag" title="Anfitrión VIP">👑</span>' : ''} ${p.isAsleep ? '<span class="sleep-tag" title="Celular en reposo" style="margin-left:4px;">💤</span>' : ''}
+              ${escapeHtml(p.name)} ${p.isVip ? '<span class="vip-crown-tag" title="Anfitrión VIP">👑</span>' : ''} ${p.isAsleep ? '<span class="sleep-tag" title="Celular en reposo" style="margin-left:4px;">💤</span>' : ''}
             </div>
             <div class="player-color-pill">
               <span class="color-dot" style="background-color: ${p.color};"></span>
@@ -703,6 +836,7 @@
     },
 
     showView(viewId) {
+      appState.currentPhase = viewId;
       const views = ['tvViewLobby', 'tvViewGame', 'tvViewShow', 'tvViewEnd'];
       views.forEach(v => {
         const el = document.getElementById(v);
@@ -716,8 +850,30 @@
     // ==========================================================================
     // FLUJO DE JUEGO (CADENAS PARALELAS Y ROTACIÓN)
     // ==========================================================================
+    clearStepTimers() {
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+      }
+      if (this.graceTimeout) {
+        clearTimeout(this.graceTimeout);
+        this.graceTimeout = null;
+      }
+      if (this.stepAdvanceTimeout) {
+        clearTimeout(this.stepAdvanceTimeout);
+        this.stepAdvanceTimeout = null;
+      }
+    },
+
     startMatch() {
-      if (this.players.length < 3) return;
+      if (this.players.length < 3 || appState.currentPhase === 'tvViewGame') return;
+
+      this.clearStepTimers();
+      clearInterval(this.showState.autoPlayInterval);
+      if (this.showState.comparisonTimeout) {
+        clearTimeout(this.showState.comparisonTimeout);
+        this.showState.comparisonTimeout = null;
+      }
 
       const N = this.players.length;
       this.totalSteps = this.config.chainLength === 'full' ? N : Math.min(4, N);
@@ -736,8 +892,8 @@
     },
 
     startStep(s) {
+      this.clearStepTimers();
       this.stepIndex = s;
-      const N = this.players.length;
 
       // Resetear estado de listos
       this.players.forEach(p => { p.isReady = false; });
@@ -747,7 +903,6 @@
       // Paso impar (1, 3, 5...): Dibujar el texto anterior
       // Paso par (2, 4, 6...): Adivinar/escribir el dibujo anterior
       const isDrawingStep = (s % 2 === 1);
-      const phaseType = isDrawingStep ? 'DIBUJAR' : 'ESCRIBIR';
 
       this.showView('tvViewGame');
       SoundEffects.playPhaseStart();
@@ -777,27 +932,28 @@
 
       // Enviar a cada jugador su tarea correspondiente
       this.players.forEach((p, i) => {
-        this.sendTaskToPlayer(p, i, s);
+        this.sendTaskToPlayer(p, i, s, false);
       });
     },
 
-    sendTaskToPlayer(player, i, s) {
+    sendTaskToPlayer(player, i, s, isSyncOnly = false) {
       const N = this.players.length;
       // Rotación: en el paso s, el jugador i recibe la libreta (i - s + N) % N
       const chainIdx = (i - s + N) % N;
       const cadena = this.cadenas[chainIdx];
 
       const isDrawingStep = (s % 2 === 1);
-      const prevEslabon = s > 0 ? cadena.eslabones[s - 1] : null;
+      const prevEslabon = s > 0 && cadena ? cadena.eslabones[s - 1] : null;
 
       let payload = {
+        screenPhase: 'GAME',
         stepIndex: s,
         totalSteps: this.totalSteps,
         phaseType: isDrawingStep ? 'DIBUJAR' : 'ESCRIBIR',
         timerSeconds: isDrawingStep ? this.config.timeDraw : this.config.timeWrite,
         phraseMode: this.config.phraseMode,
-        chainOwnerName: cadena.authorName,
-        chainOwnerAvatar: cadena.authorAvatar,
+        chainOwnerName: cadena ? cadena.authorName : player.name,
+        chainOwnerAvatar: cadena ? cadena.authorAvatar : player.avatar,
         promptText: null,
         promptDrawing: null,
         randomIdea: null
@@ -818,12 +974,9 @@
       payload.phaseKey = `step_${s}`;
 
       try {
+        if (!player.conn || !player.conn.open) return;
         player.conn.send({
-          type: 'START_STEP_TASK',
-          payload: payload
-        });
-        player.conn.send({
-          type: 'FULL_STATE_SYNC',
+          type: isSyncOnly ? 'FULL_STATE_SYNC' : 'START_STEP_TASK',
           payload: payload
         });
       } catch (e) {
@@ -834,7 +987,7 @@
     syncPlayerStep(player) {
       const i = this.players.indexOf(player);
       if (i !== -1) {
-        this.sendTaskToPlayer(player, i, this.stepIndex);
+        this.sendTaskToPlayer(player, i, this.stepIndex, true);
       }
     },
 
@@ -849,6 +1002,7 @@
 
     startTimer(seconds) {
       clearInterval(this.timerInterval);
+      this.timerInterval = null;
       this.timerSeconds = seconds;
 
       const clockBadge = document.getElementById('tvClockBadge');
@@ -875,6 +1029,7 @@
           });
         } else {
           clearInterval(this.timerInterval);
+          this.timerInterval = null;
           clockText.textContent = '0s';
           this.handleTimeout();
         }
@@ -882,18 +1037,27 @@
     },
 
     handleTimeout() {
+      if (appState.currentPhase !== 'tvViewGame') return;
+      const stepAtTimeout = this.stepIndex;
+
       // El tiempo terminó: enviar FORCE_SUBMIT a los jugadores pendientes
       const pendingPlayers = this.players.filter(p => !p.isReady);
       if (pendingPlayers.length > 0) {
         console.log('Tiempo agotado. Solicitando FORCE_SUBMIT a:', pendingPlayers.map(p => p.name));
         pendingPlayers.forEach(p => {
           try {
-            p.conn.send({ type: 'FORCE_SUBMIT' });
+            if (p.conn && p.conn.open) {
+              p.conn.send({ type: 'FORCE_SUBMIT' });
+            }
           } catch (e) {}
         });
 
         // Esperar ventana de gracia de 1.8s para recepción de datos
-        setTimeout(() => {
+        if (this.graceTimeout) clearTimeout(this.graceTimeout);
+        this.graceTimeout = setTimeout(() => {
+          this.graceTimeout = null;
+          if (appState.currentPhase !== 'tvViewGame' || this.stepIndex !== stepAtTimeout) return;
+
           // Si alguno no llegó a enviar, inyectar respuesta de emergencia
           this.players.forEach((p, i) => {
             if (!p.isReady) {
@@ -934,7 +1098,8 @@
 
     handleStepSubmission(payload) {
       // payload: { playerId, stepIndex, contentType, content }
-      if (payload.stepIndex !== this.stepIndex) return;
+      if (appState.currentPhase !== 'tvViewGame') return;
+      if (!payload || payload.stepIndex !== this.stepIndex) return;
 
       const i = this.players.findIndex(p => p.id === payload.playerId);
       if (i === -1) return;
@@ -960,9 +1125,14 @@
     },
 
     handlePlayerResumeEdit(playerId) {
+      if (appState.currentPhase !== 'tvViewGame') return;
       const player = this.players.find(p => p.id === playerId);
       if (player) {
         player.isReady = false;
+        if (this.stepAdvanceTimeout) {
+          clearTimeout(this.stepAdvanceTimeout);
+          this.stepAdvanceTimeout = null;
+        }
         this.renderTvPlayersWorkGrid();
       }
     },
@@ -982,8 +1152,8 @@
         card.className = `player-work-card ${p.isReady ? 'is-ready' : ''}`;
         card.innerHTML = `
           <div class="work-card-user">
-            <span class="work-card-avatar">${p.avatar}</span>
-            <span class="work-card-name">${p.name}</span>
+            <span class="work-card-avatar">${escapeHtml(p.avatar)}</span>
+            <span class="work-card-name">${escapeHtml(p.name)}</span>
           </div>
           <span class="work-card-status-pill ${p.isReady ? 'status-ready' : 'status-working'}">
             ${p.isReady ? '✅ ¡Listo!' : (p.isAsleep ? '💤 En reposo' : '🎨 Trabajando...')}
@@ -994,10 +1164,26 @@
     },
 
     checkStepCompletion() {
-      const allReady = this.players.every(p => p.isReady);
+      if (appState.currentPhase !== 'tvViewGame') return;
+      const allReady = this.players.length > 0 && this.players.every(p => p.isReady);
       if (allReady) {
-        clearInterval(this.timerInterval);
-        setTimeout(() => {
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        if (this.graceTimeout) {
+          clearTimeout(this.graceTimeout);
+          this.graceTimeout = null;
+        }
+        if (this.stepAdvanceTimeout) {
+          clearTimeout(this.stepAdvanceTimeout);
+        }
+        const expectedStep = this.stepIndex;
+        this.stepAdvanceTimeout = setTimeout(() => {
+          this.stepAdvanceTimeout = null;
+          if (appState.currentPhase !== 'tvViewGame' || this.stepIndex !== expectedStep) return;
+          if (!this.players.every(p => p.isReady)) return;
+
           if (this.stepIndex + 1 < this.totalSteps) {
             this.startStep(this.stepIndex + 1);
           } else {
@@ -1012,6 +1198,11 @@
     // EL GRAN SHOW FINAL (EXHIBICIÓN DE HISTORIAS)
     // ==========================================================================
     startFinalShow() {
+      this.clearStepTimers();
+      if (this.showState.comparisonTimeout) {
+        clearTimeout(this.showState.comparisonTimeout);
+        this.showState.comparisonTimeout = null;
+      }
       this.showView('tvViewShow');
       SoundEffects.playApplause();
 
@@ -1019,6 +1210,8 @@
       this.showState.stepRevealIndex = 0;
       this.showState.autoPlay = false;
       clearInterval(this.showState.autoPlayInterval);
+      const btnAuto = document.getElementById('btnTvAutoPlay');
+      if (btnAuto) btnAuto.textContent = '▶️ Reproducción Automática';
 
       // Notificar a celulares que pasaron al Show Final
       this.broadcast({
@@ -1034,6 +1227,10 @@
     },
 
     renderAlbumHeader() {
+      if (this.showState.comparisonTimeout) {
+        clearTimeout(this.showState.comparisonTimeout);
+        this.showState.comparisonTimeout = null;
+      }
       const cadena = this.cadenas[this.showState.albumIndex];
       document.getElementById('tvAlbumIndexPill').textContent = `ÁLBUM ${this.showState.albumIndex + 1} DE ${this.cadenas.length}`;
       document.getElementById('tvAlbumAuthorTitle').textContent = `Iniciado por ${cadena.authorAvatar} ${cadena.authorName}`;
@@ -1041,7 +1238,13 @@
       const streamEl = document.getElementById('tvChainStream');
       streamEl.innerHTML = '';
       document.getElementById('tvComparisonBox').classList.add('d-none');
-      document.getElementById('btnTvNextAlbum').classList.add('d-none');
+      const btnNextAlb = document.getElementById('btnTvNextAlbum');
+      if (btnNextAlb) {
+        btnNextAlb.classList.add('d-none');
+        btnNextAlb.innerHTML = (this.showState.albumIndex + 1 >= this.cadenas.length)
+          ? '<span>🏁 Ver Resumen Final</span>'
+          : '<span>⏩ Siguiente Álbum</span>';
+      }
       document.getElementById('btnTvDownloadComic').classList.add('d-none');
       document.getElementById('btnTvNextShowStep').classList.remove('d-none');
 
@@ -1074,6 +1277,7 @@
 
     revealNextShowStep() {
       const cadena = this.cadenas[this.showState.albumIndex];
+      if (!cadena) return;
       const stepIdx = this.showState.stepRevealIndex;
 
       if (stepIdx < cadena.eslabones.length) {
@@ -1092,7 +1296,11 @@
 
         // Si fue el último eslabón de este álbum:
         if (this.showState.stepRevealIndex >= cadena.eslabones.length) {
-          setTimeout(() => {
+          if (this.showState.comparisonTimeout) clearTimeout(this.showState.comparisonTimeout);
+          const expectedAlbum = this.showState.albumIndex;
+          this.showState.comparisonTimeout = setTimeout(() => {
+            this.showState.comparisonTimeout = null;
+            if (appState.currentPhase !== 'tvViewShow' || this.showState.albumIndex !== expectedAlbum) return;
             this.showAlbumComparison(cadena);
           }, 800);
         }
@@ -1100,6 +1308,10 @@
     },
 
     prevShowStep() {
+      if (this.showState.comparisonTimeout) {
+        clearTimeout(this.showState.comparisonTimeout);
+        this.showState.comparisonTimeout = null;
+      }
       const compBox = document.getElementById('tvComparisonBox');
       const isComparisonVisible = !compBox.classList.contains('d-none');
 
@@ -1139,6 +1351,10 @@
 
     prevAlbum() {
       if (this.showState.albumIndex <= 0) return;
+      if (this.showState.comparisonTimeout) {
+        clearTimeout(this.showState.comparisonTimeout);
+        this.showState.comparisonTimeout = null;
+      }
       this.showState.albumIndex--;
       const cadena = this.cadenas[this.showState.albumIndex];
 
@@ -1180,20 +1396,20 @@
 
       let contentHtml = '';
       if (eslabon.tipo === 'TEXTO') {
-        contentHtml = `<div class="step-text-bubble">"${eslabon.contenido}"</div>`;
+        contentHtml = `<div class="step-text-bubble">"${escapeHtml(eslabon.contenido)}"</div>`;
       } else {
         contentHtml = `
           <div class="step-drawing-frame">
-            <img src="${eslabon.contenido}" alt="Dibujo de ${eslabon.autorName}" class="step-drawing-img">
+            <img src="${escapeHtml(eslabon.contenido)}" alt="Dibujo de ${escapeHtml(eslabon.autorName)}" class="step-drawing-img">
           </div>
         `;
       }
 
       card.innerHTML = `
         <div class="step-card-header">
-          <span class="step-author-avatar">${eslabon.autorAvatar}</span>
+          <span class="step-author-avatar">${escapeHtml(eslabon.autorAvatar)}</span>
           <div class="step-meta-info">
-            <span class="step-author-name">${eslabon.autorName}</span>
+            <span class="step-author-name">${escapeHtml(eslabon.autorName)}</span>
             <span class="step-action-label">${actionDesc}</span>
           </div>
         </div>
@@ -1224,7 +1440,13 @@
       document.getElementById('tvComparisonFinalAuthor').textContent = `Terminado por ${finalEslabon.autorAvatar} ${finalEslabon.autorName}`;
 
       document.getElementById('btnTvNextShowStep').classList.add('d-none');
-      document.getElementById('btnTvNextAlbum').classList.remove('d-none');
+      const btnNextAlbum = document.getElementById('btnTvNextAlbum');
+      if (btnNextAlbum) {
+        btnNextAlbum.classList.remove('d-none');
+        btnNextAlbum.innerHTML = (this.showState.albumIndex + 1 >= this.cadenas.length)
+          ? '<span>🏁 Ver Resumen Final</span>'
+          : '<span>⏩ Siguiente Álbum</span>';
+      }
       document.getElementById('btnTvDownloadComic').classList.remove('d-none');
 
       compBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1245,6 +1467,10 @@
     },
 
     nextAlbum() {
+      if (this.showState.comparisonTimeout) {
+        clearTimeout(this.showState.comparisonTimeout);
+        this.showState.comparisonTimeout = null;
+      }
       this.showState.albumIndex++;
       this.showState.stepRevealIndex = 0;
 
@@ -1269,6 +1495,11 @@
         btn.textContent = '⏸️ Pausar Reproducción';
         this.showState.autoPlayInterval = setInterval(() => {
           const cadena = this.cadenas[this.showState.albumIndex];
+          if (!cadena) {
+            this.showState.autoPlay = false;
+            clearInterval(this.showState.autoPlayInterval);
+            return;
+          }
           if (this.showState.stepRevealIndex < cadena.eslabones.length) {
             this.revealNextShowStep();
           } else {
@@ -1288,7 +1519,7 @@
 
       const bubble = document.createElement('div');
       bubble.className = 'floating-reaction';
-      bubble.innerHTML = `<span>${emoji}</span> <span class="reaction-author-tag">${authorName}</span>`;
+      bubble.innerHTML = `<span>${escapeHtml(emoji)}</span> <span class="reaction-author-tag">${escapeHtml(authorName)}</span>`;
 
       // Posición horizontal con variación
       const randOffset = Math.floor(Math.random() * 80) - 40;
@@ -1305,7 +1536,12 @@
     },
 
     showFinalRecapView() {
+      this.showState.autoPlay = false;
       clearInterval(this.showState.autoPlayInterval);
+      if (this.showState.comparisonTimeout) {
+        clearTimeout(this.showState.comparisonTimeout);
+        this.showState.comparisonTimeout = null;
+      }
       this.showView('tvViewEnd');
       Confetti.start(6000);
       SoundEffects.playApplause();
@@ -1314,16 +1550,18 @@
       recapGrid.innerHTML = '';
 
       this.cadenas.forEach((cad, idx) => {
+        const firstStep = cad.eslabones[0];
+        const lastStep = cad.eslabones[cad.eslabones.length - 1];
         const card = document.createElement('div');
         card.className = 'player-lobby-card p-3 d-flex flex-column gap-2 text-start';
         card.innerHTML = `
-          <div class="d-flex justify-content-between align-items-center">
-            <strong>Álbum #${idx + 1} (${cad.authorAvatar} ${cad.authorName})</strong>
+          <div class="d-flex justify-content-between align-items-center w-100">
+            <strong>Álbum #${idx + 1} (${escapeHtml(cad.authorAvatar)} ${escapeHtml(cad.authorName)})</strong>
             <button type="button" class="btn btn-sm btn-outline-info btn-download-single-recap" data-album="${idx}">📸 Descargar</button>
           </div>
-          <div class="text-muted small">
-            Inicio: "${cad.eslabones[0]?.contenido || ''}"<br>
-            Fin: "${cad.eslabones[cad.eslabones.length - 1]?.contenido || ''}"
+          <div class="text-muted small w-100">
+            Inicio: "${escapeHtml(firstStep?.contenido || '')}"<br>
+            Fin: ${lastStep?.tipo === 'TEXTO' ? `"${escapeHtml(lastStep?.contenido || '')}"` : '(Dibujo final)'}
           </div>
         `;
         recapGrid.appendChild(card);
@@ -1350,12 +1588,27 @@
     },
 
     restartMatch() {
+      this.clearStepTimers();
+      this.showState.autoPlay = false;
+      clearInterval(this.showState.autoPlayInterval);
+      if (this.showState.comparisonTimeout) {
+        clearTimeout(this.showState.comparisonTimeout);
+        this.showState.comparisonTimeout = null;
+      }
+      const btnAuto = document.getElementById('btnTvAutoPlay');
+      if (btnAuto) btnAuto.textContent = '▶️ Reproducción Automática';
+
       this.showView('tvViewLobby');
       this.totalSteps = 0;
       this.stepIndex = 0;
       this.cadenas = [];
+      this.players.forEach(p => { p.isReady = false; });
       this.renderLobbyRoster();
       this.broadcastRoster();
+      this.broadcast({
+        type: 'RETURN_TO_LOBBY',
+        payload: { config: this.config }
+      });
     }
   };
 
@@ -1509,7 +1762,7 @@
         }
 
         // Header de autor
-        ctx.fillStyle = '#94a3b8';
+        ctx.fillStyle = '#cbd5e1';
         ctx.font = 'bold 18px sans-serif';
         ctx.textAlign = 'left';
         ctx.fillText(`${eslabon.autorAvatar || '👤'} ${eslabon.autorName || 'Jugador'} ${actionDesc}`, 50, curY + 20);
@@ -1568,36 +1821,55 @@
       });
 
       // Pie
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = '#94a3b8';
       ctx.font = 'italic 16px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('Hub de Juegos • juliangobbato.github.io/juegos', width / 2, totalHeight - 32);
 
-      // 4. Exportar a Blob y disparar descarga
-      canvas.toBlob(blob => {
-        if (!blob) {
-          throw new Error('No se pudo generar el Blob de imagen');
-        }
+      // 4. Exportar a Blob (con fallback DataURL) y disparar descarga
+      const cleanName = (album.authorName || 'album').toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+      const filename = `telefono-descompuesto-${cleanName}.png`;
 
-        const cleanName = (album.authorName || 'album').toLowerCase().replace(/[^a-z0-9_-]/g, '_');
-        const filename = `telefono-descompuesto-${cleanName}.png`;
-        const blobUrl = URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 7000);
-
+      const finishButtonSuccess = () => {
         if (btnEl) {
           btnEl.disabled = false;
           btnEl.innerHTML = '<span>✅ ¡Tira Descargada!</span>';
           setTimeout(() => {
-            btnEl.innerHTML = originalBtnText || `<span>📸 Descargar Tira de ${album.authorAvatar || ''} ${album.authorName}</span>`;
+            btnEl.innerHTML = originalBtnText || `<span>📸 Descargar Tira de ${escapeHtml(album.authorAvatar || '')} ${escapeHtml(album.authorName)}</span>`;
           }, 2500);
+        }
+      };
+
+      const triggerDownloadHref = (href, revokeLater) => {
+        const a = document.createElement('a');
+        a.href = href;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        if (revokeLater) {
+          setTimeout(() => URL.revokeObjectURL(href), 7000);
+        }
+      };
+
+      canvas.toBlob(blob => {
+        try {
+          if (blob) {
+            const blobUrl = URL.createObjectURL(blob);
+            triggerDownloadHref(blobUrl, true);
+            finishButtonSuccess();
+          } else {
+            const dataUrl = canvas.toDataURL('image/png');
+            triggerDownloadHref(dataUrl, false);
+            finishButtonSuccess();
+          }
+        } catch (err) {
+          console.error('Error descargando el Blob de la tira:', err);
+          if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.innerHTML = originalBtnText || '<span>📸 Descargar Tira</span>';
+          }
+          alert('Hubo un problema al generar la imagen. Intentá de nuevo.');
         }
       }, 'image/png');
 
@@ -1620,6 +1892,8 @@
     name: '',
     avatar: '🦊',
     isVip: false,
+    _eventsBound: false,
+    _downloadTimeout: null,
 
     currentStepIndex: 0,
     currentPhaseType: 'ESCRIBIR', // 'ESCRIBIR' o 'DIBUJAR'
@@ -1641,6 +1915,7 @@
       appState.mode = 'PHONE';
       this.revealedAlbums = [];
       this.activeDownloadBtn = null;
+      this.clearDownloadTimeout();
       document.getElementById('screenLanding').classList.remove('active');
       document.getElementById('screenLanding').classList.add('d-none');
       document.getElementById('screenPhone').classList.remove('d-none');
@@ -1659,6 +1934,8 @@
       const savedName = sessionStorage.getItem('telefono_name');
       const savedAvatar = sessionStorage.getItem('telefono_avatar');
 
+      if (savedId) this.playerId = savedId;
+
       if (preloadedRoomCode) {
         const inputRoom = document.getElementById('inputPhoneRoom');
         if (inputRoom) inputRoom.value = preloadedRoomCode.toUpperCase();
@@ -1674,9 +1951,32 @@
       if (savedAvatar) {
         this.avatar = savedAvatar;
         document.getElementById('inputPhoneAvatar').value = savedAvatar;
+        const picker = document.getElementById('phoneAvatarPicker');
+        if (picker) {
+          picker.querySelectorAll('.avatar-opt-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent === savedAvatar);
+          });
+        }
       }
 
       this.showView('phoneViewJoin');
+    },
+
+    clearDownloadTimeout() {
+      if (this._downloadTimeout) {
+        clearTimeout(this._downloadTimeout);
+        this._downloadTimeout = null;
+      }
+    },
+
+    stripRoomQueryParam() {
+      try {
+        const u = new URL(window.location.href);
+        if (u.searchParams.has('sala')) {
+          u.searchParams.delete('sala');
+          window.history.replaceState({}, '', u.toString());
+        }
+      } catch (e) {}
     },
 
     renderAvatarPicker() {
@@ -1722,6 +2022,9 @@
     },
 
     bindEvents() {
+      if (this._eventsBound) return;
+      this._eventsBound = true;
+
       document.getElementById('btnPhoneJoin')?.addEventListener('click', () => {
         this.attemptJoin();
       });
@@ -1784,7 +2087,11 @@
 
       // Conectar a otra sala
       document.getElementById('btnChangeRoomPhone')?.addEventListener('click', () => {
+        if (peerResilienceClient) peerResilienceClient.stop();
+        this.clearDownloadTimeout();
         sessionStorage.removeItem('telefono_room');
+        appState.roomCode = '';
+        this.stripRoomQueryParam();
         limpiarConexionPrevia();
         this.showView('phoneViewJoin');
       });
@@ -1981,6 +2288,7 @@
     },
 
     connectToTv(roomCode) {
+      if (!roomCode) return;
       limpiarConexionPrevia();
       const alertBox = document.getElementById('phoneJoinAlert');
 
@@ -1991,10 +2299,12 @@
           getPeer: () => appState.peer,
           getRoomCode: () => appState.roomCode,
           onReconnect: () => {
-            this.connectToTv(appState.roomCode);
+            if (appState.roomCode) {
+              this.connectToTv(appState.roomCode);
+            }
           },
           onStateSync: (payload) => {
-            this.setupStepTask(payload);
+            this.applyFullStateSync(payload);
           }
         });
       }
@@ -2016,7 +2326,7 @@
         conn.on('open', () => {
           if (peerResilienceClient) peerResilienceClient.onConnected();
           console.log('Conectado a la TV:', roomCode);
-          const savedId = sessionStorage.getItem('telefono_player_id');
+          const savedId = sessionStorage.getItem('telefono_player_id') || this.playerId;
           this.send({
             type: 'JOIN_GAME',
             payload: {
@@ -2028,11 +2338,16 @@
         });
 
         conn.on('data', (data) => {
-          this.handleTvMessage(data);
+          try {
+            this.handleTvMessage(data);
+          } catch (err) {
+            console.error('Error manejando mensaje de TV:', err);
+          }
         });
 
         conn.on('close', () => {
-          if (peerResilienceClient) {
+          if (this.conn !== conn) return;
+          if (peerResilienceClient && appState.roomCode) {
             peerResilienceClient.checkConnectionInstantly();
           } else {
             this.handlePeerUnavailable(roomCode);
@@ -2040,7 +2355,8 @@
         });
 
         conn.on('error', () => {
-          if (peerResilienceClient) {
+          if (this.conn !== conn) return;
+          if (peerResilienceClient && appState.roomCode) {
             peerResilienceClient.checkConnectionInstantly();
           } else {
             this.handlePeerUnavailable(roomCode);
@@ -2053,20 +2369,27 @@
         if (err.type === 'peer-unavailable') {
           this.handlePeerUnavailable(roomCode);
         } else {
-          alertBox.textContent = 'Error de conexión. Verificá tu red o código.';
-          alertBox.classList.remove('d-none');
+          if (alertBox) {
+            alertBox.textContent = 'Error de conexión. Verificá tu red o código.';
+            alertBox.classList.remove('d-none');
+          }
         }
       });
     },
 
     handlePeerUnavailable(roomCode) {
+      if (peerResilienceClient) peerResilienceClient.stop();
+      this.clearDownloadTimeout();
       sessionStorage.removeItem('telefono_room');
+      appState.roomCode = '';
+      this.stripRoomQueryParam();
       limpiarConexionPrevia();
       this.showView('phoneViewJoin');
 
       const alertEl = document.getElementById('phoneJoinAlert');
+      if (!alertEl) return;
       alertEl.innerHTML = `
-        <div>⚠️ La sala <strong>${roomCode}</strong> ya no existe o la TV cambió de sala.</div>
+        <div>⚠️ La sala <strong>${escapeHtml(roomCode)}</strong> ya no existe o la TV cambió de sala.</div>
         <button type="button" class="btn btn-sm btn-outline-light mt-2" id="btnRetryOtherRoom">🔄 Conectar a otra sala</button>
       `;
       alertEl.classList.remove('d-none');
@@ -2082,12 +2405,48 @@
     },
 
     send(msg) {
-      if (this.conn && this.conn.open) {
+      if (this.conn && this.conn.open && msg) {
         try {
-          this.conn.send(msg);
+          const pid = this.playerId || sessionStorage.getItem('telefono_player_id');
+          const outgoing = (pid && msg.type !== 'JOIN_GAME' && msg.type !== 'PING')
+            ? Object.assign({}, msg, { payload: Object.assign({}, msg.payload || {}, { playerId: pid }) })
+            : msg;
+          this.conn.send(outgoing);
         } catch (e) {
           console.warn('Error enviando mensaje a TV:', e);
         }
+      }
+    },
+
+    applyFullStateSync(data) {
+      if (!data) return;
+      if (data.screenPhase === 'LOBBY') {
+        this.showView('phoneViewLobby');
+        return;
+      }
+      if (data.screenPhase === 'SHOW') {
+        if (Array.isArray(data.revealedAlbums)) {
+          data.revealedAlbums.forEach(a => this.addRevealedAlbum(a));
+        }
+        this.showView('phonePhaseShow');
+        if (data.showState) {
+          this.updateShowStateFromTv(data.showState);
+        } else {
+          this.updateShowVipControls();
+        }
+        return;
+      }
+      if (data.screenPhase === 'END') {
+        if (Array.isArray(data.albums)) {
+          data.albums.forEach(a => this.addRevealedAlbum(a));
+        }
+        this.renderRevealedAlbumsList();
+        this.showView('phonePhaseShow');
+        this.updateShowVipControls();
+        return;
+      }
+      if (data.phaseType === 'ESCRIBIR' || data.phaseType === 'DIBUJAR') {
+        this.setupStepTask(data);
       }
     },
 
@@ -2095,7 +2454,7 @@
       if (!msg || !msg.type) return;
       if (peerResilienceClient && peerResilienceClient.handleIncomingData(msg)) return;
       if (msg.type === 'FULL_STATE_SYNC') {
-        this.setupStepTask(msg.payload || msg);
+        this.applyFullStateSync(msg.payload || msg);
         return;
       }
 
@@ -2103,10 +2462,18 @@
         case 'JOIN_ACCEPTED':
           this.onJoinAccepted(msg.payload);
           break;
-        case 'JOIN_REJECTED':
-          alert(msg.payload.reason);
+        case 'JOIN_REJECTED': {
+          if (peerResilienceClient) peerResilienceClient.stop();
+          limpiarConexionPrevia();
+          appState.roomCode = '';
           this.showView('phoneViewJoin');
+          const alertBox = document.getElementById('phoneJoinAlert');
+          if (alertBox) {
+            alertBox.textContent = (msg.payload && msg.payload.reason) || 'No se pudo ingresar a la sala.';
+            alertBox.classList.remove('d-none');
+          }
           break;
+        }
         case 'ROSTER_UPDATE':
           this.updateLobbyPlayers(msg.payload);
           break;
@@ -2114,6 +2481,7 @@
           this.isVip = true;
           document.getElementById('phoneVipPanel')?.classList.remove('d-none');
           document.getElementById('phoneWaitHostPanel')?.classList.add('d-none');
+          this.updateShowVipControls();
           break;
         case 'SETTINGS_SYNC':
           this.applySettingsSync(msg.payload.config);
@@ -2128,6 +2496,8 @@
           this.autoSubmitDueToTimeout();
           break;
         case 'START_FINAL_SHOW':
+          this.revealedAlbums = [];
+          this.renderRevealedAlbumsList();
           this.showView('phonePhaseShow');
           this.updateShowVipControls();
           break;
@@ -2140,20 +2510,38 @@
         case 'ALBUM_COMPLETED':
           this.onAlbumCompleted(msg.payload);
           break;
-        case 'ALBUM_EXPORT_DATA':
+        case 'ALBUM_EXPORT_DATA': {
+          this.clearDownloadTimeout();
+          const albIdx = msg.payload?.albumIndex;
+          const matchedBtn = (typeof albIdx === 'number')
+            ? document.querySelector(`#phoneAlbumsDownloadList button[data-album-index="${albIdx}"]`)
+            : null;
+          const targetBtn = matchedBtn || this.activeDownloadBtn;
           if (msg.payload && msg.payload.album) {
-            generarYDescargarTiraPNG(msg.payload.album, this.activeDownloadBtn);
-          } else if (this.activeDownloadBtn) {
-            this.activeDownloadBtn.disabled = false;
-            this.activeDownloadBtn.innerHTML = '<span>❌ Error al exportar</span>';
+            generarYDescargarTiraPNG(msg.payload.album, targetBtn);
+          } else if (targetBtn) {
+            targetBtn.disabled = false;
+            targetBtn.innerHTML = '<span>❌ Error al exportar</span>';
           }
           break;
+        }
         case 'MATCH_FINISHED':
           this.showView('phonePhaseShow');
+          this.updateShowVipControls();
           if (msg.payload && Array.isArray(msg.payload.albums)) {
             msg.payload.albums.forEach(a => this.addRevealedAlbum(a));
           }
           this.renderRevealedAlbumsList();
+          break;
+        case 'RETURN_TO_LOBBY':
+          this.clearDownloadTimeout();
+          this.revealedAlbums = [];
+          this.renderRevealedAlbumsList();
+          this.undoStack = [];
+          if (msg.payload && msg.payload.config) {
+            this.applySettingsSync(msg.payload.config);
+          }
+          this.showView('phoneViewLobby');
           break;
       }
     },
@@ -2197,7 +2585,7 @@
           pill.className = 'phone-player-pill';
           pill.innerHTML = `
             <span class="color-dot" style="background-color: ${p.color};"></span>
-            <span>${p.avatar} ${p.name} ${p.isVip ? '👑' : ''}</span>
+            <span>${escapeHtml(p.avatar)} ${escapeHtml(p.name)} ${p.isVip ? '👑' : ''}</span>
           `;
           listEl.appendChild(pill);
         });
@@ -2230,13 +2618,38 @@
 
     setupStepTask(data) {
       if (!data) return;
-      this.currentStepIndex = data.stepIndex;
-      this.currentPhaseType = data.phaseType;
+      const drawVisible = !document.getElementById('phonePhaseDraw')?.classList.contains('d-none');
+      const writeVisible = !document.getElementById('phonePhaseWrite')?.classList.contains('d-none');
 
       if (data.yaEnvioEnEstaFase) {
+        this.currentStepIndex = data.stepIndex;
+        this.currentPhaseType = data.phaseType;
         this.showView('phonePhaseWait');
         return;
       }
+
+      // Evitar borrar el trazo o texto en progreso si llega FULL_STATE_SYNC del mismo paso
+      if (
+        data.phaseType === 'DIBUJAR' &&
+        this.currentStepIndex === data.stepIndex &&
+        this.currentPhaseType === 'DIBUJAR' &&
+        drawVisible &&
+        this.undoStack.length > 0
+      ) {
+        return;
+      }
+      if (
+        data.phaseType === 'ESCRIBIR' &&
+        this.currentStepIndex === data.stepIndex &&
+        this.currentPhaseType === 'ESCRIBIR' &&
+        writeVisible &&
+        document.getElementById('inputPhonePhrase')?.value.trim()
+      ) {
+        return;
+      }
+
+      this.currentStepIndex = data.stepIndex;
+      this.currentPhaseType = data.phaseType;
 
       if (data.phaseType === 'ESCRIBIR') {
         this.showView('phonePhaseWrite');
@@ -2341,6 +2754,9 @@
     },
 
     autoSubmitDueToTimeout() {
+      const waitEl = document.getElementById('phonePhaseWait');
+      if (waitEl && !waitEl.classList.contains('d-none')) return;
+
       if (this.currentPhaseType === 'ESCRIBIR') {
         let text = document.getElementById('inputPhonePhrase').value.trim();
         if (!text) text = 'Algo misterioso e inexplicable';
@@ -2353,7 +2769,7 @@
             content: text
           }
         });
-      } else {
+      } else if (this.phoneCanvas) {
         const dataUrl = this.phoneCanvas.toDataURL('image/jpeg', 0.7);
         this.send({
           type: 'SUBMIT_STEP_CONTENT',
@@ -2403,9 +2819,10 @@
         if (btnNext) btnNext.classList.add('d-none');
         if (btnNextAlbum) {
           btnNextAlbum.classList.remove('d-none');
-          btnNextAlbum.disabled = (payload.albumIndex + 1 >= payload.totalAlbums);
-          if (payload.albumIndex + 1 >= payload.totalAlbums) {
-            btnNextAlbum.innerHTML = '<span>🏁 Fin del Show</span>';
+          const isLast = (payload.albumIndex + 1 >= payload.totalAlbums);
+          btnNextAlbum.disabled = false;
+          if (isLast) {
+            btnNextAlbum.innerHTML = '<span>🏁 Ver Resumen Final</span>';
           } else {
             btnNextAlbum.innerHTML = '<span>⏩ Siguiente Álbum</span>';
           }
@@ -2461,7 +2878,7 @@
         btn.className = 'btn-download-album';
         btn.dataset.albumIndex = alb.albumIndex;
         btn.innerHTML = `
-          <span>📸 Tira de <strong>${alb.authorAvatar || '🦊'} ${alb.authorName || 'Álbum'}</strong></span>
+          <span>📸 Tira de <strong>${escapeHtml(alb.authorAvatar || '🦊')} ${escapeHtml(alb.authorName || 'Álbum')}</strong></span>
           <span class="small opacity-75">PNG ⬇️</span>
         `;
         btn.addEventListener('click', () => {
@@ -2473,9 +2890,15 @@
 
     requestAlbumDownload(albumIndex, btn) {
       if (this.conn && this.conn.open) {
+        this.clearDownloadTimeout();
+        const prevHtml = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span>⏳ Generando imagen...</span>';
         this.activeDownloadBtn = btn;
+        this._downloadTimeout = setTimeout(() => {
+          btn.disabled = false;
+          btn.innerHTML = prevHtml;
+        }, 12000);
         this.send({
           type: 'REQUEST_ALBUM_EXPORT',
           payload: { albumIndex }
@@ -2579,14 +3002,28 @@
         TvHost.init();
       });
 
-      document.getElementById('btnSelectPhoneMode')?.addEventListener('click', () => {
+      document.getElementById('btnSelectPhoneMode')?.addEventListener('click', (e) => {
+        if (e.target.closest('#inputManualRoomCode, #btnManualJoinRoom')) return;
         SoundEffects.init();
         PhoneClient.init();
       });
 
-      document.getElementById('btnManualJoinRoom')?.addEventListener('click', () => {
+      const manualInput = document.getElementById('inputManualRoomCode');
+      const manualBtn = document.getElementById('btnManualJoinRoom');
+
+      manualInput?.addEventListener('click', (e) => e.stopPropagation());
+      manualInput?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          manualBtn?.click();
+        }
+      });
+
+      manualBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
         SoundEffects.init();
-        const code = document.getElementById('inputManualRoomCode').value.trim();
+        const code = (manualInput?.value || '').trim();
         if (code.length === 4) {
           const clean = code.toUpperCase();
           sessionStorage.setItem('telefono_room', clean);

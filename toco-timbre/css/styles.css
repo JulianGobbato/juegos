@@ -16,12 +16,13 @@
   --sube-cyan: #00a4e4;
   --sube-dark: #005f88;
   --text-primary: #f8fafc;
-  --text-muted: #94a3b8;
+  --text-muted: #cbd5e1;
   --card-bg: rgba(30, 41, 59, 0.85);
   --card-border: rgba(255, 255, 255, 0.1);
   --radius-lg: 18px;
   --radius-md: 12px;
   --radius-sm: 8px;
+  --radius-pill: 999px;
   --font-display: 'Bebas Neue', 'Impact', sans-serif;
   --font-main: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
@@ -851,6 +852,10 @@ body {
 .gap-sm { gap: 8px; }
 .gap-md { gap: 12px; }
 
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
 /* ==========================================================================
    SISTEMA DE FILTROS DE MAZO Y DIFICULTAD
    ========================================================================== */
@@ -1166,6 +1171,7 @@ body {
   }
 
   .bondi-header {
+    width: 100%;
     height: 48px;
     padding: 4px 10px;
     margin-bottom: 6px;
@@ -1190,7 +1196,7 @@ body {
   }
 
   /* Vista de Menú en TV */
-  #viewMenu {
+  #viewMenu.active {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -1222,11 +1228,21 @@ body {
     margin-bottom: 10px;
   }
 
-  /* Setup Digital en TV */
-  #viewDigitalSetup {
+  /* Setup Tarjetero y Digital en TV */
+  #viewTarjeteroSetup.active,
+  #viewDigitalSetup.active {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  #viewTarjetero.active {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     min-height: 0;
     overflow-y: auto;
   }
@@ -1242,7 +1258,7 @@ body {
   }
 
   /* Ronda Activa en TV */
-  #viewDigitalGame {
+  #viewDigitalGame.active {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -1288,7 +1304,7 @@ body {
   }
 
   /* Revelación y Resolución en TV */
-  #viewDigitalRoundResult {
+  #viewDigitalRoundResult.active {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -1326,7 +1342,7 @@ body {
   }
 
   /* Fin de Partida / Podio en TV */
-  #viewDigitalGameOver {
+  #viewDigitalGameOver.active {
     flex: 1;
     display: flex;
     flex-direction: column;

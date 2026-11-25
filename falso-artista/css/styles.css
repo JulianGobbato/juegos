@@ -17,7 +17,7 @@
   --accent-purple: #8b5cf6;
 
   --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --text-muted: #cbd5e1;
 
   --font-display: 'Bebas Neue', sans-serif;
   --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -41,6 +41,14 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.text-secondary {
+  color: var(--text-muted) !important;
 }
 
 /* Canvas de Confeti en todo el fondo */
@@ -301,10 +309,14 @@ body {
 .phone-join-quick {
   display: flex;
   gap: 8px;
+  width: 100%;
+  align-items: stretch;
 }
 
 .input-room-code {
-  width: 130px;
+  min-width: 120px;
+  flex: 1 1 auto;
+  width: 100%;
   background: rgba(0, 0, 0, 0.4);
   border: 2px solid var(--border-color);
   color: #fff;
@@ -322,7 +334,10 @@ body {
 }
 
 .btn-phone-launch {
-  flex: 1;
+  width: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: 12px 18px;
   background: linear-gradient(135deg, #8b5cf6, #6d28d9);
   color: #fff;
 }
@@ -1648,6 +1663,9 @@ body {
   }
 
   .game-header {
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
     height: 48px;
     padding: 4px 18px;
     flex-shrink: 0;
@@ -1661,7 +1679,7 @@ body {
     font-size: 0.72rem;
   }
 
-  .main-container {
+  .game-container {
     padding: 8px 24px;
     height: calc(100dvh - 48px);
     max-height: calc(100dvh - 48px);
@@ -1671,9 +1689,22 @@ body {
     justify-content: space-between;
   }
 
-  .tv-view {
+  .screen-section:not(.d-none) {
     height: 100%;
     max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .landing-hero {
+    margin: auto;
+    padding: 10px 20px;
+  }
+
+  .tv-view:not(.d-none) {
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -1682,7 +1713,7 @@ body {
 
   /* LOBBY TV */
   .tv-lobby-header {
-    margin-bottom: 10px;
+    margin: 2px 0 8px;
     flex-shrink: 0;
   }
 
@@ -1693,6 +1724,7 @@ body {
 
   .tv-lobby-subtitle {
     font-size: 0.95rem;
+    margin-top: 2px;
   }
 
   .tv-lobby-center-grid {
@@ -1703,25 +1735,45 @@ body {
   }
 
   .tv-qr-box, .tv-roster-box {
-    padding: 16px;
+    padding: 14px 16px;
+    min-height: 0;
   }
 
-  .tv-room-code-badge {
+  .tv-room-code-tag .code-value {
     font-size: 2.8rem;
-    padding: 6px 18px;
-    margin: 8px 0;
+  }
+
+  .qr-canvas-wrap {
+    padding: 10px;
+    margin-bottom: 8px;
   }
 
   .qr-canvas-wrap canvas, .qr-canvas-wrap img {
-    width: 140px;
-    height: 140px;
+    width: 150px;
+    height: 150px;
   }
 
   .tv-roster-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 8px;
-    max-height: 280px;
+    max-height: 260px;
     overflow-y: auto;
+  }
+
+  .tv-lobby-config-bar {
+    margin: 8px 0 !important;
+    padding: 8px 14px !important;
+  }
+
+  /* FASE 1 REPARTO */
+  .tv-phase-header {
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  .tv-phase-header .category-banner-title {
+    font-size: 2.6rem;
+    margin: 4px 0;
   }
 
   /* TOPBAR DEL JUEGO */
@@ -1729,16 +1781,6 @@ body {
     padding: 6px 18px;
     margin-bottom: 8px;
     flex-shrink: 0;
-  }
-
-  .category-pill {
-    padding: 4px 14px;
-    font-size: 0.92rem;
-  }
-
-  .round-pill {
-    font-size: 0.9rem;
-    padding: 4px 12px;
   }
 
   /* ESCENARIO DEL LIENZO */
@@ -1758,6 +1800,11 @@ body {
     box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
   }
 
+  #tvViewPhase3 .tv-canvas-frame,
+  #tvViewPhase3 #tvDebateCanvas {
+    max-height: min(56dvh, 520px);
+  }
+
   #tvDrawingCanvas, #tvDebateCanvas {
     max-height: min(62dvh, 580px);
     width: auto;
@@ -1770,36 +1817,70 @@ body {
     overflow-y: auto;
   }
 
-  .sidebar-turn-card {
-    padding: 10px 14px;
-    margin-bottom: 8px;
-  }
-
-  .sidebar-color-legend {
-    gap: 6px;
-  }
-
-  .color-legend-item {
-    padding: 4px 8px;
-    font-size: 0.85rem;
-  }
-
-  /* FASE DE VOTACIÓN, REVELACIÓN Y PODIO */
-  .tv-vote-options-grid {
-    gap: 10px;
+  /* FASE 4 Y 5: REVELACIÓN Y TABLA */
+  .tv-reveal-container {
     flex: 1;
     min-height: 0;
-    max-height: 380px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .reveal-title {
+    font-size: 2.2rem;
+    margin: 4px 0;
+  }
+
+  .tv-votes-grid {
+    gap: 10px;
+    max-height: 220px;
     overflow-y: auto;
   }
 
-  .tv-reveal-card {
-    padding: 18px 24px;
-    max-width: 800px;
+  .vote-reveal-card {
+    padding: 10px 14px;
   }
 
-  .tv-podium-grid {
-    gap: 12px;
-    margin-bottom: 12px;
+  .tv-verdict-box {
+    padding: 16px 24px;
+    margin-top: 10px !important;
+  }
+
+  .verdict-player-name {
+    font-size: 2.5rem;
+    margin: 2px 0;
+  }
+
+  .verdict-desc {
+    font-size: 1.08rem;
+  }
+
+  .guess-comparison-box {
+    padding: 12px 16px;
+  }
+
+  .tv-scores-card-container {
+    padding: 16px 24px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .tv-leaderboard-table {
+    flex: 1;
+    min-height: 0;
+    max-height: 480px;
+    overflow-y: auto;
+  }
+
+  .leaderboard-row {
+    padding: 8px 16px;
+  }
+
+  .tv-scores-actions {
+    margin-top: 10px !important;
+    flex-shrink: 0;
   }
 }

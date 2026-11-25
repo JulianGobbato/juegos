@@ -831,7 +831,7 @@
     "id": "cie_093",
     "categoria": "ciencia",
     "dificultad": "extremo",
-    "pregunta": "¿A cuántos grados bajo cero en la escala Celsius se sitúa el Cero Absoluto (-273,15 °C) redondeado al entero más cercano?",
+    "pregunta": "¿A cuántos grados bajo cero en la escala Celsius se sitúa el Cero Absoluto redondeado al entero más cercano?",
     "respuesta": 273,
     "unidad": "grados bajo cero (-°C)",
     "nota": "Equivale a 0 Kelvin (-273,15 °C), el límite termodinámico donde cesa toda agitación térmica de las partículas."

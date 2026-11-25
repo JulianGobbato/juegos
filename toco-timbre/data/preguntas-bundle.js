@@ -1831,7 +1831,7 @@
     "id": "dep_094",
     "categoria": "deportes",
     "dificultad": "extremo",
-    "pregunta": "¿Cuántas libras de presión de aire debe tener inflada reglamentariamente una pelota de la NFL (entre 12.5 y 13.5 psi)?",
+    "pregunta": "¿A cuántas libras de presión de aire (psi) debe estar inflada reglamentariamente una pelota de fútbol americano de la NFL?",
     "respuesta": 13,
     "unidad": "psi",
     "nota": "El estándar estipulado por las reglas de la NFL ronda las 13 libras por pulgada cuadrada."
@@ -1849,7 +1849,7 @@
     "id": "dep_096",
     "categoria": "deportes",
     "dificultad": "extremo",
-    "pregunta": "¿Cuántos metros mide la longitud del carril de aceleración para saltos de trampolín en esquí nórdico de gran colina (K-120)?",
+    "pregunta": "¿Cuántos metros mide la distancia estándar hasta el punto K en los saltos de trampolín de esquí nórdico de gran colina?",
     "respuesta": 120,
     "unidad": "metros",
     "nota": "El 'punto K' fija la distancia donde la pendiente comienza a aplanarse a los 120 metros."
@@ -3064,7 +3064,7 @@
     "id": "mus_031",
     "categoria": "musica",
     "dificultad": "medio",
-    "pregunta": "¿Cuántos años tenía Kurt Cobain al fallecer trágicamente en abril de 1994, uniéndose al 'Club de los 27'?",
+    "pregunta": "¿Cuántos años tenía Kurt Cobain al fallecer trágicamente en abril de 1994, al igual que Amy Winehouse, Jimi Hendrix y Janis Joplin?",
     "respuesta": 27,
     "unidad": "años",
     "nota": "La misma edad a la que fallecieron Jimi Hendrix, Janis Joplin, Jim Morrison y Amy Winehouse."
@@ -3244,7 +3244,7 @@
     "id": "mus_051",
     "categoria": "musica",
     "dificultad": "dificil",
-    "pregunta": "¿A cuántos hercios (Hz) de frecuencia vibratoria se estableció el estándar internacional de afinación para la nota La4 (A440)?",
+    "pregunta": "¿A cuántos hercios (Hz) de frecuencia vibratoria se estableció el estándar internacional de afinación para la nota La4?",
     "respuesta": 440,
     "unidad": "Hz",
     "nota": "Adoptado por la Organización Internacional de Normalización (ISO 16) en 1955."
@@ -3820,7 +3820,7 @@
     "id": "geo_015",
     "categoria": "geografia",
     "dificultad": "facil",
-    "pregunta": "¿Cuántos continentes se reconocen comúnmente en el modelo geográfico tradicional escolar hispanohablante de 6 continentes?",
+    "pregunta": "¿Cuántos continentes se reconocen comúnmente en el modelo geográfico escolar tradicional hispanohablante (contando a América como uno solo e incluyendo a la Antártida)?",
     "respuesta": 6,
     "unidad": "continentes",
     "nota": "América, Europa, Asia, África, Oceanía y la Antártida."
@@ -6322,7 +6322,7 @@
     "id": "cie_093",
     "categoria": "ciencia",
     "dificultad": "extremo",
-    "pregunta": "¿A cuántos grados bajo cero en la escala Celsius se sitúa el Cero Absoluto (-273,15 °C) redondeado al entero más cercano?",
+    "pregunta": "¿A cuántos grados bajo cero en la escala Celsius se sitúa el Cero Absoluto redondeado al entero más cercano?",
     "respuesta": 273,
     "unidad": "grados bajo cero (-°C)",
     "nota": "Equivale a 0 Kelvin (-273,15 °C), el límite termodinámico donde cesa toda agitación térmica de las partículas."
@@ -6862,7 +6862,7 @@
     "id": "pop_053",
     "categoria": "cultura_pop",
     "dificultad": "dificil",
-    "pregunta": "¿Cuántos kilobytes (KB) de memoria RAM básica de serie tenía la computadora doméstica Commodore 64 lanzada en 1982?",
+    "pregunta": "¿Cuántos kilobytes (KB) de memoria RAM básica de serie tenía la mítica computadora doméstica más vendida de Commodore lanzada en 1982?",
     "respuesta": 64,
     "unidad": "kilobytes",
     "nota": "De ahí su nombre C64; se convirtió en el modelo individual de computadora más vendido de la historia."
@@ -7348,7 +7348,7 @@
     "id": "cot_007",
     "categoria": "cotidiano",
     "dificultad": "facil",
-    "pregunta": "¿Cuántas porciones triangulares tradicionales se cortan de una pizza grande de molde de 8 porciones?",
+    "pregunta": "¿En cuántas porciones triangulares tradicionales se corta una pizza grande estándar de pizzería?",
     "respuesta": 8,
     "unidad": "porciones",
     "nota": "El clásico estándar de cualquier pizzería de barrio porteña o mundial."

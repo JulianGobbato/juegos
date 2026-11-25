@@ -190,6 +190,7 @@
   // =========================================================================
   let peerResilienceHost = null;
   let peerResilienceClient = null;
+  let tvHostInitRetries = 0;
 
   const appState = {
     mode: null, // 'tv' o 'phone'
@@ -263,6 +264,10 @@
   // LIMPIEZA DE CONEXIONES PREVIAS (Anti-bloqueos al cambiar de sala)
   // =========================================================================
   function limpiarConexionPrevia() {
+    if (appState.tv && appState.tv.phase1Interval) {
+      clearInterval(appState.tv.phase1Interval);
+      appState.tv.phase1Interval = null;
+    }
     if (appState.heartbeatInterval) {
       clearInterval(appState.heartbeatInterval);
       appState.heartbeatInterval = null;
@@ -348,6 +353,7 @@
       }
 
       peer.on('open', (id) => {
+        tvHostInitRetries = 0;
         console.log('TV Host iniciado en Peer:', id);
       });
 
@@ -357,41 +363,49 @@
 
       peer.on('error', (err) => {
         console.warn('Error en Peer TV:', err);
+        if (err && err.type === 'unavailable-id' && tvHostInitRetries < 5) {
+          tvHostInitRetries++;
+          this.init();
+        }
       });
     },
 
     handleIncomingConnection(conn) {
       conn.on('data', (data) => {
-        if (!data || !data.type) return;
+        try {
+          if (!data || !data.type) return;
 
-        const pId = data.playerId || conn._playerId;
-        if (pId && peerResilienceHost) {
-          if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
-          if (data.type !== 'JOIN_OR_RECONNECT' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
-        }
+          const pId = data.playerId || conn._playerId;
+          if (pId && peerResilienceHost) {
+            if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
+            if (data.type !== 'JOIN_OR_RECONNECT' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+          }
 
-        switch (data.type) {
-          case 'JOIN_OR_RECONNECT':
-            this.handlePlayerJoinOrReconnect(conn, data);
-            break;
-          case 'VIP_UPDATE_SETTINGS':
-            this.handleVipUpdateSettings(conn, data);
-            break;
-          case 'VIP_START_GAME':
-            this.handleVipStartGame(conn);
-            break;
-          case 'SUBMIT_CHAMUYO':
-            this.handlePlayerSubmitChamuyo(conn, data);
-            break;
-          case 'SUBMIT_VOTE':
-            this.handlePlayerSubmitVote(conn, data);
-            break;
-          case 'VIP_NEXT_PHASE':
-            this.handleVipNextPhase(conn);
-            break;
-          case 'VIP_RESTART_GAME':
-            this.handleVipRestartGame();
-            break;
+          switch (data.type) {
+            case 'JOIN_OR_RECONNECT':
+              this.handlePlayerJoinOrReconnect(conn, data);
+              break;
+            case 'VIP_UPDATE_SETTINGS':
+              this.handleVipUpdateSettings(conn, data);
+              break;
+            case 'VIP_START_GAME':
+              this.handleVipStartGame(conn, data);
+              break;
+            case 'SUBMIT_CHAMUYO':
+              this.handlePlayerSubmitChamuyo(conn, data);
+              break;
+            case 'SUBMIT_VOTE':
+              this.handlePlayerSubmitVote(conn, data);
+              break;
+            case 'VIP_NEXT_PHASE':
+              this.handleVipNextPhase(conn, data);
+              break;
+            case 'VIP_RESTART_GAME':
+              this.handleVipRestartGame(conn, data);
+              break;
+          }
+        } catch (err) {
+          console.error('Error procesando mensaje en TV Host:', err);
         }
       });
 
@@ -413,14 +427,16 @@
 
       const tv = appState.tv;
       let player = tv.players.get(playerId);
+      const hasConnectedVip = Array.from(tv.players.values()).some(p => p.connected && p.isVip && p.id !== playerId);
 
       if (player) {
         // Reconexión de un jugador existente
         player.conn = conn;
         player.connected = true;
-        player.name = name;
+        player.name = name.substring(0, 12);
         player.avatar = avatar || player.avatar;
         player.isAsleep = false;
+        if (!hasConnectedVip) player.isVip = true;
       } else {
         // Nuevo jugador
         if (tv.players.size >= 10 && tv.currentPhase === 'lobby') {
@@ -428,12 +444,12 @@
           return;
         }
 
-        const isFirstPlayer = tv.players.size === 0;
+        const shouldBeVip = !hasConnectedVip;
         player = {
           id: playerId,
           name: name.substring(0, 12),
           avatar: avatar || '🦊',
-          isVip: isFirstPlayer,
+          isVip: shouldBeVip,
           score: 0,
           roundScore: 0,
           fooledVictims: 0,
@@ -459,6 +475,7 @@
       for (const [id, p] of tv.players.entries()) {
         if (p.conn === conn) {
           p.connected = false;
+          p.conn = null;
           // Si era el VIP y hay otros jugadores conectados, transferir el rol de VIP
           if (p.isVip) {
             p.isVip = false;
@@ -474,6 +491,7 @@
         }
       }
       this.updateLobbyPlayersUI();
+      this.broadcastLobbySummary();
     },
 
     updateLobbyPlayersUI() {
@@ -516,6 +534,10 @@
 
     handleVipUpdateSettings(conn, data) {
       const tv = appState.tv;
+      const senderId = (data && data.playerId) || conn._playerId;
+      const sender = tv.players.get(senderId);
+      if (!sender || !sender.isVip) return;
+
       if (data.settings) {
         tv.settings = { ...tv.settings, ...data.settings };
         tv.totalRounds = parseInt(tv.settings.rounds, 10) || 7;
@@ -544,8 +566,12 @@
       });
     },
 
-    handleVipStartGame(conn) {
+    handleVipStartGame(conn, data) {
       const tv = appState.tv;
+      const senderId = (data && data.playerId) || conn._playerId;
+      const sender = tv.players.get(senderId);
+      if (!sender || !sender.isVip) return;
+
       const connectedCount = Array.from(tv.players.values()).filter(p => p.connected).length;
       if (connectedCount < 3) return;
 
@@ -614,15 +640,20 @@
       this.broadcastPhaseState();
 
       // Pasar automáticamente a Fase 2 luego de 4 segundos
+      if (tv.phase1Interval) {
+        clearInterval(tv.phase1Interval);
+        tv.phase1Interval = null;
+      }
       let count = 4;
       const hint = document.getElementById('tvPhase1Countdown');
       hint.textContent = `Habilitando celulares en ${count}s...`;
-      const interval = setInterval(() => {
+      tv.phase1Interval = setInterval(() => {
         count--;
         if (count > 0) {
           hint.textContent = `Habilitando celulares en ${count}s...`;
         } else {
-          clearInterval(interval);
+          clearInterval(tv.phase1Interval);
+          tv.phase1Interval = null;
           this.beginPhase2Writing();
         }
       }, 1000);
@@ -665,11 +696,21 @@
       const tv = appState.tv;
       if (tv.currentPhase !== 'phase2') return;
 
-      const player = tv.players.get(data.playerId);
+      const senderId = (data && data.playerId) || conn._playerId;
+      const player = tv.players.get(senderId);
       if (!player) return;
 
       const rawLie = (data.lie || '').trim();
       const normLie = normalizeAnswerText(rawLie);
+      if (!normLie) {
+        conn.send({
+          type: 'CHAMUYO_REJECTED',
+          reason: 'EMPTY',
+          message: 'Escribí una mentira válida con letras o números.'
+        });
+        return;
+      }
+
       const normReal = normalizeAnswerText(tv.currentQuestion.respuesta);
 
       // 1. Detección Anti-Verdad
@@ -677,7 +718,8 @@
       if (!isTruth && Array.isArray(tv.currentQuestion.aceptadas)) {
         isTruth = tv.currentQuestion.aceptadas.some(acc => {
           const normAcc = normalizeAnswerText(acc);
-          return normLie === normAcc || normLie.includes(normAcc);
+          if (!normAcc) return false;
+          return normLie === normAcc || (normAcc.length >= 4 && normLie.includes(normAcc));
         });
       }
 
@@ -728,6 +770,7 @@
 
     beginPhase3Voting() {
       const tv = appState.tv;
+      if (tv.currentPhase !== 'phase2') return;
       this.clearPhaseTimer();
       this.setPhase('phase3');
 
@@ -821,8 +864,9 @@
       const tv = appState.tv;
       if (tv.currentPhase !== 'phase3') return;
 
-      const player = tv.players.get(data.playerId);
-      if (!player) return;
+      const senderId = (data && data.playerId) || conn._playerId;
+      const player = tv.players.get(senderId);
+      if (!player || player.votedOptionId) return;
 
       const optionId = data.optionId;
       const opt = tv.options.find(o => o.id === optionId);
@@ -859,6 +903,7 @@
 
     async beginPhase4Reveal() {
       const tv = appState.tv;
+      if (tv.currentPhase !== 'phase3') return;
       this.clearPhaseTimer();
       this.setPhase('phase4');
 
@@ -1105,8 +1150,12 @@
       }
     },
 
-    handleVipNextPhase(conn) {
+    handleVipNextPhase(conn, data) {
       const tv = appState.tv;
+      const senderId = (data && data.playerId) || conn._playerId;
+      const sender = tv.players.get(senderId);
+      if (!sender || !sender.isVip) return;
+
       if (tv.currentPhase === 'phase4') {
         this.showLeaderboard();
       } else if (tv.currentPhase === 'phase5') {
@@ -1115,8 +1164,12 @@
       }
     },
 
-    handleVipRestartGame() {
-      const tv = appState.tv;
+    handleVipRestartGame(conn, data) {
+      if (conn) {
+        const senderId = (data && data.playerId) || conn._playerId;
+        const sender = appState.tv.players.get(senderId);
+        if (!sender || !sender.isVip) return;
+      }
       document.getElementById('tvPodiumContainer').classList.add('d-none');
       this.startGame();
     },
@@ -1190,6 +1243,7 @@
       const sorted = Array.from(tv.players.values()).sort((a, b) => b.score - a.score);
       const myRank = sorted.findIndex(p => p.id === player.id) + 1;
 
+      const votedOpt = player.votedOptionId && tv.options ? tv.options.find(o => o.id === player.votedOptionId) : null;
       const syncPayload = {
         type: 'SYNC_PLAYER_STATE',
         phase: tv.currentPhase,
@@ -1205,6 +1259,7 @@
         myLie: player.submittedLie,
         options: optionsForPlayer,
         myVotedId: player.votedOptionId,
+        myVotedText: votedOpt ? votedOpt.text : '',
         myScore: player.score,
         myDelta: player.roundScore,
         myRank: myRank || 1,
@@ -1212,7 +1267,6 @@
         phaseKey: `${tv.currentPhase}_round_${tv.currentRoundIndex}`
       };
 
-      player.conn.send(syncPayload);
       player.conn.send({ type: 'FULL_STATE_SYNC', payload: syncPayload });
     },
 
@@ -1318,7 +1372,7 @@
 
       // Botón TV Reiniciar
       document.getElementById('btnTvRestartGame').addEventListener('click', () => {
-        this.handleVipRestartGame();
+        this.handleVipRestartGame(null, null);
       });
     }
   };
@@ -1490,8 +1544,12 @@
     },
 
     handlePeerUnavailable(roomCode) {
+      if (peerResilienceClient) peerResilienceClient.stop();
       sessionStorage.removeItem('chamuyo_room_code');
       sessionStorage.removeItem('codigoSala');
+      if (window.location.search.includes('sala=')) {
+        history.replaceState(null, '', window.location.pathname);
+      }
       limpiarConexionPrevia();
 
       this.showView('phoneViewJoin');
@@ -1615,6 +1673,9 @@
         if (state.myVotedId) {
           document.getElementById('phoneVotingOptionsList').classList.add('d-none');
           document.getElementById('phoneVoteSent').classList.remove('d-none');
+          if (state.myVotedText) {
+            document.getElementById('phoneMyVotedOption').textContent = state.myVotedText;
+          }
         } else {
           document.getElementById('phoneVotingOptionsList').classList.remove('d-none');
           document.getElementById('phoneVoteSent').classList.add('d-none');
@@ -1623,26 +1684,32 @@
       } else if (state.phase === 'phase4') {
         this.showView('phonePhase4');
         if (phone.isVip) {
-          document.getElementById('phoneVipPhase4Action').classList.add('d-none');
+          document.getElementById('phoneVipPhase4Action').classList.remove('d-none');
         }
       } else if (state.phase === 'phase5') {
         this.showView('phonePhase5');
         document.getElementById('phoneMyRankBadge').textContent = `#${state.myRank || 1}`;
         document.getElementById('phoneMyTotalScore').textContent = state.myScore || 0;
         document.getElementById('phoneMyScoreDelta').textContent = `+${state.myDelta || 0} pts en esta ronda`;
+        const bd = document.getElementById('phoneRoundBreakdown');
+        if (bd) {
+          bd.textContent = (state.myDelta || 0) > 0
+            ? `Sumaste +${state.myDelta} pts esta ronda. ¡Mirá la TV!`
+            : 'Mirá el ranking completo en la pantalla de la TV.';
+        }
 
         const vipNextWrap = document.getElementById('phoneVipNextRoundWrap');
-        const btnNext = document.getElementById('phoneVipNextRound');
-        const btnRestart = document.getElementById('phoneVipRestart');
+        const btnNext = document.getElementById('btnPhoneVipNextRound');
+        const btnRestart = document.getElementById('btnPhoneVipRestart');
 
         if (phone.isVip) {
           vipNextWrap.classList.remove('d-none');
           if (state.question && state.question.roundIndex >= state.question.totalRounds) {
-            btnNext.classList.add('d-none');
-            btnRestart.classList.remove('d-none');
+            if (btnNext) btnNext.classList.add('d-none');
+            if (btnRestart) btnRestart.classList.remove('d-none');
           } else {
-            btnNext.classList.remove('d-none');
-            btnRestart.classList.add('d-none');
+            if (btnNext) btnNext.classList.remove('d-none');
+            if (btnRestart) btnRestart.classList.add('d-none');
           }
         } else {
           vipNextWrap.classList.add('d-none');
@@ -1746,7 +1813,7 @@
       // Botón Arrancar Partida VIP
       document.getElementById('btnPhoneVipStart').addEventListener('click', () => {
         if (phone.conn && phone.conn.open) {
-          phone.conn.send({ type: 'VIP_START_GAME' });
+          phone.conn.send({ type: 'VIP_START_GAME', playerId: phone.playerId });
         }
       });
 
@@ -1776,28 +1843,32 @@
       // Botón VIP Continuar desde Revelación
       document.getElementById('btnPhoneVipNextFromReveal').addEventListener('click', () => {
         if (phone.conn && phone.conn.open) {
-          phone.conn.send({ type: 'VIP_NEXT_PHASE' });
+          phone.conn.send({ type: 'VIP_NEXT_PHASE', playerId: phone.playerId });
         }
       });
 
       // Botón VIP Siguiente Ronda
       document.getElementById('btnPhoneVipNextRound').addEventListener('click', () => {
         if (phone.conn && phone.conn.open) {
-          phone.conn.send({ type: 'VIP_NEXT_PHASE' });
+          phone.conn.send({ type: 'VIP_NEXT_PHASE', playerId: phone.playerId });
         }
       });
 
       // Botón VIP Reiniciar Partida
       document.getElementById('btnPhoneVipRestart').addEventListener('click', () => {
         if (phone.conn && phone.conn.open) {
-          phone.conn.send({ type: 'VIP_RESTART_GAME' });
+          phone.conn.send({ type: 'VIP_RESTART_GAME', playerId: phone.playerId });
         }
       });
 
       // Botón Cambiar de Sala desde el Celular
       document.getElementById('btnChangeRoomPhone')?.addEventListener('click', () => {
+        if (peerResilienceClient) peerResilienceClient.stop();
         sessionStorage.removeItem('chamuyo_room_code');
         sessionStorage.removeItem('codigoSala');
+        if (window.location.search.includes('sala=')) {
+          history.replaceState(null, '', window.location.pathname);
+        }
         limpiarConexionPrevia();
         this.showView('phoneViewJoin');
         const inputRoom = document.getElementById('inputPhoneRoom');
@@ -1818,6 +1889,7 @@
 
       phone.conn.send({
         type: 'VIP_UPDATE_SETTINGS',
+        playerId: phone.playerId,
         settings: {
           categories: checkedCats.length > 0 ? checkedCats : ['argentina', 'historia_insolita', 'leyes_absurdas', 'ciencia_y_animales', 'cultura_curiosa'],
           rounds: rounds,

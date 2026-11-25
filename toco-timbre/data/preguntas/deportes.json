@@ -840,7 +840,7 @@
     "id": "dep_094",
     "categoria": "deportes",
     "dificultad": "extremo",
-    "pregunta": "¿Cuántas libras de presión de aire debe tener inflada reglamentariamente una pelota de la NFL (entre 12.5 y 13.5 psi)?",
+    "pregunta": "¿A cuántas libras de presión de aire (psi) debe estar inflada reglamentariamente una pelota de fútbol americano de la NFL?",
     "respuesta": 13,
     "unidad": "psi",
     "nota": "El estándar estipulado por las reglas de la NFL ronda las 13 libras por pulgada cuadrada."
@@ -858,7 +858,7 @@
     "id": "dep_096",
     "categoria": "deportes",
     "dificultad": "extremo",
-    "pregunta": "¿Cuántos metros mide la longitud del carril de aceleración para saltos de trampolín en esquí nórdico de gran colina (K-120)?",
+    "pregunta": "¿Cuántos metros mide la distancia estándar hasta el punto K en los saltos de trampolín de esquí nórdico de gran colina?",
     "respuesta": 120,
     "unidad": "metros",
     "nota": "El 'punto K' fija la distancia donde la pendiente comienza a aplanarse a los 120 metros."

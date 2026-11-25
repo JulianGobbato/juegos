@@ -293,6 +293,29 @@
   let roomCode = null;
   let peerResilienceHost = null;
   let peerResilienceClient = null;
+  let reconnectRetryTimer = null;
+  let tvHostInitRetries = 0;
+
+  function clearReconnectRetryTimer() {
+    if (reconnectRetryTimer) {
+      clearTimeout(reconnectRetryTimer);
+      reconnectRetryTimer = null;
+    }
+  }
+
+  function cleanupPeer() {
+    clearReconnectRetryTimer();
+    if (activeConn) {
+      try { activeConn.close(); } catch (_) {}
+      activeConn = null;
+    }
+    if (peer) {
+      try {
+        if (!peer.destroyed) peer.destroy();
+      } catch (_) {}
+      peer = null;
+    }
+  }
 
   // =========================================================================
   // GESTIÓN DE PALABRAS Y COLORES
@@ -461,8 +484,7 @@
     const btnRemote = document.getElementById('btnSelectRoleRemote');
     if (btnRemote) {
       btnRemote.addEventListener('click', () => {
-        const code = prompt('Ingresá el código de 4 letras que aparece en la TV (ej. K7M2):');
-        if (code) startRemoteRole(code.toUpperCase().trim());
+        renderRemoteJoinScreen('');
       });
     }
 
@@ -487,7 +509,11 @@
   }
 
   function startTvRole() {
+    cleanupPeer();
     state.role = 'tv';
+    const singleControls = document.getElementById('singleDeviceControls');
+    if (singleControls) singleControls.classList.add('d-none');
+
     showView('viewTv');
     initDefaultGameState();
 
@@ -504,7 +530,7 @@
             }
           }
         },
-        getPhaseKey: () => `phase_${state.phase}_round_${state.round}`
+        getPhaseKey: () => `phase_${state.phase}_round_${state.currentRound}`
       });
       peerResilienceHost.startSleepMonitor();
     }
@@ -517,7 +543,12 @@
     try {
       peer = new Peer(peerId);
 
+      peer.on('open', () => {
+        tvHostInitRetries = 0;
+      });
+
       peer.on('connection', (conn) => {
+        conn._playerId = 'remote';
         if (peerResilienceHost) {
           peerResilienceHost.registerPlayerConnection('remote', conn);
         }
@@ -529,21 +560,27 @@
         });
 
         conn.on('data', (data) => {
-          if (peerResilienceHost && peerResilienceHost.handleIncomingHostData('remote', conn, data)) return;
-          if (peerResilienceHost && !peerResilienceHost.isConnectionActive('remote', conn)) return;
-          handleRemoteMessage(data);
+          try {
+            const senderId = (data && data.playerId) || conn._playerId || 'remote';
+            if (peerResilienceHost && peerResilienceHost.handleIncomingHostData(senderId, conn, data)) return;
+            if (peerResilienceHost && !peerResilienceHost.isConnectionActive(senderId, conn)) return;
+            handleRemoteMessage(data);
+          } catch (err) {
+            console.error('Error procesando mensaje remoto:', err);
+          }
         });
 
         conn.on('close', () => {
           if (peerResilienceHost && !peerResilienceHost.isConnectionActive('remote', conn)) return;
+          if (activeConn === conn) activeConn = null;
           const ticker = document.getElementById('tvStatusTicker');
           if (ticker) ticker.textContent = '⚠️ Celular desconectado temporalmente. Esperando reconexión...';
         });
       });
 
       peer.on('error', (err) => {
-        if (err.type === 'unavailable-id') {
-          roomCode = generateRoomCode();
+        if (err && err.type === 'unavailable-id' && tvHostInitRetries < 5) {
+          tvHostInitRetries++;
           startTvRole();
         }
       });
@@ -596,16 +633,68 @@
       const payload = {
         ...state,
         phoneSecretOpen: undefined,
-        phaseKey: `phase_${state.phase}_round_${state.round}`
+        phaseKey: `phase_${state.phase}_round_${state.currentRound}`
       };
       activeConn.send({ type: 'FULL_STATE_SYNC', payload });
-      activeConn.send({ type: 'SYNC_STATE', payload });
     }
   }
 
   // =========================================================================
   // ROL 2: CELULAR CONTROL REMOTO
   // =========================================================================
+  function renderRemoteJoinScreen(errorMessage = '') {
+    state.role = 'remote';
+    showView('viewRemote');
+    const dot = document.getElementById('remoteConnDot');
+    const label = document.getElementById('remoteConnLabel');
+    const codeLabel = document.getElementById('remoteRoomCodeDisplay');
+    if (dot) dot.className = 'connection-dot offline';
+    if (label) label.textContent = errorMessage ? 'Sala no encontrada' : 'Ingresá código de TV';
+    if (codeLabel) codeLabel.textContent = '----';
+
+    const container = document.getElementById('remotePhaseContainer');
+    if (!container) return;
+    container.innerHTML = `
+      <div class="setup-card my-0">
+        <h2 class="setup-title">📱 CONECTAR A LA TV</h2>
+        ${errorMessage ? `<div class="alert alert-danger py-2 px-3 small mb-3">${escapeHtml(errorMessage)}</div>` : ''}
+        <p class="small text-muted mb-3">
+          Ingresá el código de 4 letras que aparece en la pantalla de la TV.
+        </p>
+        <form id="remoteManualJoinForm" class="room-join-row mb-3">
+          <input type="text" id="remoteRoomCodeInput" class="form-control form-control-lg bg-dark text-white border-secondary room-join-input" maxlength="4" placeholder="ABCD" autocomplete="off" required>
+          <button type="submit" class="btn btn-warning fw-bold px-3 room-join-btn">Unirse</button>
+        </form>
+        <button type="button" class="btn-action-secondary" id="btnRemoteBackMenu">⬅️ Volver al Menú</button>
+      </div>
+    `;
+
+    const form = document.getElementById('remoteManualJoinForm');
+    const input = document.getElementById('remoteRoomCodeInput');
+    if (input) input.focus();
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const code = (input ? input.value : '').toUpperCase().trim();
+        if (code.length >= 4) {
+          startRemoteRole(code);
+        }
+      });
+    }
+    const backBtn = document.getElementById('btnRemoteBackMenu');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        if (peerResilienceClient) peerResilienceClient.stop();
+        cleanupPeer();
+        sessionStorage.removeItem(ROOM_STORAGE_KEY);
+        if (window.location.hash === '#remote') {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+        showView('viewMenu');
+      });
+    }
+  }
+
   function applySyncedState(payload) {
     if (!payload) return;
     const localSecret = state.phoneSecretOpen;
@@ -618,6 +707,7 @@
   }
 
   function startRemoteRole(code) {
+    clearReconnectRetryTimer();
     state.role = 'remote';
     roomCode = code;
     sessionStorage.setItem(ROOM_STORAGE_KEY, code);
@@ -656,6 +746,7 @@
   }
 
   function initRemotePeerConnection(isReconnecting = false) {
+    clearReconnectRetryTimer();
     const peerIdTv = PEER_PREFIX + roomCode;
     const dot = document.getElementById('remoteConnDot');
     const label = document.getElementById('remoteConnLabel');
@@ -668,9 +759,8 @@
       activeConn = null;
     }
 
-    if (isReconnecting && peer) {
-      try { peer.destroy(); } catch (e) {}
-      peer = null;
+    if (isReconnecting || !peer || peer.destroyed) {
+      cleanupPeer();
     }
 
     try {
@@ -681,9 +771,20 @@
           connectToTvHost(peerIdTv);
         });
 
-        peer.on('error', () => {
+        peer.on('error', (err) => {
+          if (err && err.type === 'peer-unavailable') {
+            if (peerResilienceClient) peerResilienceClient.stop();
+            sessionStorage.removeItem(ROOM_STORAGE_KEY);
+            cleanupPeer();
+            if (window.location.search.includes('sala=') || window.location.search.includes('code=')) {
+              history.replaceState(null, '', window.location.pathname);
+            }
+            renderRemoteJoinScreen(`La sala "${roomCode}" no existe o se cerró en la TV.`);
+            return;
+          }
           if (label) label.textContent = 'Error de conexión. Reintentando...';
-          setTimeout(() => connectToTvHost(peerIdTv), 2500);
+          clearReconnectRetryTimer();
+          reconnectRetryTimer = setTimeout(() => connectToTvHost(peerIdTv), 2500);
         });
       } else {
         connectToTvHost(peerIdTv);
@@ -695,6 +796,7 @@
 
   function connectToTvHost(targetId) {
     if (!peer || peer.destroyed) return;
+    clearReconnectRetryTimer();
     const dot = document.getElementById('remoteConnDot');
     const label = document.getElementById('remoteConnLabel');
 
@@ -703,35 +805,44 @@
       activeConn = null;
     }
 
-    activeConn = peer.connect(targetId, { reliable: true });
+    const conn = peer.connect(targetId, { reliable: true });
+    activeConn = conn;
 
-    activeConn.on('open', () => {
+    conn.on('open', () => {
+      if (activeConn !== conn) return;
       if (peerResilienceClient) peerResilienceClient.onConnected();
       if (dot) dot.className = 'connection-dot';
       if (label) label.textContent = '🟢 TV Conectada (' + roomCode + ')';
     });
 
-    activeConn.on('data', (data) => {
-      if (peerResilienceClient && peerResilienceClient.handleIncomingData(data)) return;
-      if (data && (data.type === 'SYNC_STATE' || data.type === 'FULL_STATE_SYNC')) {
-        applySyncedState(data.payload || data);
+    conn.on('data', (data) => {
+      if (activeConn !== conn) return;
+      try {
+        if (peerResilienceClient && peerResilienceClient.handleIncomingData(data)) return;
+        if (data && (data.type === 'SYNC_STATE' || data.type === 'FULL_STATE_SYNC')) {
+          applySyncedState(data.payload || data);
+        }
+      } catch (err) {
+        console.error('Error aplicando estado en celular:', err);
       }
     });
 
-    activeConn.on('close', () => {
+    conn.on('close', () => {
+      if (activeConn !== conn) return;
       if (dot) dot.className = 'connection-dot offline';
       if (label) label.textContent = '⚠️ Reconectando con la TV...';
       if (peerResilienceClient) {
         peerResilienceClient.checkConnectionInstantly();
       } else {
-        setTimeout(() => connectToTvHost(targetId), 2000);
+        clearReconnectRetryTimer();
+        reconnectRetryTimer = setTimeout(() => connectToTvHost(targetId), 2000);
       }
     });
   }
 
   function sendRemoteAction(type, payload = {}) {
     if (activeConn && activeConn.open) {
-      activeConn.send({ type, ...payload });
+      activeConn.send({ type, playerId: 'remote', ...payload });
     }
   }
 
@@ -1266,7 +1377,7 @@
     }
 
     if (counterBadge) {
-      const placedCount = state.placedCards.length - 3;
+      const placedCount = Math.max(0, state.placedCards.length - 3);
       counterBadge.textContent = `Carta ${Math.min(placedCount, state.totalCardsTarget)} / ${state.totalCardsTarget}`;
     }
 
@@ -2262,6 +2373,72 @@
     }
 
     if (state.phase === 3) {
+      if (state.isGameOver) {
+        const winText = state.mode === 'teams'
+          ? (state.winner === 'blue' ? '🏆 ¡VICTORIA DEL EQUIPO AZUL!' : '🏆 ¡VICTORIA DEL EQUIPO ROJO!')
+          : (state.winner === 'win' ? '🏆 ¡VICTORIA TOTAL EN UNA VUELTA!' : '💀 PARTIDA PERDIDA');
+        container.innerHTML = `
+          <div class="d-flex flex-column align-items-center gap-2 text-center">
+            <div class="fw-bold text-warning fs-5">${escapeHtml(winText)}</div>
+            <button type="button" class="btn btn-primary btn-lg fw-bold" id="btnSingleNext">
+              🔄 Volver a Configurar
+            </button>
+          </div>
+        `;
+        const bNxt = document.getElementById('btnSingleNext');
+        if (bNxt) {
+          bNxt.addEventListener('click', () => {
+            advanceToNextCard();
+          });
+        }
+        return;
+      }
+
+      const res = state.lastResolution;
+      if (res && res.awaitingSteal) {
+        const rivalTeamName = state.activeTeam === 'blue' ? 'Equipo Rojo' : 'Equipo Azul';
+        const gaps = calculateCurrentGaps();
+        container.innerHTML = `
+          <div class="d-flex flex-column align-items-center gap-2" style="max-width: 600px; margin: 0 auto; width: 100%;">
+            <div class="fw-bold text-danger fs-5">⚡ ¡Chance de Robo para ${escapeHtml(rivalTeamName)}!</div>
+            <div class="gaps-select-grid w-100 mb-2">
+              ${gaps.map(g => `
+                <button type="button" class="gap-select-btn ${state.selectedGapId === g.id ? 'selected' : ''}" data-gap="${g.id}">
+                  <div class="d-flex align-items-center w-100">
+                    <span class="gap-letter-tag">${g.id}</span>
+                    <div class="gap-desc-content">
+                      <div class="gap-title-line">Hueco ${g.id}</div>
+                      <div class="gap-neighbors-line">
+                        <span class="badge-neighbor">[${g.prevNumStr} ${escapeHtml(g.prevCard.word)}]</span>
+                        <span class="gap-arrow">↔</span>
+                        <span class="badge-neighbor">[${g.nextNumStr} ${escapeHtml(g.nextCard.word)}]</span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+            <button type="button" class="btn btn-action-primary btn-action-gold py-2" id="btnSingleConfirmSteal" ${!state.selectedGapId ? 'disabled' : ''}>
+              🎯 Confirmar Intento de Robo
+            </button>
+          </div>
+        `;
+        container.querySelectorAll('.gap-select-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.selectedGapId = btn.dataset.gap;
+            renderTvBoard();
+            renderSingleControls();
+          });
+        });
+        const bSteal = document.getElementById('btnSingleConfirmSteal');
+        if (bSteal) {
+          bSteal.addEventListener('click', () => {
+            if (state.selectedGapId) resolveStealAttempt(state.selectedGapId);
+          });
+        }
+        return;
+      }
+
       container.innerHTML = `
         <div class="d-flex flex-column align-items-center gap-2">
           <button type="button" class="btn btn-primary btn-lg fw-bold" id="btnSingleNext">

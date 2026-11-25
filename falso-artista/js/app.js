@@ -288,6 +288,10 @@
 
   // Limpieza segura de conexiones PeerJS
   function limpiarConexionPrevia() {
+    if (TvHost.phase1Timer) {
+      clearInterval(TvHost.phase1Timer);
+      TvHost.phase1Timer = null;
+    }
     if (appState.heartbeatInterval) {
       clearInterval(appState.heartbeatInterval);
       appState.heartbeatInterval = null;
@@ -295,6 +299,14 @@
     if (PhoneClient.conn) {
       try { PhoneClient.conn.close(); } catch (e) {}
       PhoneClient.conn = null;
+    }
+    if (TvHost.players && TvHost.players.length > 0) {
+      TvHost.players.forEach(p => {
+        if (p.peerConn) {
+          try { p.peerConn.close(); } catch (e) {}
+          p.peerConn = null;
+        }
+      });
     }
     if (appState.peer && !appState.peer.destroyed) {
       try { appState.peer.destroy(); } catch (e) {}
@@ -307,6 +319,7 @@
   // ============================================================================
   let peerResilienceHost = null;
   let peerResilienceClient = null;
+  let tvHostInitRetries = 0;
 
   const TvHost = {
     players: [], // { id, name, avatar, color, peerConn, score, roundDelta, strokesDone }
@@ -323,6 +336,8 @@
     currentTurnIndex: 0, // 0 a (players.length * vueltasDibujo) - 1
     strokesHistory: [], // Array de { playerId, color, points }
     currentLiveStroke: null,
+    phase1Timer: null,
+    revealSubPhase: 'done', // 'escape' | 'wait_guess' | 'judge' | 'done'
     
     votes: {}, // { [voterId]: candidatePlayerId }
     fakeGuess: '',
@@ -378,6 +393,7 @@
       appState.peer = peer;
 
       peer.on('open', (id) => {
+        tvHostInitRetries = 0;
         console.log('TV Host Peer abierto:', id);
         this.showView('tvViewLobby');
       });
@@ -388,8 +404,8 @@
 
       peer.on('error', (err) => {
         console.error('Error Peer TV:', err);
-        if (err.type === 'unavailable-id') {
-          // Si el ID ya existe, reintentar con otro código
+        if (err && err.type === 'unavailable-id' && tvHostInitRetries < 5) {
+          tvHostInitRetries++;
           setTimeout(() => this.setupPeer(), 1000);
         }
       });
@@ -477,21 +493,25 @@
 
     handleIncomingConnection(conn) {
       conn.on('data', (data) => {
-        if (!data || !data.type) return;
+        try {
+          if (!data || !data.type) return;
 
-        const pId = (data.payload && data.payload.playerId) || conn._playerId;
-        if (pId && peerResilienceHost) {
-          if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
-          if (data.type !== 'JOIN_GAME' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+          const pId = data.playerId || (data.payload && data.payload.playerId) || conn._playerId;
+          if (pId && peerResilienceHost) {
+            if (peerResilienceHost.handleIncomingHostData(pId, conn, data)) return;
+            if (data.type !== 'JOIN_GAME' && !peerResilienceHost.isConnectionActive(pId, conn)) return;
+          }
+
+          this.handleClientMessage(conn, data, pId);
+        } catch (err) {
+          console.error('Error procesando mensaje en TV Host:', err);
         }
-
-        this.handleClientMessage(conn, data);
       });
 
       conn.on('close', () => {
         const pId = conn._playerId;
         if (pId && peerResilienceHost && !peerResilienceHost.isConnectionActive(pId, conn)) return;
-        this.handlePlayerDisconnect(conn.peer);
+        this.handlePlayerDisconnect(conn);
       });
 
       conn.on('error', (e) => {
@@ -499,39 +519,48 @@
       });
     },
 
-    handleClientMessage(conn, msg) {
+    handleClientMessage(conn, msg, senderId) {
+      const pid = senderId || msg.playerId || (msg.payload && msg.payload.playerId) || conn._playerId;
+      const sender = pid ? this.players.find(p => p.id === pid) : null;
+
       switch (msg.type) {
         case 'JOIN_GAME':
           this.registerPlayer(conn, msg.payload);
           break;
         case 'VIP_SETTINGS':
+          if (!sender || !sender.isVip) return;
           this.updateVipSettings(msg.payload);
           break;
         case 'VIP_START_MATCH':
+          if (!sender || !sender.isVip) return;
           this.startMatch();
           break;
         case 'DRAW_LIVE_POINT':
-          this.handleLivePoint(msg.payload);
+          this.handleLivePoint({ ...(msg.payload || {}), playerId: pid });
           break;
         case 'STROKE_RESET':
-          this.handleStrokeReset(msg.payload);
+          this.handleStrokeReset({ ...(msg.payload || {}), playerId: pid });
           break;
         case 'STROKE_CONFIRMED':
-          this.handleStrokeConfirmed(msg.payload);
+          this.handleStrokeConfirmed({ ...(msg.payload || {}), playerId: pid });
           break;
         case 'SUBMIT_VOTE':
-          this.registerVote(msg.payload.voterId, msg.payload.candidateId);
+          this.registerVote(pid || (msg.payload && msg.payload.voterId), msg.payload && msg.payload.candidateId);
           break;
         case 'SUBMIT_FAKE_GUESS':
-          this.handleFakeGuessSubmission(msg.payload.guess);
+          if (pid && pid !== this.fakeArtistId) return;
+          this.handleFakeGuessSubmission(msg.payload && msg.payload.guess);
           break;
         case 'VIP_JUDGE_RESULT':
-          this.resolveFakeGuess(msg.payload.isValid);
+          if (!sender || !sender.isVip) return;
+          this.resolveFakeGuess(msg.payload && msg.payload.isValid);
           break;
         case 'VIP_NEXT_ROUND':
+          if (!sender || !sender.isVip) return;
           this.nextRound();
           break;
         case 'VIP_RESTART_MATCH':
+          if (!sender || !sender.isVip) return;
           this.restartGame();
           break;
         case 'PING':
@@ -551,9 +580,11 @@
           existing.peerId = conn.peer;
           existing.isAsleep = false;
           conn._playerId = existing.id;
+          if (!this.players.some(p => p.isVip)) existing.isVip = true;
           if (peerResilienceHost) peerResilienceHost.registerPlayerConnection(existing.id, conn);
           this.sendFullStateSync(existing);
           this.renderLobbyRoster();
+          this.broadcastRoster();
           return;
         }
       }
@@ -566,7 +597,7 @@
       // Asignar color único de la paleta
       const colorIndex = this.players.length % BRUSH_PALETTE.length;
       const assignedColor = BRUSH_PALETTE[colorIndex];
-      const isVip = this.players.length === 0;
+      const isVip = !this.players.some(p => p.isVip);
 
       const player = {
         id: info.playerId || ('p_' + Math.random().toString(36).substring(2, 9)),
@@ -600,6 +631,7 @@
           roomCode: appState.roomCode,
           vueltasDibujo: this.vueltasDibujo,
           totalRounds: this.totalRounds,
+          selectedCategoryIds: this.selectedCategoryIds,
           categories: appState.catalog ? appState.catalog.categorias : []
         }
       });
@@ -611,8 +643,12 @@
     sendFullStateSync(player) {
       if (!player || !player.peerConn || !player.peerConn.open) return;
       const isFake = player.id === this.fakeArtistId;
-      const currentTurnPlayerId = this.turnOrder[this.currentTurnIndex];
+      const currentTurnPlayerId = this.turnOrder[this.currentTurnIndex % (this.players.length || 1)];
+      const activePlayer = this.players.find(p => p.id === currentTurnPlayerId);
       const isMyTurn = currentTurnPlayerId === player.id;
+      const catDisplayName = this.currentCategory ? `${this.currentCategory.icono} ${this.currentCategory.nombre}` : '';
+      const sortedRanking = [...this.players].sort((a, b) => b.score - a.score);
+      const rankIdx = sortedRanking.findIndex(p => p.id === player.id);
 
       const payload = {
         type: 'FULL_STATE_SYNC',
@@ -622,40 +658,52 @@
         color: player.color,
         name: player.name,
         avatar: player.avatar,
-        category: this.currentCategory ? this.currentCategory.nombre : '',
+        roomCode: appState.roomCode,
+        roundNumber: this.roundIndex + 1,
+        totalRounds: this.totalRounds,
+        category: catDisplayName,
+        categoryName: catDisplayName,
         secretWord: isFake ? '???' : this.secretWord,
         isFake: isFake,
+        isFakeArtist: isFake,
         isMyTurn: isMyTurn,
+        turnPlayerId: currentTurnPlayerId || '',
+        turnPlayerName: activePlayer ? activePlayer.name : '',
+        turnPlayerAvatar: activePlayer ? activePlayer.avatar : '🎨',
+        turnPlayerColor: activePlayer ? activePlayer.color : { name: 'Negro', hex: '#ffffff' },
         currentLap: Math.floor(this.currentTurnIndex / (this.players.length || 1)) + 1,
         totalLaps: this.vueltasDibujo,
-        turnPlayerName: this.players.find(p => p.id === currentTurnPlayerId)?.name || '',
-        turnPlayerColor: this.players.find(p => p.id === currentTurnPlayerId)?.color || '#fff',
+        vueltasDibujo: this.vueltasDibujo,
+        selectedCategoryIds: this.selectedCategoryIds,
+        categories: appState.catalog ? appState.catalog.categorias : [],
+        strokesHistory: this.strokesHistory,
+        candidates: appState.currentPhase === 'tvViewPhase3'
+          ? this.players.filter(p => p.id !== player.id).map(p => ({ id: p.id, name: p.name, avatar: p.avatar, color: p.color }))
+          : [],
         votedCandidateId: this.votes[player.id] || null,
+        revealSubPhase: this.revealSubPhase,
+        fakeArtistName: this.players.find(p => p.id === this.fakeArtistId)?.name || '',
+        fakeGuess: this.fakeGuess || '',
+        realWord: (appState.currentPhase === 'tvViewPhase4' && this.revealSubPhase === 'judge') ? this.secretWord : '',
+        results: {
+          rank: rankIdx >= 0 ? rankIdx + 1 : 1,
+          score: player.score,
+          delta: player.roundDelta,
+          isFinal: (this.roundIndex + 1 >= this.totalRounds),
+          roundIndex: this.roundIndex + 1,
+          totalRounds: this.totalRounds
+        },
         yaEnvioEnEstaFase: (appState.currentPhase === 'tvViewPhase2' ? !isMyTurn : (appState.currentPhase === 'tvViewPhase3' ? Boolean(this.votes[player.id]) : false)),
         phaseKey: `${appState.currentPhase || 'lobby'}_round_${this.roundIndex}`
       };
 
       try {
-        player.peerConn.send(payload);
-        player.peerConn.send({
-          type: 'JOIN_ACCEPTED',
-          payload: {
-            playerId: player.id,
-            name: player.name,
-            avatar: player.avatar,
-            color: player.color,
-            isVip: player.isVip,
-            roomCode: appState.roomCode,
-            vueltasDibujo: this.vueltasDibujo,
-            totalRounds: this.totalRounds,
-            categories: appState.catalog ? appState.catalog.categorias : []
-          }
-        });
+        player.peerConn.send({ type: 'FULL_STATE_SYNC', payload });
       } catch (e) {}
     },
 
-    handlePlayerDisconnect(peerId) {
-      const idx = this.players.findIndex(p => p.peerId === peerId);
+    handlePlayerDisconnect(conn) {
+      const idx = this.players.findIndex(p => p.peerConn === conn || p.peerId === conn?.peer);
       if (idx !== -1) {
         const p = this.players[idx];
         if (appState.currentPhase === 'tvViewLobby' || !appState.currentPhase) {
@@ -663,7 +711,13 @@
           if (p.isVip && this.players.length > 0) {
             this.players[0].isVip = true;
             try {
-              this.players[0].peerConn.send({ type: 'ASSIGNED_VIP' });
+              this.players[0].peerConn.send({
+                type: 'ASSIGNED_VIP',
+                payload: {
+                  categories: appState.catalog ? appState.catalog.categorias : [],
+                  selectedCategoryIds: this.selectedCategoryIds
+                }
+              });
             } catch (e) {}
           }
           this.renderLobbyRoster();
@@ -844,16 +898,21 @@
       });
 
       // Cuenta regresiva visual en la TV antes del dibujo
+      if (this.phase1Timer) {
+        clearInterval(this.phase1Timer);
+        this.phase1Timer = null;
+      }
       let secondsLeft = 7;
       const countEl = document.getElementById('tvRoleCountdown');
       countEl.textContent = `Iniciando dibujo en ${secondsLeft}s...`;
 
-      const timer = setInterval(() => {
+      this.phase1Timer = setInterval(() => {
         secondsLeft--;
         if (secondsLeft > 0) {
           countEl.textContent = `Iniciando dibujo en ${secondsLeft}s...`;
         } else {
-          clearInterval(timer);
+          clearInterval(this.phase1Timer);
+          this.phase1Timer = null;
           this.startPhase2();
         }
       }, 1000);
@@ -861,6 +920,10 @@
 
     // FASE 2: LAS 2 VUELTAS DE DIBUJO (1 TRAZO POR TURNO)
     startPhase2() {
+      if (this.phase1Timer) {
+        clearInterval(this.phase1Timer);
+        this.phase1Timer = null;
+      }
       this.showView('tvViewPhase2');
       this.renderTvCanvasHeader();
       this.renderTvPaletteSidebar();
@@ -1072,6 +1135,8 @@
     },
 
     registerVote(voterId, candidateId) {
+      if (appState.currentPhase !== 'tvViewPhase3') return;
+      if (!voterId || !candidateId) return;
       if (!this.votes[voterId]) {
         this.votes[voterId] = candidateId;
         this.renderTvDebateSidebar();
@@ -1085,6 +1150,7 @@
 
     // FASE 4: REVELACIÓN Y ÚLTIMA OPORTUNIDAD
     startPhase4() {
+      if (appState.currentPhase !== 'tvViewPhase3') return;
       this.showView('tvViewPhase4');
       SoundEffects.playDrumroll();
 
@@ -1140,6 +1206,7 @@
       document.getElementById('tvVerdictPlayerName').textContent = `${fakeArtist.avatar} ${fakeArtist.name}`;
 
       if (!isFakeCaught) {
+        this.revealSubPhase = 'escape';
         // CASO A: EL FALSO ARTISTA ESCAPÓ
         SoundEffects.playEscaped();
         document.getElementById('tvVerdictBadge').textContent = '🎉 ¡EL FALSO ARTISTA ESCAPÓ SIN SER DESCUBIERTO!';
@@ -1154,6 +1221,7 @@
 
         document.getElementById('btnTvShowScores').classList.remove('d-none');
       } else {
+        this.revealSubPhase = 'wait_guess';
         // CASO B: EL FALSO ARTISTA FUE ATRAPADO (ÚLTIMA OPORTUNIDAD)
         SoundEffects.playCaught();
         document.getElementById('tvVerdictBadge').textContent = '🚨 ¡ATRAPARON AL FALSO ARTISTA!';
@@ -1199,6 +1267,7 @@
         // Acierto automático exacto!
         this.resolveFakeGuess(true);
       } else {
+        this.revealSubPhase = 'judge';
         // Mostrar botones de validación en la TV y al VIP
         document.getElementById('tvHostJudgeActions').classList.remove('d-none');
         const vipPlayer = this.players.find(p => p.isVip);
@@ -1217,6 +1286,7 @@
     },
 
     resolveFakeGuess(isValid) {
+      this.revealSubPhase = 'done';
       document.getElementById('tvHostJudgeActions').classList.add('d-none');
       const fakeArtist = this.players.find(p => p.id === this.fakeArtistId);
 
@@ -1402,7 +1472,7 @@
       });
 
       // Respuesta del Falso Artista
-      document.getElementById('btnPhoneSubmitGuess')?.addEventListener('click', () => {
+      const submitGuessAction = () => {
         const guess = document.getElementById('inputFakeGuess').value.trim();
         if (guess) {
           this.send({ type: 'SUBMIT_FAKE_GUESS', payload: { guess: guess } });
@@ -1411,6 +1481,14 @@
           document.getElementById('phoneWaitGuessBox').querySelector('h4').textContent = 'Respuesta enviada';
           document.getElementById('phoneWaitGuessBox').querySelector('p').textContent = 'Mirá la TV para ver el veredicto...';
         }
+      };
+      document.getElementById('btnPhoneSubmitGuess')?.addEventListener('click', submitGuessAction);
+      document.getElementById('inputFakeGuess')?.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') submitGuessAction();
+      });
+
+      document.getElementById('inputPhoneName')?.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') this.attemptJoin();
       });
 
       // Juez VIP Celular
@@ -1429,6 +1507,33 @@
         this.send({ type: 'VIP_START_MATCH' });
       });
 
+      // Botones de rondas (registrados una única vez)
+      document.querySelectorAll('.btn-round-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.btn-round-opt').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const r = btn.getAttribute('data-rounds');
+          PhoneClient.send({
+            type: 'VIP_SETTINGS',
+            payload: { totalRounds: r }
+          });
+        });
+      });
+
+      // Botones de vueltas de dibujo por jugador (registrados una única vez)
+      document.querySelectorAll('.btn-phone-lap-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.btn-phone-lap-opt').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const laps = parseInt(btn.getAttribute('data-laps'), 10) || 2;
+          this.vueltasDibujo = laps;
+          PhoneClient.send({
+            type: 'VIP_SETTINGS',
+            payload: { vueltasDibujo: laps }
+          });
+        });
+      });
+
       // VIP Siguiente Ronda
       document.getElementById('btnPhoneVipNextRound')?.addEventListener('click', () => {
         this.send({ type: 'VIP_NEXT_ROUND' });
@@ -1440,9 +1545,18 @@
 
       // Cambio de sala
       document.getElementById('btnChangeRoomPhone')?.addEventListener('click', () => {
+        if (peerResilienceClient) peerResilienceClient.stop();
         sessionStorage.removeItem('falso_artista_room');
+        if (window.location.search.includes('sala=')) {
+          history.replaceState(null, '', window.location.pathname);
+        }
         limpiarConexionPrevia();
         this.showView('phoneViewJoin');
+        const inputRoom = document.getElementById('inputPhoneRoom');
+        if (inputRoom) {
+          inputRoom.value = '';
+          inputRoom.focus();
+        }
       });
 
       // Manejador del Lienzo Táctil (Pointer Events)
@@ -1665,7 +1779,11 @@
     },
 
     handlePeerUnavailable(roomCode) {
+      if (peerResilienceClient) peerResilienceClient.stop();
       sessionStorage.removeItem('falso_artista_room');
+      if (window.location.search.includes('sala=')) {
+        history.replaceState(null, '', window.location.pathname);
+      }
       limpiarConexionPrevia();
       this.showView('phoneViewJoin');
 
@@ -1689,7 +1807,17 @@
     send(msg) {
       if (this.conn && this.conn.open) {
         try {
-          this.conn.send(msg);
+          const outMsg = {
+            ...msg,
+            playerId: msg.playerId || this.playerId
+          };
+          if (msg.payload && typeof msg.payload === 'object') {
+            outMsg.payload = {
+              ...msg.payload,
+              playerId: msg.payload.playerId || this.playerId
+            };
+          }
+          this.conn.send(outMsg);
         } catch (e) {
           console.warn('Error enviando mensaje a TV:', e);
         }
@@ -1719,6 +1847,9 @@
           this.isVip = true;
           document.getElementById('phoneVipPanel')?.classList.remove('d-none');
           document.getElementById('phoneWaitHostPanel')?.classList.add('d-none');
+          if (msg.payload && msg.payload.categories) {
+            this.renderVipCategoryToggles(msg.payload.categories, msg.payload.selectedCategoryIds);
+          }
           break;
         case 'ROUND_ROLE_ASSIGNED':
           this.showPhase1Role(msg.payload);
@@ -1771,53 +1902,107 @@
 
     applyFullStateSync(payload) {
       if (!payload) return;
-      this.playerId = payload.playerId;
-      sessionStorage.setItem('falso_artista_player_id', this.playerId);
+      if (payload.playerId) {
+        this.playerId = payload.playerId;
+        sessionStorage.setItem('falso_artista_player_id', this.playerId);
+      }
+      this.name = payload.name || this.name;
+      this.avatar = payload.avatar || this.avatar;
       this.color = payload.color || this.color;
       this.isVip = Boolean(payload.isVip);
-      this.vueltasDibujo = payload.totalLaps || this.vueltasDibujo;
-      this.currentCategoryName = payload.category || '';
+      this.vueltasDibujo = payload.totalLaps || payload.vueltasDibujo || this.vueltasDibujo;
+      this.currentCategoryName = payload.categoryName || payload.category || this.currentCategoryName;
+
+      // Mantener cabecera de identidad celular actualizada
+      if (document.getElementById('phoneMyAvatar')) document.getElementById('phoneMyAvatar').textContent = this.avatar;
+      if (document.getElementById('phoneMyName')) document.getElementById('phoneMyName').textContent = this.name;
+      if (payload.roomCode && document.getElementById('phoneRoomLabel')) {
+        document.getElementById('phoneRoomLabel').textContent = payload.roomCode;
+      }
+      if (this.color && document.getElementById('phoneMyColorDot')) {
+        const dot = document.getElementById('phoneMyColorDot');
+        dot.style.backgroundColor = this.color.hex;
+        dot.style.color = this.color.hex;
+        document.getElementById('phoneMyColorName').textContent = this.color.name;
+      }
 
       if (payload.phase === 'tvViewLobby' || !payload.phase) {
         this.showView('phoneViewLobby');
-        document.getElementById('phoneLobbyWait')?.classList.remove('d-none');
         if (this.isVip) {
           document.getElementById('phoneVipPanel')?.classList.remove('d-none');
           document.getElementById('phoneWaitHostPanel')?.classList.add('d-none');
+          if (payload.categories) {
+            this.renderVipCategoryToggles(payload.categories, payload.selectedCategoryIds);
+          }
+        } else {
+          document.getElementById('phoneVipPanel')?.classList.add('d-none');
+          document.getElementById('phoneWaitHostPanel')?.classList.remove('d-none');
+        }
+        if (payload.vueltasDibujo || payload.totalLaps) {
+          const laps = payload.vueltasDibujo || payload.totalLaps;
+          document.querySelectorAll('.btn-phone-lap-opt').forEach(b => {
+            b.classList.toggle('active', parseInt(b.getAttribute('data-laps'), 10) === laps);
+          });
+        }
+        if (payload.totalRounds) {
+          document.querySelectorAll('.btn-round-opt').forEach(b => {
+            b.classList.toggle('active', parseInt(b.getAttribute('data-rounds'), 10) === payload.totalRounds);
+          });
         }
       } else if (payload.phase === 'tvViewPhase1') {
         this.showPhase1Role({
-          category: payload.category,
+          roundNumber: payload.roundNumber || 1,
+          categoryName: this.currentCategoryName,
+          vueltasDibujo: payload.totalLaps || this.vueltasDibujo,
           secretWord: payload.secretWord,
-          isFake: payload.isFake,
-          color: payload.color
+          isFakeArtist: Boolean(payload.isFakeArtist || payload.isFake)
         });
       } else if (payload.phase === 'tvViewPhase2') {
+        this.cachedSecretWord = payload.isFakeArtist ? null : payload.secretWord;
+        this.isFakeArtist = Boolean(payload.isFakeArtist || payload.isFake);
         this.onTurnChange({
-          turnIndex: 0,
-          playerId: payload.turnPlayerId || '',
-          playerName: payload.turnPlayerName || '',
-          color: payload.turnPlayerColor || '#fff',
+          roundNumber: payload.roundNumber || 1,
+          categoryName: this.currentCategoryName,
+          activePlayerId: payload.turnPlayerId || '',
+          activePlayerName: payload.turnPlayerName || '',
+          activePlayerAvatar: payload.turnPlayerAvatar || '🎨',
+          activeColor: payload.turnPlayerColor || '#fff',
+          isMyTurn: Boolean(payload.isMyTurn),
           lap: payload.currentLap || 1,
-          totalLaps: payload.totalLaps || 2
+          maxLaps: payload.totalLaps || this.vueltasDibujo,
+          strokesHistory: payload.strokesHistory || []
         });
-        if (payload.yaEnvioEnEstaFase) {
-          this.hasDrawnThisTurn = true;
-          document.getElementById('phoneDrawPanel')?.classList.add('d-none');
-          document.getElementById('phoneDrawWaitPanel')?.classList.remove('d-none');
-        }
       } else if (payload.phase === 'tvViewPhase3') {
         if (payload.votedCandidateId) {
           this.showView('phonePhase3');
-          document.getElementById('phoneVoteSubmittedMsg')?.classList.remove('d-none');
-          document.getElementById('phoneCandidatesGrid')?.classList.add('d-none');
+          document.getElementById('phoneVoteConfirmedMsg')?.classList.remove('d-none');
+          document.getElementById('phoneVoteList')?.classList.add('d-none');
         } else {
-          this.showView('phonePhase3');
+          this.showPhase3Voting(payload.candidates || []);
         }
       } else if (payload.phase === 'tvViewPhase4') {
         this.showView('phonePhase4');
+        const fakeForm = document.getElementById('phoneFakeGuessForm');
+        const waitBox = document.getElementById('phoneWaitGuessBox');
+        const judgeBox = document.getElementById('phoneVipJudgeBox');
+        if (fakeForm) fakeForm.classList.add('d-none');
+        if (waitBox) waitBox.classList.remove('d-none');
+        if (judgeBox) judgeBox.classList.add('d-none');
+
+        if (payload.revealSubPhase === 'wait_guess' && payload.isFakeArtist && fakeForm && waitBox) {
+          fakeForm.classList.remove('d-none');
+          waitBox.classList.add('d-none');
+        } else if (payload.revealSubPhase === 'judge' && this.isVip && judgeBox) {
+          document.getElementById('phoneJudgeSaid').textContent = `"${payload.fakeGuess || ''}"`;
+          document.getElementById('phoneJudgeReal').textContent = `"${payload.realWord || ''}"`;
+          judgeBox.classList.remove('d-none');
+        }
       } else if (payload.phase === 'tvViewPhase5') {
-        this.showView('phonePhase5');
+        if (payload.results) {
+          this.showPhase5Results(payload.results);
+        } else {
+          this.showView('phonePhase5');
+        }
       }
     },
 
@@ -1841,7 +2026,7 @@
       if (this.isVip) {
         document.getElementById('phoneVipPanel').classList.remove('d-none');
         document.getElementById('phoneWaitHostPanel').classList.add('d-none');
-        this.renderVipCategoryToggles(data.categories);
+        this.renderVipCategoryToggles(data.categories, data.selectedCategoryIds);
       } else {
         document.getElementById('phoneVipPanel').classList.add('d-none');
         document.getElementById('phoneWaitHostPanel').classList.remove('d-none');
@@ -1862,17 +2047,20 @@
       this.showView('phoneViewLobby');
     },
 
-    renderVipCategoryToggles(categories) {
+    renderVipCategoryToggles(categories, activeIds = null) {
       const container = document.getElementById('phoneCategoryToggles');
       if (!container || !categories) return;
       container.innerHTML = '';
 
-      const selectedIds = categories.map(c => c.id);
+      const selectedIds = Array.isArray(activeIds) && activeIds.length > 0
+        ? [...activeIds]
+        : categories.map(c => c.id);
 
       categories.forEach(cat => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'cat-check-btn active';
+        const isSelected = selectedIds.includes(cat.id);
+        btn.className = `cat-check-btn ${isSelected ? 'active' : ''}`;
         btn.innerHTML = `<span>${cat.icono}</span> <span>${cat.nombre}</span>`;
         btn.addEventListener('click', () => {
           btn.classList.toggle('active');
@@ -1890,36 +2078,17 @@
         });
         container.appendChild(btn);
       });
-
-      // Botones de rondas
-      document.querySelectorAll('.btn-round-opt').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.btn-round-opt').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const r = btn.getAttribute('data-rounds');
-          PhoneClient.send({
-            type: 'VIP_SETTINGS',
-            payload: { totalRounds: r }
-          });
-        });
-      });
-
-      // Botones de vueltas de dibujo por jugador
-      document.querySelectorAll('.btn-phone-lap-opt').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.btn-phone-lap-opt').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const laps = parseInt(btn.getAttribute('data-laps'), 10) || 2;
-          this.vueltasDibujo = laps;
-          PhoneClient.send({
-            type: 'VIP_SETTINGS',
-            payload: { vueltasDibujo: laps }
-          });
-        });
-      });
     },
 
     updateLobbyPlayers(data) {
+      const me = data.players && data.players.find(p => p.id === this.playerId);
+      if (me && me.isVip !== this.isVip) {
+        this.isVip = me.isVip;
+        if (this.isVip) {
+          document.getElementById('phoneVipPanel')?.classList.remove('d-none');
+          document.getElementById('phoneWaitHostPanel')?.classList.add('d-none');
+        }
+      }
       if (data.vueltasDibujo) {
         this.vueltasDibujo = data.vueltasDibujo;
         document.querySelectorAll('.btn-phone-lap-opt').forEach(b => {
@@ -1967,7 +2136,7 @@
       document.getElementById('phoneMyCategory').textContent = this.currentCategoryName;
 
       // Actualizar categoría arriba del tablero en el celular
-      const mobileCat = document.getElementById('mobile-board-category') || document.getElementById('phoneDrawCatLabel');
+      const mobileCat = document.getElementById('phoneDrawCatLabel');
       if (mobileCat && this.currentCategoryName) {
         mobileCat.textContent = this.currentCategoryName;
       }
@@ -2006,7 +2175,7 @@
       }
 
       // Actualizar categoría arriba del tablero en el celular
-      const mobileCat = document.getElementById('mobile-board-category') || document.getElementById('phoneDrawCatLabel');
+      const mobileCat = document.getElementById('phoneDrawCatLabel');
       if (mobileCat && this.currentCategoryName) {
         mobileCat.textContent = this.currentCategoryName;
       }
@@ -2215,12 +2384,14 @@
         TvHost.init();
       });
 
-      document.getElementById('btnSelectPhoneMode')?.addEventListener('click', () => {
+      document.getElementById('btnSelectPhoneMode')?.addEventListener('click', (e) => {
+        if (e.target.closest('.phone-join-quick')) return;
         SoundEffects.init();
         PhoneClient.init();
       });
 
-      document.getElementById('btnManualJoinRoom')?.addEventListener('click', () => {
+      const manualJoinAction = (e) => {
+        if (e && e.stopPropagation) e.stopPropagation();
         SoundEffects.init();
         const code = document.getElementById('inputManualRoomCode').value.trim();
         if (code.length === 4) {
@@ -2230,6 +2401,12 @@
         } else {
           alert('Por favor ingresá un código de 4 letras.');
         }
+      };
+
+      document.getElementById('btnManualJoinRoom')?.addEventListener('click', manualJoinAction);
+      document.getElementById('inputManualRoomCode')?.addEventListener('click', (e) => e.stopPropagation());
+      document.getElementById('inputManualRoomCode')?.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') manualJoinAction(e);
       });
     }
   });

@@ -129,7 +129,7 @@
     "id": "geo_015",
     "categoria": "geografia",
     "dificultad": "facil",
-    "pregunta": "¿Cuántos continentes se reconocen comúnmente en el modelo geográfico tradicional escolar hispanohablante de 6 continentes?",
+    "pregunta": "¿Cuántos continentes se reconocen comúnmente en el modelo geográfico escolar tradicional hispanohablante (contando a América como uno solo e incluyendo a la Antártida)?",
     "respuesta": 6,
     "unidad": "continentes",
     "nota": "América, Europa, Asia, África, Oceanía y la Antártida."

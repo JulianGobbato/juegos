@@ -16,7 +16,7 @@
     "Desayuno", "Almuerzo", "Cena", "Postre", "Frutilla", "Manzana", "Banana", "Limón", "Naranja", "Sandía",
     "Pan", "Huevo", "Carne", "Pescado", "Arroz", "Fideos", "Sopa", "Ensalada", "Hamburguesa", "Papas",
     "Cafetería", "Restaurante", "Hotel", "Supermercado", "Farmacia", "Panadería", "Estación", "Aeropuerto", "Terminal", "Subte",
-    "Colectivo", "Taxi", "Auto", "Moto", "Camión", "Camioneta", "Barco", "Submarino", "Helicóptero", "Globo",
+    "Colectivo", "Taxi", "Auto", "Moto", "Camión", "Camioneta", "Lancha", "Submarino", "Helicóptero", "Globo",
     "Zapatilla", "Zapato", "Bota", "Remera", "Camisa", "Pantalón", "Vestido", "Campera", "Gorra", "Sombrero",
     "Bufanda", "Guante", "Mochila", "Valija", "Billetera", "Moneda", "Billete", "Tarjeta", "Llave", "Candado",
     "Puerta", "Ventana", "Cama", "Mesa", "Silla", "Sillón", "Lámpara", "Cuadro", "Alfombra", "Planta",
@@ -25,6 +25,6 @@
     "Silencio", "Grito", "Risa", "Llanto", "Sueño", "Pesadilla", "Recuerdo", "Secreto", "Mentira", "Verdad",
     "Peligro", "Victoria", "Derrota", "Empate", "Juego", "Juguete", "Pelota", "Dado", "Carta", "Ficha",
     "Premio", "Medalla", "Trofeo", "Regalo", "Sorpresa", "Aventura", "Misión", "Desafío", "Trampa", "Escape",
-    "Tesoro", "Mapa", "Brújula", "Linterna", "Cámara", "Foto", "Video", "Mensaje", "Carta", "Paquete"
+    "Tesoro", "Mapa", "Brújula", "Linterna", "Cámara", "Foto", "Video", "Mensaje", "Sobre", "Paquete"
   ]
 }

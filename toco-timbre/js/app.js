@@ -220,7 +220,6 @@
   let questionsCache = [];
   let isQuestionsLoaded = false;
   let loadPromise = null;
-  const questionsByCategory = {};
 
   // Filtros activos guardados
   let activeFilters = {
@@ -1098,7 +1097,6 @@
     const nextQ = getRandomUnusedFilteredQuestion(state.tarjetero.usedIds, state.tarjetero.sessionDeck);
     if (nextQ) {
       state.tarjetero.currentQuestion = nextQ;
-      state.tarjetero.usedIds.push(nextQ.id);
       state.tarjetero.isRevealed = false;
       renderTarjeteroCard();
       saveState();
@@ -1137,19 +1135,25 @@
       return;
     }
 
+    const players = d.config.players;
     d.currentQuestion = nextQ;
-    d.usedQuestionIds.push(nextQ.id);
+    d.roundInitialChoferIndex = (d.currentRound - 1) % players.length;
+    d.bidding = {
+      choferIndex: d.roundInitialChoferIndex,
+      currentBet: null,
+      turnPlayerIndex: null,
+      playerStatus: {},
+      passengersAgreed: {}
+    };
+    players.forEach((_, idx) => {
+      d.bidding.playerStatus[idx] = idx === d.roundInitialChoferIndex ? 'chofer' : 'pasajero';
+      d.bidding.passengersAgreed[idx] = false;
+    });
+    d.roundPhase = 'chofer_input';
     d.roundResult = null;
 
-    // Reiniciar estado de la ronda para la nueva pregunta
-    d.currentStep = 0;
-    d.choferAnswers = {};
-    d.playerChoices = {};
-    d.firstRungIndex = null;
-    d.isRoundOver = false;
-
-    showView('viewDigitalGame');
     renderDigitalGameScreen();
+    showView('viewDigitalGame');
     saveState();
     showToast('Ronda anulada y nueva pregunta cargada', '🚩');
   }
